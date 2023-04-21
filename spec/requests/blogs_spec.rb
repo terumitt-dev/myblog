@@ -12,10 +12,10 @@ require 'rails_helper'
 # of tools you can use to make these specs even more expressive, but we're
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
-RSpec.describe "/model_names", type: :request do
+RSpec.describe "/blogs", type: :request do
   
   # This should return the minimal set of attributes required to create a valid
-  # ModelName. As you add validations to ModelName, be sure to
+  # Blog. As you add validations to Blog, be sure to
   # adjust the attributes here as well.
   let(:valid_attributes) {
     skip("Add a hash of attributes valid for your model")
@@ -27,59 +27,59 @@ RSpec.describe "/model_names", type: :request do
 
   describe "GET /index" do
     it "renders a successful response" do
-      ModelName.create! valid_attributes
-      get model_names_url
+      Blog.create! valid_attributes
+      get blogs_url
       expect(response).to be_successful
     end
   end
 
   describe "GET /show" do
     it "renders a successful response" do
-      model_name = ModelName.create! valid_attributes
-      get model_name_url(model_name)
+      blog = Blog.create! valid_attributes
+      get blog_url(blog)
       expect(response).to be_successful
     end
   end
 
   describe "GET /new" do
     it "renders a successful response" do
-      get new_model_name_url
+      get new_blog_url
       expect(response).to be_successful
     end
   end
 
   describe "GET /edit" do
     it "renders a successful response" do
-      model_name = ModelName.create! valid_attributes
-      get edit_model_name_url(model_name)
+      blog = Blog.create! valid_attributes
+      get edit_blog_url(blog)
       expect(response).to be_successful
     end
   end
 
   describe "POST /create" do
     context "with valid parameters" do
-      it "creates a new ModelName" do
+      it "creates a new Blog" do
         expect {
-          post model_names_url, params: { model_name: valid_attributes }
-        }.to change(ModelName, :count).by(1)
+          post blogs_url, params: { blog: valid_attributes }
+        }.to change(Blog, :count).by(1)
       end
 
-      it "redirects to the created model_name" do
-        post model_names_url, params: { model_name: valid_attributes }
-        expect(response).to redirect_to(model_name_url(ModelName.last))
+      it "redirects to the created blog" do
+        post blogs_url, params: { blog: valid_attributes }
+        expect(response).to redirect_to(blog_url(Blog.last))
       end
     end
 
     context "with invalid parameters" do
-      it "does not create a new ModelName" do
+      it "does not create a new Blog" do
         expect {
-          post model_names_url, params: { model_name: invalid_attributes }
-        }.to change(ModelName, :count).by(0)
+          post blogs_url, params: { blog: invalid_attributes }
+        }.to change(Blog, :count).by(0)
       end
 
     
       it "renders a response with 422 status (i.e. to display the 'new' template)" do
-        post model_names_url, params: { model_name: invalid_attributes }
+        post blogs_url, params: { blog: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_entity)
       end
     
@@ -92,26 +92,26 @@ RSpec.describe "/model_names", type: :request do
         skip("Add a hash of attributes valid for your model")
       }
 
-      it "updates the requested model_name" do
-        model_name = ModelName.create! valid_attributes
-        patch model_name_url(model_name), params: { model_name: new_attributes }
-        model_name.reload
+      it "updates the requested blog" do
+        blog = Blog.create! valid_attributes
+        patch blog_url(blog), params: { blog: new_attributes }
+        blog.reload
         skip("Add assertions for updated state")
       end
 
-      it "redirects to the model_name" do
-        model_name = ModelName.create! valid_attributes
-        patch model_name_url(model_name), params: { model_name: new_attributes }
-        model_name.reload
-        expect(response).to redirect_to(model_name_url(model_name))
+      it "redirects to the blog" do
+        blog = Blog.create! valid_attributes
+        patch blog_url(blog), params: { blog: new_attributes }
+        blog.reload
+        expect(response).to redirect_to(blog_url(blog))
       end
     end
 
     context "with invalid parameters" do
     
       it "renders a response with 422 status (i.e. to display the 'edit' template)" do
-        model_name = ModelName.create! valid_attributes
-        patch model_name_url(model_name), params: { model_name: invalid_attributes }
+        blog = Blog.create! valid_attributes
+        patch blog_url(blog), params: { blog: invalid_attributes }
         expect(response).to have_http_status(:unprocessable_entity)
       end
     
@@ -119,17 +119,17 @@ RSpec.describe "/model_names", type: :request do
   end
 
   describe "DELETE /destroy" do
-    it "destroys the requested model_name" do
-      model_name = ModelName.create! valid_attributes
+    it "destroys the requested blog" do
+      blog = Blog.create! valid_attributes
       expect {
-        delete model_name_url(model_name)
-      }.to change(ModelName, :count).by(-1)
+        delete blog_url(blog)
+      }.to change(Blog, :count).by(-1)
     end
 
-    it "redirects to the model_names list" do
-      model_name = ModelName.create! valid_attributes
-      delete model_name_url(model_name)
-      expect(response).to redirect_to(model_names_url)
+    it "redirects to the blogs list" do
+      blog = Blog.create! valid_attributes
+      delete blog_url(blog)
+      expect(response).to redirect_to(blogs_url)
     end
   end
 end
