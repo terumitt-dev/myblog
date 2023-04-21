@@ -1,2 +1,0 @@
-class ModelName < ApplicationRecord
-end
