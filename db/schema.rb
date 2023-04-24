@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 # This file is auto-generated from the current state of the database. Instead
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
@@ -12,15 +10,26 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 20_230_424_013_937) do
+ActiveRecord::Schema[7.0].define(version: 2023_04_24_055118) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension 'plpgsql'
+  enable_extension "plpgsql"
 
-  create_table 'blogs', force: :cascade do |t|
-    t.datetime 'created_at', null: false
-    t.datetime 'updated_at', null: false
-    t.string 'title', null: false
-    t.text 'content', null: false
-    t.integer 'category', null: false
+  create_table "blogs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "title", null: false
+    t.text "content", null: false
+    t.integer "category", null: false
   end
+
+  create_table "comments", force: :cascade do |t|
+    t.bigint "blogs_id", null: false
+    t.string "other_user_name", null: false
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blogs_id"], name: "index_comments_on_blogs_id"
+  end
+
+  add_foreign_key "comments", "blogs", column: "blogs_id"
 end
