@@ -11,7 +11,24 @@
     </div>
   <% end %>
 
-  <div>
+  <div class="field">
+    <%= form.label :title %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div class="field">
+    <%= form.label :category %>
+    <%= form.radio_button :category, "technology" %>
+    <%= form.radio_button :category, "hobby" %>
+    <%= form.radio_button :category, "others" %>
+  </div>
+
+  <div class="field">
+    <%= form.label :content %>
+    <%= form.text_area :content %>
+  </div>
+
+  <div class="actions">
     <%= form.submit %>
   </div>
 <% end %>
