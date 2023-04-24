@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Blog < ApplicationRecord
   attribute :title, :string
   attribute :category, :integer, default: 0

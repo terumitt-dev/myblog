@@ -66,8 +66,6 @@ class BlogsController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def blog_params
-    params.require(:blog).permit(:title, :content, :category).tap do |whitelisted|
-      whitelisted[:category] = whitelisted[:category].to_i
-    end
+    params.require(:blog).permit(:title, :content, :category)
   end
 end
