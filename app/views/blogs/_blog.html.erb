@@ -1,2 +1,22 @@
 <div id="<%= dom_id blog %>">
+  <%= form_for blog do |f| %>
+    <div class="field">
+      <%= f.label :title %>
+      <%= f.text_field :title %>
+    </div>
+
+    <div class="field">
+      <%= f.label :category %>
+      <%= f.radio_button :category, "technology" %>
+      <%= f.radio_button :category, "hobby" %>
+      <%= f.radio_button :category, "others" %>
+    </div>
+
+    <div class="field">
+      <%= f.label :content %>
+      <%= f.text_area :content %>
+    </div>
+
+    <%= f.submit "Save" %>
+  <% end %>
 </div>
