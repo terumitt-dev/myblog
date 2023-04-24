@@ -5,16 +5,10 @@ class Blog < ApplicationRecord
   attribute :category, :integer
   attribute :content, :text
 
+  enum category: { hobby: 1, tech: 2, other: 3 }
+
   def category_label
-    case category
-    when 1
-      "Hobby"
-    when 2
-      "Tech"
-    when 3
-      "Other"
-    else
-      "Unknown Category"
-    end
+    category&.titleize || "Unknown Category"
   end
+
 end
