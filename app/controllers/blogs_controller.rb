@@ -9,7 +9,10 @@ class BlogsController < ApplicationController
   end
 
   # GET /blogs/1 or /blogs/1.json
-  def show; end
+  def show
+    @comment = Comment.new
+    @blog = Blog.find(params[:id])
+  end
 
   # GET /blogs/new
   def new
