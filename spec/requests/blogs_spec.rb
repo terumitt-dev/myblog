@@ -18,113 +18,112 @@ RSpec.describe '/blogs', type: :request do
   # This should return the minimal set of attributes required to create a valid
   # Blog. As you add validations to Blog, be sure to
   # adjust the attributes here as well.
-  let(:valid_attributes) do
-    skip('Add a hash of attributes valid for your model')
-  end
-
-  let(:invalid_attributes) do
-    skip('Add a hash of attributes invalid for your model')
-  end
 
   describe 'GET /index' do
-    it 'renders a successful response' do
-      Blog.create! valid_attributes
+    it '投稿一覧のページが出力される' do
+      blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
+      blog.save!
       get blogs_url
       expect(response).to be_successful
     end
   end
 
   describe 'GET /show' do
-    it 'renders a successful response' do
-      blog = Blog.create! valid_attributes
+    it '投稿詳細ページが出力される' do
+      blog = Blog.new(title: 'Test Blog', category: 'tech', content: 'Lorem ipsum')
+      blog.save!
       get blog_url(blog)
       expect(response).to be_successful
     end
   end
 
   describe 'GET /new' do
-    it 'renders a successful response' do
+    it '新規投稿ページが出力される' do
       get new_blog_url
       expect(response).to be_successful
     end
   end
 
   describe 'GET /edit' do
-    it 'renders a successful response' do
-      blog = Blog.create! valid_attributes
+    it '投稿の編集ページが出力される' do
+      blog = Blog.new(title: 'Demo Blog', category: 'other', content: 'Lorem ipsum')
+      blog.save!
       get edit_blog_url(blog)
       expect(response).to be_successful
     end
   end
 
   describe 'POST /create' do
-    context 'with valid parameters' do
-      it 'creates a new Blog' do
+    context '正しいパラメータが渡された場合' do
+      it '新しい投稿が作成される' do
         expect do
-          post blogs_url, params: { blog: valid_attributes }
+          post blogs_url, params: { blog: { title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum' } }
         end.to change(Blog, :count).by(1)
       end
 
-      it 'redirects to the created blog' do
-        post blogs_url, params: { blog: valid_attributes }
+      it '作成された投稿のページにリダイレクトされる' do
+        post blogs_url, params: { blog: { title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum' } }
         expect(response).to redirect_to(blog_url(Blog.last))
       end
     end
 
-    context 'with invalid parameters' do
-      it 'does not create a new Blog' do
+    context '無効なパラメータが渡された場合' do
+      it '新しい投稿が作成されない' do
         expect do
-          post blogs_url, params: { blog: invalid_attributes }
+          post blogs_url, params: { blog: { title: '', category: 'hobby', content: 'Lorem ipsum' } }
         end.to change(Blog, :count).by(0)
       end
 
-      it "renders a response with 422 status (i.e. to display the 'new' template)" do
-        post blogs_url, params: { blog: invalid_attributes }
+      it '422エラーを返すこと (つまり、newテンプレートを表示すること)' do
+        post blogs_url, params: { blog: { title: '', category: 'hobby', content: 'Lorem ipsum' } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end
 
   describe 'PATCH /update' do
-    context 'with valid parameters' do
-      let(:new_attributes) do
-        skip('Add a hash of attributes valid for your model')
-      end
-
-      it 'updates the requested blog' do
-        blog = Blog.create! valid_attributes
-        patch blog_url(blog), params: { blog: new_attributes }
+    context '有効なパラメータの場合' do
+      it 'ブログが更新されること' do
+        blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
+        blog.save!
+        patch blog_url(blog), params: { blog: { title: 'Demo Blog', category: 'other', content: 'Lorem ipsum2' } }
         blog.reload
-        skip('Add assertions for updated state')
+        expect(blog.reload.title).to eq 'Demo Blog'
+        expect(blog.reload.category).to eq 'other'
+        expect(blog.reload.content).to eq 'Lorem ipsum2'
       end
 
-      it 'redirects to the blog' do
-        blog = Blog.create! valid_attributes
-        patch blog_url(blog), params: { blog: new_attributes }
+      it 'ブログにリダイレクトすること' do
+        blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
+        blog.save!
+        patch blog_url(blog), params: { blog: { title: 'Demo Blog', category: 'other', content: 'Lorem ipsum2' } }
         blog.reload
         expect(response).to redirect_to(blog_url(blog))
       end
     end
-
-    context 'with invalid parameters' do
-      it "renders a response with 422 status (i.e. to display the 'edit' template)" do
-        blog = Blog.create! valid_attributes
-        patch blog_url(blog), params: { blog: invalid_attributes }
+  
+    context '無効なパラメータの場合' do
+      it '422ステータスを返すこと（すなわち、編集テンプレートを表示すること）' do
+        blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
+        blog.save!
+        patch blog_url(blog), params: { blog: { title: '', category: 'other', content: 'Lorem ipsum' } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end
-
+  
   describe 'DELETE /destroy' do
-    it 'destroys the requested blog' do
-      blog = Blog.create! valid_attributes
+    it '指定されたブログを削除すること' do
+      blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
+      blog.save!
       expect do
         delete blog_url(blog)
       end.to change(Blog, :count).by(-1)
     end
 
-    it 'redirects to the blogs list' do
-      blog = Blog.create! valid_attributes
+    it 'ブログ一覧にリダイレクトすること' do
+      blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
+      blog.save!
       delete blog_url(blog)
       expect(response).to redirect_to(blogs_url)
     end
