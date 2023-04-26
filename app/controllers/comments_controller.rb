@@ -1,5 +1,6 @@
 class CommentsController < ApplicationController
   before_action :set_comment, only: %i[ show edit update destroy ]
+  before_action :set_blog, only: %i[ create ]
 
   # GET /comments or /comments.json
   def index
@@ -63,8 +64,12 @@ class CommentsController < ApplicationController
       @comment = Comment.find(params[:id])
     end
 
+    def set_blog
+      @blog = Blog.find(params[:comment][:blog_id])
+    end
+
     # Only allow a list of trusted parameters through.
     def comment_params
-      params.require(:comment).permit(:blog_id, :other_user_name, :comment)
-    end
+      params.require(:comment).permit(:other_user_name, :comment).merge(blog_id: @blog.id)
+    end    
 end
