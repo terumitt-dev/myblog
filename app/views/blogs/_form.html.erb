@@ -18,9 +18,11 @@
 
   <div class="field">
     <%= form.label :category %>
-    <%= form.radio_button :category, 1 %>
-    <%= form.radio_button :category, 2 %>
-    <%= form.radio_button :category, 3 %>
+    <% Blog.categories.keys.each do |key| %>
+      <% next if key == 'uncategorized' %>
+      <%= form.radio_button :category, key %>
+      <%= key.to_s.humanize %>
+    <% end %>
   </div>
 
   <div class="field">
