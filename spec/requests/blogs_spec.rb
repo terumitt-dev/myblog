@@ -21,8 +21,7 @@ RSpec.describe '/blogs', type: :request do
 
   describe 'GET /index' do
     it '投稿一覧のページが出力される' do
-      blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
-      blog.save!
+      blog = FactoryBot.create(:blog)
       get blogs_url
       expect(response).to be_successful
     end
@@ -30,8 +29,7 @@ RSpec.describe '/blogs', type: :request do
 
   describe 'GET /show' do
     it '投稿詳細ページが出力される' do
-      blog = Blog.new(title: 'Test Blog', category: 'tech', content: 'Lorem ipsum')
-      blog.save!
+      blog = FactoryBot.create(:blog)
       get blog_url(blog)
       expect(response).to be_successful
     end
@@ -46,8 +44,7 @@ RSpec.describe '/blogs', type: :request do
 
   describe 'GET /edit' do
     it '投稿の編集ページが出力される' do
-      blog = Blog.new(title: 'Demo Blog', category: 'other', content: 'Lorem ipsum')
-      blog.save!
+      blog = FactoryBot.create(:blog)
       get edit_blog_url(blog)
       expect(response).to be_successful
     end
@@ -84,8 +81,7 @@ RSpec.describe '/blogs', type: :request do
   describe 'PATCH /update' do
     context '有効なパラメータの場合' do
       it 'ブログが更新されること' do
-        blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
-        blog.save!
+        blog = FactoryBot.create(:blog)
         patch blog_url(blog), params: { blog: { title: 'Demo Blog', category: 'other', content: 'Lorem ipsum2' } }
         blog.reload
         expect(blog.reload.title).to eq 'Demo Blog'
@@ -94,8 +90,7 @@ RSpec.describe '/blogs', type: :request do
       end
 
       it 'ブログにリダイレクトすること' do
-        blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
-        blog.save!
+        blog = FactoryBot.create(:blog)
         patch blog_url(blog), params: { blog: { title: 'Demo Blog', category: 'other', content: 'Lorem ipsum2' } }
         blog.reload
         expect(response).to redirect_to(blog_url(blog))
@@ -104,8 +99,7 @@ RSpec.describe '/blogs', type: :request do
 
     context '無効なパラメータの場合' do
       it '422ステータスを返すこと（すなわち、編集テンプレートを表示すること）' do
-        blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
-        blog.save!
+        blog = FactoryBot.create(:blog)
         patch blog_url(blog), params: { blog: { title: '', category: 'other', content: 'Lorem ipsum' } }
         expect(response).to have_http_status(:unprocessable_entity)
       end
@@ -114,16 +108,14 @@ RSpec.describe '/blogs', type: :request do
 
   describe 'DELETE /destroy' do
     it '指定されたブログを削除すること' do
-      blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
-      blog.save!
+      blog = FactoryBot.create(:blog)
       expect do
         delete blog_url(blog)
       end.to change(Blog, :count).by(-1)
     end
 
     it 'ブログ一覧にリダイレクトすること' do
-      blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
-      blog.save!
+      blog = FactoryBot.create(:blog)
       delete blog_url(blog)
       expect(response).to redirect_to(blogs_url)
     end
