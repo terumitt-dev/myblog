@@ -8,8 +8,6 @@ class CommentsController < ApplicationController
 
   # GET /comments/1 or /comments/1.json
   def show
-    @blog = Blog.find(params[:id])
-    @comment = @blog.comments.build
   end
 
   # GET /comments/new
@@ -23,6 +21,7 @@ class CommentsController < ApplicationController
 
   # POST /comments or /comments.json
   def create
+    @blog = Blog.find(params[:comment][:blog_id])
     @comment = Comment.new(comment_params)
 
     respond_to do |format|
