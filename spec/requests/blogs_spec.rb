@@ -101,7 +101,7 @@ RSpec.describe '/blogs', type: :request do
         expect(response).to redirect_to(blog_url(blog))
       end
     end
-  
+
     context '無効なパラメータの場合' do
       it '422ステータスを返すこと（すなわち、編集テンプレートを表示すること）' do
         blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
@@ -111,7 +111,7 @@ RSpec.describe '/blogs', type: :request do
       end
     end
   end
-  
+
   describe 'DELETE /destroy' do
     it '指定されたブログを削除すること' do
       blog = Blog.new(title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum')
