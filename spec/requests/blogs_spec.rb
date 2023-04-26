@@ -82,16 +82,16 @@ RSpec.describe '/blogs', type: :request do
     context '有効なパラメータの場合' do
       it 'ブログが更新されること' do
         blog = FactoryBot.create(:blog)
-        patch blog_url(blog), params: { blog: { title: 'Demo Blog', category: 'other', content: 'Lorem ipsum2' } }
+        patch blog_url(blog), params: { blog: { title: 'Updated Blog', category: 'other', content: 'Lorem ipsum2' } }
         blog.reload
-        expect(blog.reload.title).to eq 'Demo Blog'
+        expect(blog.reload.title).to eq 'Updated Blog'
         expect(blog.reload.category).to eq 'other'
         expect(blog.reload.content).to eq 'Lorem ipsum2'
       end
 
       it 'ブログにリダイレクトすること' do
         blog = FactoryBot.create(:blog)
-        patch blog_url(blog), params: { blog: { title: 'Demo Blog', category: 'other', content: 'Lorem ipsum2' } }
+        patch blog_url(blog), params: { blog: { title: 'Updated Blog', category: 'other', content: 'Lorem ipsum2' } }
         blog.reload
         expect(response).to redirect_to(blog_url(blog))
       end
