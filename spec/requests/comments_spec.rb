@@ -31,29 +31,36 @@ RSpec.describe '/comments', type: :request do
       @blog = FactoryBot.create(:blog)
     end
 
-    context '有効な属性値が送信された場合' do
-      it 'コメントを新規作成する' do
+    context 'コメントの属性値が有効な場合' do
+      it 'コメントが作成されること' do
         expect {
           post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment) }
         }.to change(Comment, :count).by(1)
       end
 
-      it 'ブログページにリダイレクトする' do
+      it 'ブログ詳細ページにリダイレクトされること' do
         post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment) }
-        expect(response).to redirect_to(blog_path(@blog))
+        expect(response).to redirect_to(blog_url(@blog))
+
       end
     end
 
-    context '無効な属性値が送信された場合' do
-      it 'コメントを新規作成しない' do
+    context 'コメントの属性値が無効な場合' do
+      it '新規コメントページにリダイレクトされること' do
         expect {
           post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment, other_user_name: '') }
-        }.not_to change(Comment, :count)
+        }.to change(Comment, :count).by(0)
       end
 
-      it 'newテンプレートをレンダリングする' do
+      it "ブログの詳細ページにリダイレクトされること" do
         post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment, other_user_name: '') }
-        expect(response).to render_template(:new)
+        expect(response).to redirect_to(blog_url(@blog))
+
+      end
+
+      it 'エラーメッセージが表示されること' do
+        post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment, other_user_name: '') }
+        expect(flash[:notice]).to eq('Comment was not created.')
       end
     end
   end
