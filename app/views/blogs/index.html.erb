@@ -12,3 +12,8 @@
 </div>
 
 <%= link_to "New blog", new_blog_path %>
+
+<%= form_with(url: data_port_blogs_path, method: :post, local: true, multipart: true) do |f| %>
+  <%= f.file_field :import_file %>
+  <%= f.submit "Import" %>
+<% end %>
