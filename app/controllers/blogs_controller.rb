@@ -10,7 +10,8 @@ class BlogsController < ApplicationController
 
   # GET /blogs/1 or /blogs/1.json
   def show
-    @blog = set_blog
+    @comment = Comment.new
+    set_blog
   end
 
   # GET /blogs/new
