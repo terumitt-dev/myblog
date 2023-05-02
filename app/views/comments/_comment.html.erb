@@ -1,11 +1,6 @@
 <% @blog.comments.each do |comment| %>
   <div id="<%= dom_id comment %>">
     <p>
-      <strong>Blog:</strong>
-      <%= comment.blog_id %>
-    </p>
-
-    <p>
       <strong>Other user name:</strong>
       <%= comment.other_user_name %>
     </p>
