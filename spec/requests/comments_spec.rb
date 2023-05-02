@@ -27,9 +27,6 @@ RSpec.describe '/comments', type: :request do
   # end
 
   describe 'POST #create' do
-    # before do
-    #   @blog = FactoryBot.create(:blog)
-    # end
 
     let!(:blog) { FactoryBot.create(:blog) }
 
