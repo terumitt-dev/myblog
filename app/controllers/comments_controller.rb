@@ -19,7 +19,7 @@ class CommentsController < ApplicationController
   end
 
   private
-  
+
   def set_blog
     @blog = Blog.find(params[:blog_id])
   end

@@ -33,29 +33,27 @@ RSpec.describe '/comments', type: :request do
 
     context 'コメントの属性値が有効な場合' do
       it 'コメントが作成されること' do
-        expect {
+        expect do
           post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment) }
-        }.to change(Comment, :count).by(1)
+        end.to change(Comment, :count).by(1)
       end
 
       it 'ブログ詳細ページにリダイレクトされること' do
         post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment) }
         expect(response).to redirect_to(blog_url(@blog))
-
       end
     end
 
     context 'コメントの属性値が無効な場合' do
       it '新規コメントページにリダイレクトされること' do
-        expect {
+        expect do
           post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment, other_user_name: '') }
-        }.to change(Comment, :count).by(0)
+        end.to change(Comment, :count).by(0)
       end
 
-      it "ブログの詳細ページにリダイレクトされること" do
+      it 'ブログの詳細ページにリダイレクトされること' do
         post blog_comments_path(@blog), params: { comment: FactoryBot.attributes_for(:comment, other_user_name: '') }
         expect(response).to redirect_to(blog_url(@blog))
-
       end
 
       it 'エラーメッセージが表示されること' do
