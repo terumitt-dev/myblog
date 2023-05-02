@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require 'nokogiri'
+# require 'nokogiri'
 
 class BlogsController < ApplicationController
   before_action :set_blog, only: %i[show edit update destroy]
@@ -60,21 +60,27 @@ class BlogsController < ApplicationController
 
 
   def data_port
-    file = params[:file]
+    file = File.open(params[:file], 'r')
     content = file.read
 
-    title_regex = /^title:\s*(.*)$/m
-    body_regex = /^----\s*\r?\n(.*)\r?\n----/m
-
-    title = content.match(title_regex)[1]
-    body = content.match(body_regex)[1]
-
-    blog = Blog.new(title: title, content: body)
-
-    if blog.save
-      redirect_to blogs_path, notice: 'Blog was successfully imported.'
+    blog_regex = /^(TITLE:[^\n]+\nBODY:[^\n]+\n)+/m
+  
+    matches = content.scan(blog_regex)
+    blogs = matches.map do |match|
+      
+      title_regex = /^TITLE:\s*(.*)$/m
+      body_regex = /^BODY:\s*\r?\n(.*)$/m
+  
+      title = match.match(title_regex)[1]
+      body = match.match(body_regex)[1]
+  
+      Blog.new(title: title, content: body)
+    end
+  
+    if blogs.all?(&:save)
+      redirect_to blogs_path, notice: 'Blogs were successfully imported.'
     else
-      render :new
+      render :new, alert: 'Failed to import blog.'
     end
   end
 
