@@ -58,6 +58,27 @@ class BlogsController < ApplicationController
     end
   end
 
+
+  def data_port
+    file = params[:file]
+    content = file.read
+
+    title_regex = /^title:\s*(.*)$/m
+    body_regex = /^----\s*\r?\n(.*)\r?\n----/m
+
+    title = content.match(title_regex)[1]
+    body = content.match(body_regex)[1]
+
+    blog = Blog.new(title: title, content: body)
+
+    if blog.save
+      redirect_to blogs_path, notice: 'Blog was successfully imported.'
+    else
+      render :new
+    end
+  end
+
+
   private
 
   # Use callbacks to share common setup or constraints between actions.
