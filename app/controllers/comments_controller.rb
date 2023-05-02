@@ -7,12 +7,10 @@ class CommentsController < ApplicationController
   def create
     @comment = Comment.new(comment_params)
 
-    respond_to do |format|
-      if @comment.save
-        format.html { redirect_to blog_url(@blog), notice: 'Comment was successfully created.' }
-      else
-        format.html { redirect_to blog_url(@blog), notice: 'Comment was not created.' }
-      end
+    if @comment.save
+      redirect_to blog_url(@blog), notice: 'Comment was successfully created.'
+    else
+      redirect_to blog_url(@blog), notice: 'Comment was not created.'
     end
   end
 
