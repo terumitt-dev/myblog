@@ -4,7 +4,6 @@ require 'rails_helper'
 
 RSpec.describe Comment, type: :model do
   describe 'validations' do
-    
     let(:blog) { Blog.create(title: 'Test', category: :hobby, content: 'test content') }
 
     it 'other_user_nameがない場合は無効であること' do
