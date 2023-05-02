@@ -27,7 +27,6 @@ RSpec.describe '/comments', type: :request do
   # end
 
   describe 'POST #create' do
-
     let!(:blog) { FactoryBot.create(:blog) }
 
     context 'コメントの属性値が有効な場合' do
