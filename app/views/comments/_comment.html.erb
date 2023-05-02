@@ -1,8 +1,8 @@
 <% @blog.comments.each do |comment| %>
   <div id="<%= dom_id comment %>">
     <p>
-      <strong>Other user name:</strong>
-      <%= comment.other_user_name %>
+      <strong>User name:</strong>
+      <%= comment.user_name %>
     </p>
 
     <p>

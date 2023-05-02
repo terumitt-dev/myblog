@@ -2,5 +2,5 @@
 
 class Comment < ApplicationRecord
   belongs_to :blog
-  validates :other_user_name, presence: true
+  validates :user_name, presence: true
 end
