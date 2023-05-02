@@ -58,23 +58,6 @@ class BlogsController < ApplicationController
     end
   end
 
-
-  def data_port
-    file = params[:import_file]
-    doc = Nokogiri::HTML(file.read)
-    title = doc.search('title').text
-    content = doc.search('body').text
-
-    @blog = Blog.new(title: title, content: content)
-
-    if @blog.save
-      redirect_to blogs_path, notice: 'Blog was successfully created.'
-    else
-      render :new
-    end
-  end
-  
-
   private
 
   # Use callbacks to share common setup or constraints between actions.
