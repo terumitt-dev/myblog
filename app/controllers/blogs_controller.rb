@@ -32,7 +32,6 @@ class BlogsController < ApplicationController
     else
       render :new, status: :unprocessable_entity
     end
-
   end
 
   # PATCH/PUT /blogs/1 or /blogs/1.json

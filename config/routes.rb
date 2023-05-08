@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   namespace :admin do
     get 'home/index'
   end
-  
+
   resources :blogs do
     resources :comments
   end
