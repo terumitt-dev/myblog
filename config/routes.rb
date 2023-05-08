@@ -1,12 +1,6 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  devise_for :admins
-
-  namespace :admin do
-    get 'home/index'
-  end
-
   resources :blogs do
     resources :comments
   end
