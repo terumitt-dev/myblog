@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     collection do
       post :data_port
     end
+    resources :comments
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

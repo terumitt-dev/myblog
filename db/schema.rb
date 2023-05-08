@@ -12,7 +12,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
+<<<<<<< HEAD
 ActiveRecord::Schema[7.0].define(version: 20_230_424_013_937) do
+=======
+ActiveRecord::Schema[7.0].define(version: 2023_04_24_075414) do
+>>>>>>> main
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -23,4 +27,18 @@ ActiveRecord::Schema[7.0].define(version: 20_230_424_013_937) do
     t.text 'content', null: false
     t.integer 'category', null: false
   end
+<<<<<<< HEAD
+=======
+
+  create_table "comments", force: :cascade do |t|
+    t.bigint "blog_id", null: false
+    t.string "user_name", null: false
+    t.text "comment"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blog_id"], name: "index_comments_on_blog_id"
+  end
+
+  add_foreign_key "comments", "blogs"
+>>>>>>> main
 end
