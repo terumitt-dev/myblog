@@ -34,4 +34,14 @@ ActiveRecord::Schema[7.0].define(version: 2023_05_08_013956) do
     t.integer "category", null: false
   end
 
+  create_table "comments", force: :cascade do |t|
+    t.bigint "blog_id", null: false
+    t.string "user_name", null: false
+    t.text "comment"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blog_id"], name: "index_comments_on_blog_id"
+  end
+
+  add_foreign_key "comments", "blogs"
 end

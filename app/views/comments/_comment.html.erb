@@ -1,0 +1,14 @@
+<% @blog.comments.each do |comment| %>
+  <div id="<%= dom_id comment %>">
+    <p>
+      <strong>User name:</strong>
+      <%= comment.user_name %>
+    </p>
+
+    <p>
+      <strong>Comment:</strong>
+      <%= comment.comment %>
+    </p>
+
+  </div>
+<% end %>

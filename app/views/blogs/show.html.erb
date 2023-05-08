@@ -8,3 +8,7 @@
 
   <%= button_to "Destroy this blog", @blog, method: :delete %>
 </div>
+
+<%= render partial: 'comments/comment', locals: { comment: @comment, blog: @blog } %>
+
+<%= render partial: 'comments/form', locals: { comment: @comment, blog: @blog } %>
