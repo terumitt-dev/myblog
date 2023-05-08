@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     resources :comments
   end
   
+  devise_for :admins
   namespace :admin do
     get 'home/index'
   end 
