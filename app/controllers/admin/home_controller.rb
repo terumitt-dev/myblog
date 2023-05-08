@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
-class Admin::HomeController < ApplicationController
-  before_action :authenticate_admin!
+module Admin
+  class HomeController < ApplicationController
+    before_action :authenticate_admin!
 
-  def index
-    @blogs = Blog.all
+    def index
+      @blogs = Blog.all
+    end
   end
 end
