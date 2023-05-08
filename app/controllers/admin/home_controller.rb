@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Admin::HomeController < ApplicationController
+class HomeController < ApplicationController
   before_action :authenticate_admin!
 
   def index
