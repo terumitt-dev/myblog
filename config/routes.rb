@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  # get 'admins/index'
-  # devise_for :admins
 
   devise_for :admins
   namespace :admin do
-    resources :dashboard, only: [:index]
+    # get 'admins', to: 'admins#index'
+    resources :admins, only: [:index]
   end
 
   resources :blogs do
