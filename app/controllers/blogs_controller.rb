@@ -62,9 +62,4 @@ class BlogsController < ApplicationController
     params.require(:blog).permit(:title, :content, :category)
   end
 
-  def authenticate_admin!
-    unless current_admin
-      redirect_to root_path, alert: "You don't have permission to access this page"
-    end
-  end
 end
