@@ -4,9 +4,9 @@ Rails.application.routes.draw do
 
   devise_for :admins
   namespace :admin do
-    resources :admins, only: [:index]
+    resources :admins
   end
-
+  # resources :admins
   resources :blogs do
     resources :comments
   end
