@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  devise_for :admins
+  devise_for :admins, controllers: { registrations: 'admins/registrations' }, path: "admins"
 
   authenticated :admin do
     root to: 'admins#index', as: :admin_root
