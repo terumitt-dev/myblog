@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 class BlogsController < ApplicationController
-  before_action :set_blog, only: %i[show]
-  before_action :authenticate_admin!, only: %i[new, create, edit, update, destroy]
+  before_action :set_blog, only: %i[show edit update destroy]
 
   # GET /blogs or /blogs.json
   def index
@@ -60,5 +59,4 @@ class BlogsController < ApplicationController
   def blog_params
     params.require(:blog).permit(:title, :content, :category)
   end
-
 end

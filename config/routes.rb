@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-
   devise_for :admins
-  namespace :admin do
-    resources :admins
-  end
-  # resources :admins
+  resources :admins
+
   resources :blogs do
     resources :comments
   end
