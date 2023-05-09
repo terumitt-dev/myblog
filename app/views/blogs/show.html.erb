@@ -2,12 +2,17 @@
 
 <%= render @blog %>
 
-<div>
-  <%= link_to "Edit this blog", edit_blog_path(@blog) %> |
-  <%= link_to "Back to blogs", blogs_path %>
-
-  <%= button_to "Destroy this blog", @blog, method: :delete %>
-</div>
+<% if current_admin %>
+  <div class="admin">
+    <%= link_to "Edit this blog", edit_blog_path(@blog) %> |
+    <%= link_to "Back to blogs", admins_path %>
+    <%= button_to "Destroy this blog", @blog, method: :delete %>
+  </div>
+<% else %>
+  <div class="general_user">
+    <%= link_to "Back to blogs", blogs_path %>
+  </div>
+<% end %>
 
 <%= render partial: 'comments/comment', locals: { comment: @comment, blog: @blog } %>
 
