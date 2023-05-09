@@ -2,7 +2,11 @@
 
 Rails.application.routes.draw do
   devise_for :admins
-  resources :admins
+  # resources :admins
+
+  authenticated :admin do
+    root to: 'admins#index', as: :admin_root
+  end
 
   resources :blogs do
     resources :comments
