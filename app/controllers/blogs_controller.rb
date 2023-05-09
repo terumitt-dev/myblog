@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 class BlogsController < ApplicationController
-  before_action :set_blog, only: %i[show edit update destroy]
+  # before_action :set_blog, only: %i[show edit update destroy]
+  before_action :set_blog, only: %i[show]
+  before_action :authenticate_admin!, only: %i[new, create, edit, update, destroy]
 
   # GET /blogs or /blogs.json
   def index
@@ -58,5 +60,11 @@ class BlogsController < ApplicationController
   # Only allow a list of trusted parameters through.
   def blog_params
     params.require(:blog).permit(:title, :content, :category)
+  end
+
+  def authenticate_admin!
+    unless current_admin
+      redirect_to root_path, alert: "You don't have permission to access this page"
+    end
   end
 end
