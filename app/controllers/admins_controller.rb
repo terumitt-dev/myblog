@@ -7,5 +7,4 @@ class AdminsController < ApplicationController
     @blogs = Blog.all
     @blog = Blog.new
   end
-
 end
