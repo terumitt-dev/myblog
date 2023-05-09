@@ -5,9 +5,10 @@ Rails.application.routes.draw do
 
   authenticated :admin do
     root to: 'admins#index', as: :admin_root
+    resources :blogs
   end
 
-  resources :blogs do
+  resources :blogs, only: %i[index, show]do
     resources :comments
   end
 
