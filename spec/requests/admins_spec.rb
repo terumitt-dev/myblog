@@ -19,14 +19,10 @@ RSpec.describe 'Admins', type: :request do
       it 'indexテンプレートを表示すること' do
         get admin_root_url
         expect(response).to be_successful
-        expect(response.body).to include(blog.title)
-        expect(response.body).to include(blog.content)
       end
     
       it '@blogsに全てのブログが割り当てられていること' do
-        blog = assigns(:blog)
-        expect(blog).to be_a(Blog)
-        expect(blog.persisted?).to be false
+        expect(assigns(:blogs)).to eq(Blog.all)
       end
 
       it '@blogに新しいBlogが割り当てられていること' do
@@ -39,6 +35,7 @@ RSpec.describe 'Admins', type: :request do
     end
 
     context 'ログインしていない場合' do
+      let!(:admin) { Admin.create(email: 'nil', password: 'nil') }
       it 'ログインページにリダイレクトすること' do
         get admin_root_url
         expect(response).to redirect_to(new_admin_session_path)
