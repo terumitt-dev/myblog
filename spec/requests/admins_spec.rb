@@ -18,7 +18,8 @@ RSpec.describe 'Admins', type: :request do
         get admin_root_url
         expect(response).to be_successful
       end
-
+    end
+    
     context 'ログインしていない場合' do
       let(:admin) { build(:admin, email: nil, password: nil) }
       before do
