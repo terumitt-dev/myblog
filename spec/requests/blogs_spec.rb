@@ -18,18 +18,24 @@ RSpec.configure do |config|
   config.include Devise::Test::IntegrationHelpers, type: :request
 end
 
-RSpec.describe '/blogs', type: :request do
+RSpec.describe 'Blogs', type: :request do
   # This should return the minimal set of attributes required to create a valid
   # Blog. As you add validations to Blog, be sure to
   # adjust the attributes here as well.
 
-  describe 'GET /index' do
-    context '管理者ユーザーの場合' do
-      let!(:admin) { FactoryBot.create(:admin) }
-      before do
-        sign_in admin
-      end
+  context '管理者ユーザーの場合' do
+    let!(:admin) { FactoryBot.create(:admin) }
+    before do
+      sign_in admin
       
+      describe 'GET /index' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '投稿一覧のページが出力される' do
+          get blogs_url
+          expect(response).to be_successful
+        end
+      end
+
       describe 'GET /new' do
         let!(:blog) { FactoryBot.create(:blog) }
         it '新規投稿ページが出力される' do
@@ -118,10 +124,12 @@ RSpec.describe '/blogs', type: :request do
   end
 
   context '一般ユーザーの場合' do
-    let!(:blog) { FactoryBot.create(:blog) }
-        it '投稿一覧のページが出力される' do
-          get blogs_url
-          expect(response).to be_successful
+    describe 'GET /index' do
+      let!(:blog) { FactoryBot.create(:blog) }
+      it '投稿一覧のページが出力される' do
+        get blogs_url
+        expect(response).to be_successful
+      end
     end
 
     describe 'GET /show' do
