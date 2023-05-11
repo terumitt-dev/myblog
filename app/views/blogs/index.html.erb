@@ -2,11 +2,17 @@
 
 <h1>Blogs</h1>
 
-<div id="blogs">
-  <% @blogs.each do |blog| %>
-    <%= render blog %>
-    <br>
-  <% end %>
-</div>
+<% @blogs.each do |blog| %>
+  <div id="<%= dom_id blog %>">
+    <div class="output">
+      <strong>Title:</strong>
+      <%= link_to blog.title, blog %>
+    </div>
+    <div class="output">
+      <strong>Category:</strong>
+      <%= blog.category.to_s.humanize %>
+    </div>
+  </div>
+<% end %>
 
 <%= link_to "Login", new_admin_session_path %>
