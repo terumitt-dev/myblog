@@ -28,7 +28,6 @@ RSpec.describe 'Admins', type: :request do
         get admin_root_url
         expect(controller.instance_variable_get(:@blog)).to be_a_new(Blog)
       end
-
     end
 
     let!(:admin) { build(:admin, email: nil, password: nil) }
