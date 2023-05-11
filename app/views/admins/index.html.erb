@@ -3,11 +3,14 @@
 <h1>Admin</h1>
 
 <h2>Blogs</h2>
-<div id="blogs">
-  <% @blogs.each do |blog| %>
-    <%= render blog %>
-  <% end %>
-</div>
+<% @blogs.each do |blog| %>
+  <div id="<%= dom_id blog %>">
+    <div class="output">
+      <strong>Title:</strong>
+      <%= link_to blog.title, blog %>
+    </div>
+  </div>
+<% end %>
 
 <h2>New blog</h2>
 <div id="form">
