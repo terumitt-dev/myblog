@@ -17,8 +17,6 @@ RSpec.describe BlogsController, type: :routing do
       end
         
       it 'routes to #index' do
-        # authenticate admin
-        admin_signed_in?
         expect(get: '/blogs').to route_to('blogs#index')
       end
 
