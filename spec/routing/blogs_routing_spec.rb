@@ -6,7 +6,7 @@ RSpec.configure do |config|
   config.include Devise::Test::IntegrationHelpers, type: :routing
 end
 
-RSpec.describe BlogsController, type: :routing do
+RSpec.describe 'routes for blogs', type: :routing do
   describe 'routing' do
     context '管理者ユーザーの場合' do
       let!(:admin) { FactoryBot.create(:admin) }
