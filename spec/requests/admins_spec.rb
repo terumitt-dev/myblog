@@ -18,9 +18,20 @@ RSpec.describe 'Admins', type: :request do
         get admin_root_url
         expect(response).to be_successful
       end
+
+      it '@blogsにすべてのブログを割り当てること' do
+        get admin_root_url
+        expect(controller.instance_variable_get(:@blogs)).to eq(Blog.all)
+      end
+
+      it 'newアクションで@blogを割り当てること' do
+        get admin_root_url
+        expect(controller.instance_variable_get(:@blog)).to be_a_new(Blog)
+      end
+
     end
 
-    let(:admin) { build(:admin, email: nil, password: nil) }
+    let!(:admin) { build(:admin, email: nil, password: nil) }
     context 'ログイン情報が未入力の場合' do
       before do
         sign_in admin
