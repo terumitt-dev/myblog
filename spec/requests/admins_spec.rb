@@ -13,21 +13,21 @@ RSpec.describe 'Admins', type: :request do
       before do
         sign_in admin
       end
-      
+
       it 'indexテンプレートを表示する' do
         get admin_root_url
         expect(response).to be_successful
       end
     end
   end
-  
+
   describe '管理者以外のリクエスト' do
     let(:admin) { build(:admin, email: nil, password: nil) }
     context 'ログインしていない場合' do
       before do
         sign_in admin
       end
-  
+
       it 'ログインページに回帰する' do
         get new_admin_session_url
       end

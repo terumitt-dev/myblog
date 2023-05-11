@@ -27,4 +27,4 @@ RSpec.describe '管理者ページへのアクセスルート', type: :routing d
       end
     end
   end
-end   
+end
