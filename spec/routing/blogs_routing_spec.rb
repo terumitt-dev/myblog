@@ -45,9 +45,7 @@ RSpec.describe 'ブログへのアクセスルート', type: :routing do
       end
     end
   end
-end
 
-RSpec.describe 'ブログへのアクセスルート', type: :routing do
   let(:admin) { build(:admin, email: nil, password: nil) }
   context '一般ユーザーの場合' do
     before do
