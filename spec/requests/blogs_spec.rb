@@ -23,7 +23,7 @@ RSpec.describe 'Blogs', type: :request do
   # Blog. As you add validations to Blog, be sure to
   # adjust the attributes here as well.
 
-  describe 'admin_blogs_request' do
+  describe '管理者がブログ機能へのリクエスト' do
     let!(:admin) { FactoryBot.create(:admin) }
     context '管理者ユーザーの場合' do
       before do
@@ -125,7 +125,7 @@ RSpec.describe 'Blogs', type: :request do
     end
   end
 
-  describe 'general_user_blogs_request' do
+  describe '一般ユーザーのブログへのリクエスト' do
     context '一般ユーザーの場合' do
       describe 'GET /index' do
         let!(:blog) { FactoryBot.create(:blog) }

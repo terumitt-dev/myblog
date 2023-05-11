@@ -7,26 +7,30 @@ RSpec.configure do |config|
 end
 
 RSpec.describe 'Admins', type: :request do
-  context 'ログインしている場合' do
+  describe '管理者のリクエスト' do
     let!(:admin) { FactoryBot.create(:admin) }
-    before do
-      sign_in admin
-    end
-    
-    it 'indexテンプレートを表示する' do
-      get admin_root_url
-      expect(response).to be_successful
+    context 'ログインしている場合' do
+      before do
+        sign_in admin
+      end
+      
+      it 'indexテンプレートを表示する' do
+        get admin_root_url
+        expect(response).to be_successful
+      end
     end
   end
-    
-  context 'ログインしていない場合' do
+  
+  describe '管理者以外のリクエスト' do
     let(:admin) { build(:admin, email: nil, password: nil) }
-    before do
-      sign_in admin
-    end
-
-    it 'ログインページに回帰する' do
-      get new_admin_session_url
+    context 'ログインしていない場合' do
+      before do
+        sign_in admin
+      end
+  
+      it 'ログインページに回帰する' do
+        get new_admin_session_url
+      end
     end
   end
 end
