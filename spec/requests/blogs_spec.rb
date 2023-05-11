@@ -23,11 +23,13 @@ RSpec.describe 'Blogs', type: :request do
   # Blog. As you add validations to Blog, be sure to
   # adjust the attributes here as well.
 
-  context '管理者ユーザーの場合' do
+  describe 'admin_blogs_request' do
     let!(:admin) { FactoryBot.create(:admin) }
-    before do
-      sign_in admin
-      
+    context '管理者ユーザーの場合' do
+      before do
+        sign_in admin
+      end
+
       describe 'GET /index' do
         let!(:blog) { FactoryBot.create(:blog) }
         it '投稿一覧のページが出力される' do
@@ -123,20 +125,22 @@ RSpec.describe 'Blogs', type: :request do
     end
   end
 
-  context '一般ユーザーの場合' do
-    describe 'GET /index' do
-      let!(:blog) { FactoryBot.create(:blog) }
-      it '投稿一覧のページが出力される' do
-        get blogs_url
-        expect(response).to be_successful
+  describe 'general_user_blogs_request' do
+    context '一般ユーザーの場合' do
+      describe 'GET /index' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '投稿一覧のページが出力される' do
+          get blogs_url
+          expect(response).to be_successful
+        end
       end
-    end
-
-    describe 'GET /show' do
-      let!(:blog) { FactoryBot.create(:blog) }
-      it '投稿詳細ページが出力される' do
-        get blog_url(blog)
-        expect(response).to be_successful
+  
+      describe 'GET /show' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '投稿詳細ページが出力される' do
+          get blog_url(blog)
+          expect(response).to be_successful
+        end
       end
     end
   end
