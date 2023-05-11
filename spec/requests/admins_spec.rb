@@ -19,11 +19,9 @@ RSpec.describe 'Admins', type: :request do
         expect(response).to be_successful
       end
     end
-  end
 
-  describe '管理者以外のリクエスト' do
     let(:admin) { build(:admin, email: nil, password: nil) }
-    context 'ログインしていない場合' do
+    context 'ログイン情報が未入力の場合' do
       before do
         sign_in admin
       end

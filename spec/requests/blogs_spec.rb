@@ -125,9 +125,7 @@ RSpec.describe 'Blogs', type: :request do
         end
       end
     end
-  end
 
-  describe '一般ユーザーのブログへのリクエスト' do
     context '一般ユーザーの場合' do
       describe 'GET /index' do
         let!(:blog) { FactoryBot.create(:blog) }
