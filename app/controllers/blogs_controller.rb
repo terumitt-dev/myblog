@@ -49,14 +49,6 @@ class BlogsController < ApplicationController
     redirect_to blogs_url, notice: 'Blog was successfully destroyed.'
   end
 
-  def tweet
-    client = Rails.application.config.twitter_client
-    @blog = Blog.find(params[:id])
-    # client.update_with_media(@blog.title, open(@blog.image_url), @blog.url)
-    client.update_with_media(@blog.title, @blog.url)
-    redirect_to @blog, notice: 'Blog was successfully tweeted.'
-  end
-
   private
 
   # Use callbacks to share common setup or constraints between actions.
