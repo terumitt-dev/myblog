@@ -27,10 +27,11 @@ class BlogsController < ApplicationController
     @blog = Blog.new(blog_params)
 
     if @blog.save
-      client = Rails.application.config.twitter_client
+      # client = Rails.application.config.twitter_client
       # client.update_with_media(@blog.title, open(@blog.image_url), @blog.url)
       # client.update_with_media(@blog.title, @blog.url)
       client.update(@blog.title)
+      redirect_to blog_url(@blog), notice: 'Blog was successfully created and tweeted.'
     else
       render :new, status: :unprocessable_entity
     end
