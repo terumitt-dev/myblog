@@ -5,4 +5,14 @@ class Admin < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
+
+  validate :only_one_admin_allowed
+
+  private
+
+  def only_one_admin_allowed
+    if Admin.count >= 1
+      errors.add(:base, 'Only one admin allowed') 
+    end
+  end
 end
