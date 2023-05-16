@@ -1,0 +1,17 @@
+<div id="<%= dom_id blog %>">
+
+  <div class="output">
+    <strong>Title:</strong>
+    <%= blog.title %>
+  </div>
+
+  <div class="output">
+    <strong>Category:</strong>
+    <%= blog.category.to_s.humanize %>
+  </div>
+
+  <div class="output">
+    <strong>Content:</strong>
+    <%= blog.content %>
+  </div>
+</div>
