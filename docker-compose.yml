@@ -9,12 +9,12 @@ services:
     ports:
       - "5432:5432"
 
-  web:
+  back_end:
     build: .
     command: bash -c "rm -f tmp/pids/server.pid && bin/rails db:create && bin/rails db:migrate && bin/rails s -b 0.0.0.0 -p 3000"
     volumes:
-      - tmp:/myblog/tmp
-      - .:/myblog
+      - tmp:/back_end/tmp
+      - ./back_end:/back_end
     ports:
       - "3000:3000"
     depends_on:
