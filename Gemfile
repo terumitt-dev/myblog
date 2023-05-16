@@ -52,7 +52,7 @@ gem 'bootsnap', require: false
 # devise certification
 gem 'devise'
 
- # .env
+# .env
 gem 'dotenv-rails'
 
 group :development, :test do
