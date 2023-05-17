@@ -3,7 +3,7 @@
 <h1>Blogs</h1>
 
 <div id="blogs">
-  <% @blogs.each do |blog| %>
+  <% @blogs.take(3).each do |blog| %>
     <%= render blog %>
     <p>
       <%= link_to "Show this blog", blog %>
