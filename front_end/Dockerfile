@@ -1,12 +1,6 @@
-FROM node:14-alpine
+FROM node:16-alpine
 
-WORKDIR /app
+WORKDIR /front_end
 
-COPY package.json yarn.lock ./
-RUN yarn install
-
-COPY . .
-
-RUN yarn build
-
-CMD ["yarn", "start"]
+COPY package.json package-lock.json ./
+RUN npm install
