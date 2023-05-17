@@ -1,5 +1,7 @@
 //= link_tree ../images
-//= link_directory ../stylesheets .css
+// = link_directory ../stylesheets/ .css
+//= link_directory ../stylesheets/blogs .css
+//= link_directory ../stylesheets/comments .css
+//= link_directory ../stylesheets/layouts .css
 //= link_tree ../../javascript .js
 //= link_tree ../../../vendor/javascript .js
-//= link layouts/application.css
