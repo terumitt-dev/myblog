@@ -13,3 +13,15 @@
  *= require_tree .
  *= require_self
  */
+
+body {
+  background-color: rgba(214, 73, 222, 0.504);
+}
+
+.green-text {
+  color: rgba(41, 241, 65, 0.798);
+}
+
+.red-text {
+  color: rgb(255, 0, 0);
+}

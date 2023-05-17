@@ -1,6 +1,6 @@
 <%= form_with(model: [blog, comment]) do |form| %>
   <% if comment.errors.any? %>
-    <div style="color: red">
+    <div class="red-text">
       <h2><%= pluralize(comment.errors.count, "error") %> prohibited this comment from being saved:</h2>
 
       <ul>
