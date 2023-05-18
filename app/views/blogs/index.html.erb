@@ -1,17 +1,20 @@
 <p class="green-text"><%= notice %></p>
 
 <div class="top">
-  <h1 class="title">Blogs_name</h1> 
+  <h1 class="blog_title">Blogs_name</h1> 
     <%= image_tag("/default_images/coming_soon.png", alt: "Top image") %>
 </div>
 
 <div class="blog_contents">
-  <% @blogs.take(3).each do |blog| %>
-    <%= render blog %>
-    <div class="link">
-      <%= link_to "Show this blog", blog %>
+  <h2 class="contents_title">blog_contents</h2>
+    <% @blogs.take(3).each do |blog| %>
+    <div class="blog_content">
+      <%= render blog %>
+      <div class="link">
+        <%= link_to "Show this blog", blog %>
+      </div>
     </div>
-  <% end %>
+    <% end %>
 </div>
 
 <%# ここの記述は削除予定 %>
