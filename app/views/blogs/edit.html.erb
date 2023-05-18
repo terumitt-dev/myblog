@@ -1,10 +1,8 @@
-<h1>Editing blog</h1>
+<div class="edit_content">
+  <%= render "form", blog: @blog %>
+</div>
 
-<%= render "form", blog: @blog %>
-
-<br>
-
-<div>
+<div class="link">
   <%= link_to "Show this blog", @blog %> |
   <%= link_to "Back to blogs", blogs_path %>
 </div>
