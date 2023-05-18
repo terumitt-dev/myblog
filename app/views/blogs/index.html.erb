@@ -1,7 +1,7 @@
 <p class="green-text"><%= notice %></p>
 
 <div class="top">
-  <h1>Blogs_name</h1> 
+  <h1 class="title">Blogs_name</h1> 
     <%= image_tag("/default_images/coming_soon.png", alt: "Top image") %>
 </div>
 
@@ -14,6 +14,7 @@
   <% end %>
 </div>
 
+<%# ここの記述は削除予定 %>
 <div class="link">
-<%= link_to "New blog", new_blog_path %>
+  <%= link_to "New blog", new_blog_path %>
 </div>
