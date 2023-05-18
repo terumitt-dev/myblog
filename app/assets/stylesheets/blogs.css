@@ -1,0 +1,38 @@
+/* index */
+.top img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.title {
+  position: absolute;
+  top: 130px;
+  left: 0;
+  width: 100%;
+  height: auto;
+  text-align: center;
+  color: blue;
+}
+
+.blog_contents {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.blog_contents h2 {
+  position: absolute;
+}
+
+.blog_content {
+  width: 20%;
+  margin: 0 2.5%;
+}
+
+/* new */
+
+/* show */
+
+/* edit */
