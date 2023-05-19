@@ -21,16 +21,19 @@
   justify-content: space-between;
   flex-wrap: wrap;
   margin: 2.5%;
+  margin-bottom: 0;
 }
 
 .contents {
   width: 80%;
+  background-color: aliceblue;
 }
 
 .blogs_content {
   display: flex;
-  margin: 0 2.5%;
+  margin: 0 2.5% 2.5%;
   flex-wrap: wrap;
+  background-color: rgb(250, 250, 250);
 }
 
 .contents_title {
@@ -66,6 +69,7 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
+  margin: 2.5%;
 }
 
 /* new */
