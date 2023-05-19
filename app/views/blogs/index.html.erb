@@ -5,12 +5,12 @@
     <%= image_tag("/default_images/coming_soon.png", alt: "Top image") %>
 </div>
 
-<div class="contents">
-  <div class="blog_contents">
+<div class="blog_contents">
+  <div class="contents">
     <h2 class="contents_title">blog_contents</h2>
-    <% @blogs.order(created_at: :desc).limit(3).each do |blog| %>
-      <div class="blog_content">
-        <div id="<%= dom_id blog %>">
+    <div class="blog_content">
+      <% @blogs.order(created_at: :desc).limit(3).each do |blog| %>
+        <div class="blog" id="<%= dom_id blog %>">
           <div class="title_output">
             <strong>タイトル:</strong>
             <%= link_to blog.title, blog %>
@@ -20,8 +20,8 @@
             <%= blog.category.to_s.humanize %>
           </div>
         </div>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
   </div>
 
   <div class="admin_link">

@@ -16,18 +16,29 @@
   color: blue;
 }
 
-.contents {
+.blog_contents {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-}
-
-.blog_contents {
-  width: 80%;
+  margin: 2.5%;
+  height: 100%;
 }
 
 .blog_content {
   display: flex;
+  margin: 0 2.5%;
+}
+
+.contents {
+  width: 80%;
+}
+
+.contents_title {
+  text-align: center;
+}
+
+.blog {
+  width: 30%;
   margin: 0 2.5%;
 }
 
