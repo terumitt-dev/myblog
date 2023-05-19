@@ -6,7 +6,7 @@
   height: auto;
 }
 
-.title {
+.blog_title {
   position: absolute;
   top: 130px;
   left: 0;
@@ -16,19 +16,27 @@
   color: blue;
 }
 
-.blog_contents {
+.contents {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
 
-.blog_contents h2 {
-  position: absolute;
+.blog_contents {
+  width: 80%;
 }
 
 .blog_content {
-  width: 20%;
+  display: flex;
   margin: 0 2.5%;
+}
+
+.category_output {
+  font-size: small;
+}
+
+.admin_link {
+  width: 20%;
 }
 
 /* new */

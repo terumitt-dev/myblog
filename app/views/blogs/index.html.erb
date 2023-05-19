@@ -5,26 +5,30 @@
     <%= image_tag("/default_images/coming_soon.png", alt: "Top image") %>
 </div>
 
-<div class="blog_contents">
-  <h2 class="contents_title">blog_contents</h2>
-  <% @blogs.each do |blog| %>
-    <div class="blog_content">
-      <div id="<%= dom_id blog %>">
-        <div class="output">
-          <strong>Title:</strong>
-          <%= link_to blog.title, blog %>
-        </div>
-        <div class="output">
-          <strong>Category:</strong>
-          <%= blog.category.to_s.humanize %>
+<div class="contents">
+  <div class="blog_contents">
+    <h2 class="contents_title">blog_contents</h2>
+    <% @blogs.order(created_at: :desc).limit(3).each do |blog| %>
+      <div class="blog_content">
+        <div id="<%= dom_id blog %>">
+          <div class="title_output">
+            <strong>タイトル:</strong>
+            <%= link_to blog.title, blog %>
+          </div>
+          <div class="category_output">
+            <strong>カテゴリー:</strong>
+            <%= blog.category.to_s.humanize %>
+          </div>
         </div>
       </div>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
+
+  <div class="admin_link">
+    <%= link_to "Login", new_admin_session_path %>
+
+    <% if Admin.count.zero? %>
+      <%= link_to "Signup", new_admin_registration_path %>
+    <% end %>
+  </div>
 </div>
-
-<%= link_to "Login", new_admin_session_path %>
-
-<% if Admin.count.zero? %>
-  <%= link_to "Signup", new_admin_registration_path %>
-<% end %>
