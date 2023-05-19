@@ -26,11 +26,13 @@
     </div>
   </div>
 
-  <div class="admin_link">
-    <%= link_to "Login", new_admin_session_path %>
+  <div class="admin">
+    <div class="login_or_signup">
+      <%= link_to "Login", new_admin_session_path %>
 
-    <% if Admin.count.zero? %>
-      <%= link_to "Signup", new_admin_registration_path %>
-    <% end %>
+      <% if Admin.count.zero? %>
+        <%= link_to "Signup", new_admin_registration_path %>
+      <% end %>
+    </div>
   </div>
 </div>
