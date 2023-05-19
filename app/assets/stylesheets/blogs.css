@@ -50,6 +50,9 @@
 
 .category_output {
   font-size: small;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .admin {
