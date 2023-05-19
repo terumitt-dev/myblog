@@ -8,18 +8,20 @@
 <div class="blog_contents">
   <div class="contents">
     <h2 class="contents_title">blog_contents</h2>
-    <div class="blog_content">
-      <% @blogs.order(created_at: :desc).limit(3).each do |blog| %>
-        <div class="blog" id="<%= dom_id blog %>">
-          <div class="title_output">
-            <strong>タイトル:</strong>
-            <%= link_to blog.title, blog %>
+    <div class="blogs_content">
+      <% @blogs.order(created_at: :desc).each_slice(3) do |blogs| %>
+        <% blogs.each do |blog| %>
+          <div class="blog">
+            <div class="title_output">
+              <strong>タイトル:</strong>
+              <%= link_to blog.title, blog %>
+            </div>
+            <div class="category_output">
+              <strong>カテゴリー:</strong>
+              <%= blog.category.to_s.humanize %>
+            </div>
           </div>
-          <div class="category_output">
-            <strong>カテゴリー:</strong>
-            <%= blog.category.to_s.humanize %>
-          </div>
-        </div>
+        <% end %>
       <% end %>
     </div>
   </div>

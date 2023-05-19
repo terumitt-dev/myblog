@@ -21,16 +21,16 @@
   justify-content: space-between;
   flex-wrap: wrap;
   margin: 2.5%;
-  height: 100%;
-}
-
-.blog_content {
-  display: flex;
-  margin: 0 2.5%;
 }
 
 .contents {
   width: 80%;
+}
+
+.blogs_content {
+  display: flex;
+  margin: 0 2.5%;
+  flex-wrap: wrap;
 }
 
 .contents_title {
@@ -38,8 +38,8 @@
 }
 
 .blog {
-  width: 30%;
-  margin: 0 2.5%;
+  width: 20%;
+  margin: 2.5%;
 }
 
 .category_output {
