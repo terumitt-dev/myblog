@@ -14,109 +14,134 @@ require 'rails_helper'
 # of tools you can use to make these specs even more expressive, but we're
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
-RSpec.describe '/blogs', type: :request do
+RSpec.configure do |config|
+  config.include Devise::Test::IntegrationHelpers, type: :request
+end
+
+RSpec.describe 'Blogs', type: :request do
   # This should return the minimal set of attributes required to create a valid
   # Blog. As you add validations to Blog, be sure to
   # adjust the attributes here as well.
 
-  describe 'GET /index' do
-    let!(:blog) { FactoryBot.create(:blog) }
-    it '投稿一覧のページが出力される' do
-      get blogs_url
-      expect(response).to be_successful
-    end
-  end
-
-  describe 'GET /show' do
-    let!(:blog) { FactoryBot.create(:blog) }
-    it '投稿詳細ページが出力される' do
-      get blog_url(blog)
-      expect(response).to be_successful
-    end
-  end
-
-  describe 'GET /new' do
-    let!(:blog) { FactoryBot.create(:blog) }
-    it '新規投稿ページが出力される' do
-      get new_blog_url
-      expect(response).to be_successful
-    end
-  end
-
-  describe 'GET /edit' do
-    let!(:blog) { FactoryBot.create(:blog) }
-    it '投稿の編集ページが出力される' do
-      get edit_blog_url(blog)
-      expect(response).to be_successful
-    end
-  end
-
-  describe 'POST /create' do
-    let!(:blog) { FactoryBot.create(:blog) }
-    context '正しいパラメータが渡された場合' do
-      it '新しい投稿が作成される' do
-        expect do
-          post blogs_url, params: { blog: { title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum' } }
-        end.to change(Blog, :count).by(1)
+  describe '管理者がブログ機能へのリクエスト' do
+    let!(:admin) { FactoryBot.create(:admin) }
+    context '管理者ユーザーの場合' do
+      before do
+        sign_in admin
       end
 
-      it '作成された投稿のページにリダイレクトされる' do
-        post blogs_url, params: { blog: { title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum' } }
-        expect(response).to redirect_to(blog_url(Blog.last))
+      describe 'GET /index' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '投稿一覧のページが出力される' do
+          get blogs_url
+          expect(response).to be_successful
+        end
+      end
+
+      describe 'GET /new' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '新規投稿ページが出力される' do
+          get new_blog_url
+          expect(response).to be_successful
+        end
+      end
+
+      describe 'GET /edit' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '投稿の編集ページが出力される' do
+          get edit_blog_url(blog)
+          expect(response).to be_successful
+        end
+      end
+
+      describe 'POST /create' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        context '正しいパラメータが渡された場合' do
+          it '新しい投稿が作成される' do
+            expect do
+              post blogs_url, params: { blog: { title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum' } }
+            end.to change(Blog, :count).by(1)
+          end
+
+          it '作成された投稿のページにリダイレクトされる' do
+            post blogs_url, params: { blog: { title: 'Test Blog', category: 'hobby', content: 'Lorem ipsum' } }
+            expect(response).to redirect_to(blog_url(Blog.last))
+          end
+        end
+
+        context '無効なパラメータが渡された場合' do
+          it '新しい投稿が作成されない' do
+            expect do
+              post blogs_url, params: { blog: { title: '', category: 'hobby', content: 'Lorem ipsum' } }
+            end.to change(Blog, :count).by(0)
+          end
+
+          it '422エラーを返すこと (つまり、newテンプレートを表示すること)' do
+            post blogs_url, params: { blog: { title: '', category: 'hobby', content: 'Lorem ipsum' } }
+            expect(response).to have_http_status(:unprocessable_entity)
+          end
+        end
+      end
+
+      describe 'PATCH /update' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        context '有効なパラメータの場合' do
+          it 'ブログが更新されること' do
+            patch blog_url(blog),
+                  params: { blog: { title: 'Updated Blog', category: 'other', content: 'Lorem ipsum2' } }
+            blog.reload
+            expect(blog.reload.title).to eq 'Updated Blog'
+            expect(blog.reload.category).to eq 'other'
+            expect(blog.reload.content).to eq 'Lorem ipsum2'
+          end
+
+          it 'ブログにリダイレクトすること' do
+            patch blog_url(blog),
+                  params: { blog: { title: 'Updated Blog', category: 'other', content: 'Lorem ipsum2' } }
+            blog.reload
+            expect(response).to redirect_to(blog_url(blog))
+          end
+        end
+
+        context '無効なパラメータの場合' do
+          it '422ステータスを返すこと（すなわち、編集テンプレートを表示すること）' do
+            patch blog_url(blog), params: { blog: { title: '', category: 'other', content: 'Lorem ipsum' } }
+            expect(response).to have_http_status(:unprocessable_entity)
+          end
+        end
+      end
+
+      describe 'DELETE /destroy' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '指定されたブログを削除すること' do
+          expect do
+            delete blog_url(blog)
+          end.to change(Blog, :count).by(-1)
+        end
+
+        it 'ブログ一覧にリダイレクトすること' do
+          delete blog_url(blog)
+          expect(response).to redirect_to(admin_root_url)
+        end
       end
     end
 
-    context '無効なパラメータが渡された場合' do
-      it '新しい投稿が作成されない' do
-        expect do
-          post blogs_url, params: { blog: { title: '', category: 'hobby', content: 'Lorem ipsum' } }
-        end.to change(Blog, :count).by(0)
+    context '一般ユーザーの場合' do
+      describe 'GET /index' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '投稿一覧のページが出力される' do
+          get blogs_url
+          expect(response).to be_successful
+        end
       end
 
-      it '422エラーを返すこと (つまり、newテンプレートを表示すること)' do
-        post blogs_url, params: { blog: { title: '', category: 'hobby', content: 'Lorem ipsum' } }
-        expect(response).to have_http_status(:unprocessable_entity)
+      describe 'GET /show' do
+        let!(:blog) { FactoryBot.create(:blog) }
+        it '投稿詳細ページが出力される' do
+          get blog_url(blog)
+          expect(response).to be_successful
+        end
       end
-    end
-  end
-
-  describe 'PATCH /update' do
-    let!(:blog) { FactoryBot.create(:blog) }
-    context '有効なパラメータの場合' do
-      it 'ブログが更新されること' do
-        patch blog_url(blog), params: { blog: { title: 'Updated Blog', category: 'other', content: 'Lorem ipsum2' } }
-        blog.reload
-        expect(blog.reload.title).to eq 'Updated Blog'
-        expect(blog.reload.category).to eq 'other'
-        expect(blog.reload.content).to eq 'Lorem ipsum2'
-      end
-
-      it 'ブログにリダイレクトすること' do
-        patch blog_url(blog), params: { blog: { title: 'Updated Blog', category: 'other', content: 'Lorem ipsum2' } }
-        blog.reload
-        expect(response).to redirect_to(blog_url(blog))
-      end
-    end
-
-    context '無効なパラメータの場合' do
-      it '422ステータスを返すこと（すなわち、編集テンプレートを表示すること）' do
-        patch blog_url(blog), params: { blog: { title: '', category: 'other', content: 'Lorem ipsum' } }
-        expect(response).to have_http_status(:unprocessable_entity)
-      end
-    end
-  end
-
-  describe 'DELETE /destroy' do
-    let!(:blog) { FactoryBot.create(:blog) }
-    it '指定されたブログを削除すること' do
-      expect do
-        delete blog_url(blog)
-      end.to change(Blog, :count).by(-1)
-    end
-
-    it 'ブログ一覧にリダイレクトすること' do
-      delete blog_url(blog)
-      expect(response).to redirect_to(blogs_url)
     end
   end
 end

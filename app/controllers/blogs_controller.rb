@@ -35,7 +35,6 @@ class BlogsController < ApplicationController
     else
       render :new, status: :unprocessable_entity
     end
-
   end
 
   # PATCH/PUT /blogs/1 or /blogs/1.json
@@ -50,7 +49,7 @@ class BlogsController < ApplicationController
   # DELETE /blogs/1 or /blogs/1.json
   def destroy
     @blog.destroy
-    redirect_to blogs_url, notice: 'Blog was successfully destroyed.'
+    redirect_to admin_root_url, notice: 'Blog was successfully destroyed.'
   end
 
   private
