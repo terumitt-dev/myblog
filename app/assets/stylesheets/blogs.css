@@ -125,9 +125,9 @@
   text-align: center;
 }
 
-.edit_content input text {
+/* .edit_content input text {
   width: 50%;
-}
+} */
 
 .edit_content textarea {
   width: 100%;

@@ -13,11 +13,11 @@
         <% blogs.each do |blog| %>
           <div class="blog">
             <div class="title_output">
-              <strong>タイトル:</strong>
+              <strong>Title:</strong>
               <%= link_to blog.title, blog %>
             </div>
             <div class="category_output">
-              <strong>カテゴリー:</strong>
+              <strong>Category:</strong>
               <%= blog.category.to_s.humanize %>
             </div>
           </div>

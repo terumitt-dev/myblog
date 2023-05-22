@@ -1,0 +1,38 @@
+/* index */
+.top {
+  text-align: center;
+}
+
+.admin_contents {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 2.5%;
+  margin-bottom: 0;
+}
+
+.admin_content {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.new_blogs_form {
+  width: 50%;
+  padding: 1.5%;
+  background-color: rgb(255, 240, 255);
+}
+
+.admin_contents_title {
+  text-align: center;
+  margin-top: 0;
+}
+
+.blogs_index {
+  width: 40%;
+  padding: 1.5%;
+  background-color: rgb(250, 250, 250);
+}
+
+
