@@ -95,7 +95,6 @@
   width: 100%;
   height: 30px;
   margin-bottom: 1.5%;
-  
 }
 
 .comment_from textarea {
@@ -109,4 +108,20 @@
   padding: 1.5%;
   background-color: rgb(250, 250, 250);
   margin-bottom: 0;
+}
+
+/* edit */
+.edit_content {
+  margin: 2%;
+  padding: 2.5%;
+  background-color: rgb(255, 240, 255);
+}
+
+.edit_content input text {
+  width: 50%;
+}
+
+.edit_content textarea {
+  width: 100%;
+  height: 300px;
 }
