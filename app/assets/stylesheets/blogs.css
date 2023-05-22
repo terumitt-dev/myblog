@@ -72,8 +72,28 @@
   margin: 2.5%;
 }
 
-/* new */
-
 /* show */
+.show_blog {
+  /* width: 100%; */
+  display: flex;
+  justify-content: space-between;
+  margin: 2.5%;
+  margin-bottom: 0;
+}
 
-/* edit */
+.show_content {
+  width: 50%;
+}
+
+.comment_from {
+  
+}
+
+/* .action_link {
+  float: right;
+} */
+
+.comments {
+  width: 50%;
+  margin-left: 2.5%;
+}
