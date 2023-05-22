@@ -110,11 +110,19 @@
   margin-bottom: 0;
 }
 
+.blog_edit_title {
+  text-align: center;
+}
+
 /* edit */
 .edit_content {
   margin: 2%;
   padding: 2.5%;
   background-color: rgb(255, 240, 255);
+}
+
+.comments_title {
+  text-align: center;
 }
 
 .edit_content input text {
