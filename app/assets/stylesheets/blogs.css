@@ -74,7 +74,6 @@
 
 /* show */
 .show_blog {
-  /* width: 100%; */
   display: flex;
   justify-content: space-between;
   margin: 2.5%;
@@ -86,14 +85,23 @@
 }
 
 .comment_from {
-  
+  margin-top: 3.5%;
 }
 
-/* .action_link {
-  float: right;
-} */
+.comment_from input {
+  width: 100%;
+  height: 30px;
+}
+
+.comment_from textarea {
+  width: 100%;
+  height: 150px;
+}
 
 .comments {
   width: 50%;
   margin-left: 2.5%;
+  padding: 1.5%;
+  background-color: rgb(250, 250, 250);
+  margin-bottom: 0;
 }
