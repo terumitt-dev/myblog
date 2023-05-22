@@ -86,11 +86,16 @@
 
 .comment_from {
   margin-top: 3.5%;
+  background-color: rgb(215, 244, 250);
+  padding: 3.5%;
+  padding-top: 1.5%;
 }
 
 .comment_from input {
   width: 100%;
   height: 30px;
+  margin-bottom: 1.5%;
+  
 }
 
 .comment_from textarea {
