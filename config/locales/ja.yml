@@ -1,1 +1,13 @@
 ja:
+  admin:
+    index:
+  blogs:
+    edit:
+    index:
+    new:
+    show:
+  comments:
+    edit:
+    index:
+    new:
+    show:
