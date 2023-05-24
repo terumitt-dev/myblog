@@ -1,13 +1,65 @@
 ja:
-  admin:
-    index:
-  blogs:
-    edit:
-    index:
-    new:
-    show:
-  comments:
-    edit:
-    index:
-    new:
-    show:
+  activerecord:
+    models:
+      blog: ブログ
+      comment: コメント
+    attributes:
+      blog:
+        title: タイトル：
+        category: カテゴリー：
+        content: 内容：
+      comment:
+        user_name: 名前
+        comment: コメント：
+  views:
+    common:
+      admins:
+        admin_title: "%{name}ページ"
+        logout: "%{name}ログアウト"
+    
+      blogs:
+        blog_name: "ブログタイトル（未定）"
+        login: "%{name}ログイン"
+        sign_up: "%{name}サインアップ"
+        index: "%{name}一覧"
+        new: "%{name}記事の新規作成"
+        edit: "投稿内容の編集"
+        admin_back: "%{name}に戻る"
+        blog_back: "%{name}一覧に戻る"
+        blog_edit: "この%{name}記事を編集"
+        blog_destroy: "この%{name}記事を削除"
+
+  controllers:
+    common:
+      blogs:
+        notice_create: "%{name}が作成されました。"
+        notice_update: "%{name}が更新されました。"
+        notice_destroy: "%{name}が削除されました。"
+
+  helpers:
+    blogs:
+      submit:
+        create: 投稿する
+        update: 更新する
+    comments:
+      submit:
+        create: コメントする
+  
+  # admin:
+  #   index:
+  # blogs:
+  #   edit:
+  #   index:
+  #     blogs_name: ブログタイトル（考え中（トップ画像も作成中））
+  #     blog_contents: ブログ一覧
+  #     title: タイトル：
+  #     category: カテゴリー：
+  #     login: ログイン
+  #     sign_up: サインアップ
+  #   new:
+  #   show:
+  # comments:
+  #   edit:
+  #   index:
+  #   new:
+  #   show:
