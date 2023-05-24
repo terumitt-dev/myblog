@@ -15,7 +15,7 @@
       <h2 class="admin_contents_title">blogs_index</h2>
       <% @blogs.each do |blog| %>
         <div id="<%= dom_id blog %>">
-          <div class="output">
+          <div class="title_output">
             <strong>Title:</strong>
             <%= link_to blog.title, blog %>
           </div>
@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <div class="admin">
+  <div class="session">
     <div class="logout">
       <%= button_to "Logout", destroy_admin_session_path, method: :delete %>
     </div>
