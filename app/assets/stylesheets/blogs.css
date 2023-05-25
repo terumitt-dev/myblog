@@ -60,12 +60,14 @@
 
 .admin {
   width: 20%;
+  font-size: small;
   text-align: center;
   position: relative;
 }
 
 .login_or_signup {
   position: absolute;
+  width: 100%;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);

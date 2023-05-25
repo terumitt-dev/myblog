@@ -28,11 +28,14 @@
 
   <div class="admin">
     <div class="login_or_signup">
-      <%= link_to t('views.common.blogs.login', name: Admin.model_name.human.downcase), new_admin_session_path %>
-
-      <% if Admin.count.zero? %>
-        <%= link_to t('views.common.blogs.sign_up', name: Admin.model_name.human.downcase), new_admin_registration_path %>
-      <% end %>
+      <div class="login">
+        <%= link_to t('views.common.blogs.login', name: Admin.model_name.human.downcase), new_admin_session_path %>
+      </div>
+      <div class="signup">
+        <% if Admin.count.zero? %>
+          <%= link_to t('views.common.blogs.sign_up', name: Admin.model_name.human.downcase), new_admin_registration_path %>
+        <% end %>
+      </div>
     </div>
   </div>
 </div>
