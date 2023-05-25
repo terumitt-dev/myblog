@@ -40,3 +40,8 @@ ja:
     submit:
       create: 記録する
       update: 更新する 
+
+  shared:
+    links:
+      back: 戻る
+      forgot_your_password: パスワードを忘れましたか？
