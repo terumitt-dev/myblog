@@ -84,9 +84,13 @@
 
 .show_content {
   width: 50%;
+  overflow: hidden;
 }
 
 .output {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: normal;
 }
 
 .comment_from {
