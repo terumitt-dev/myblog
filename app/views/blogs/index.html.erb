@@ -29,7 +29,9 @@
   <div class="admin">
     <div class="login_or_signup">
       <div class="login">
-        <%= link_to t('views.common.blogs.login', name: Admin.model_name.human.downcase), new_admin_session_path %>
+        <% if admin_signed_in? %>
+          <%= link_to t('views.common.blogs.login', name: Admin.model_name.human.downcase), new_admin_session_path %>
+        <% end %>
       </div>
       <div class="signup">
         <% if Admin.count.zero? %>
