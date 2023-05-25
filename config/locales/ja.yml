@@ -11,6 +11,7 @@ ja:
       comment:
         user_name: 名前
         comment: コメント：
+
   views:
     common:
       admins:
