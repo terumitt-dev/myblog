@@ -86,6 +86,9 @@
   width: 50%;
 }
 
+.output {
+}
+
 .comment_from {
   margin-top: 3.5%;
   background-color: rgb(215, 244, 250);
@@ -126,10 +129,6 @@
 .comments_title {
   text-align: center;
 }
-
-/* .edit_content input text {
-  width: 50%;
-} */
 
 .edit_content textarea {
   width: 100%;

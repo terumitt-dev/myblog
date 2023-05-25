@@ -24,7 +24,7 @@ ja:
         index: "%{name}一覧"
         new: "%{name}記事の新規作成"
         edit: "投稿内容の編集"
-        admin_back: "%{name}に戻る"
+        admin_back: "%{name}ページに戻る"
         blog_back: "%{name}一覧に戻る"
         blog_edit: "この%{name}記事を編集"
         blog_destroy: "この%{name}記事を削除"
@@ -37,11 +37,11 @@ ja:
         notice_destroy: "%{name}が削除されました。"
 
   helpers:
-    blogs:
+    blog_helper:
       submit:
         create: 投稿する
         update: 更新する
-    comments:
+    comment_helper:
       submit:
         create: コメントする
   
