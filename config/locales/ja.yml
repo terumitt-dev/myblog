@@ -37,29 +37,6 @@ ja:
         notice_destroy: "%{name}が削除されました。"
 
   helpers:
-    blog_helper:
-      submit:
-        create: 投稿する
-        update: 更新する
-    comment_helper:
-      submit:
-        create: コメントする
-  
-  # admin:
-  #   index:
-  # blogs:
-  #   edit:
-  #   index:
-  #     blogs_name: ブログタイトル（考え中（トップ画像も作成中））
-  #     blog_contents: ブログ一覧
-  #     title: タイトル：
-  #     category: カテゴリー：
-  #     login: ログイン
-  #     sign_up: サインアップ
-  #   new:
-  #   show:
-  # comments:
-  #   edit:
-  #   index:
-  #   new:
-  #   show:
+    submit:
+      create: 記録する
+      update: 更新する 
