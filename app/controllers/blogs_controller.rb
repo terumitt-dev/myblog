@@ -27,7 +27,7 @@ class BlogsController < ApplicationController
     @blog = Blog.new(blog_params)
 
     if @blog.save
-      redirect_to blog_url(@blog), notice: 'Blog was successfully created.'
+      redirect_to blog_url(@blog), notice: t('controllers.common.notice_create', name: Blog.model_name.human)
     else
       render :new, status: :unprocessable_entity
     end
@@ -36,7 +36,7 @@ class BlogsController < ApplicationController
   # PATCH/PUT /blogs/1 or /blogs/1.json
   def update
     if @blog.update(blog_params)
-      redirect_to blog_url(@blog), notice: 'Blog was successfully updated.'
+      redirect_to blog_url(@blog), notice: t('controllers.common.notice_update', name: Blog.model_name.human)
     else
       render :edit, status: :unprocessable_entity
     end
@@ -45,7 +45,7 @@ class BlogsController < ApplicationController
   # DELETE /blogs/1 or /blogs/1.json
   def destroy
     @blog.destroy
-    redirect_to admin_root_url, notice: 'Blog was successfully destroyed.'
+    redirect_to admin_root_url, notice: t('controllers.common.notice_destroy', name: Blog.model_name.human)
   end
 
   private
