@@ -27,10 +27,7 @@ class BlogsController < ApplicationController
     @blog = Blog.new(blog_params)
 
     if @blog.save
-      # client = Rails.application.config.twitter_client
-      # client.update_with_media(@blog.title, open(@blog.image_url), @blog.url)
-      # client.update_with_media(@blog.title, @blog.url)
-      client.update(@blog.title)
+      tweet(@blog.title)
       redirect_to blog_url(@blog), notice: 'Blog was successfully created and tweeted.'
     else
       render :new, status: :unprocessable_entity
@@ -63,4 +60,16 @@ class BlogsController < ApplicationController
   def blog_params
     params.require(:blog).permit(:title, :content, :category)
   end
+
+  # Twitter
+  def tweet(title)
+    client = Twitter::Client.new {
+      config.consumer_key = Rails.application.credentials.twitter[:consumer_key],
+      config.consumer_secret = Rails.application.credentials.twitter[:consumer_secret],
+      config.access_token = Rails.application.credentials.twitter[:access_token],
+      config.access_token_secret = Rails.application.credentials.twitter[:access_token_secret],
+    }
+    client.post('statuses/update', { status: "New blog post: #{title}" })
+  end
+
 end
