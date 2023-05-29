@@ -1,16 +1,12 @@
 document.addEventListener("DOMContentLoaded", function() {
-  const noticeElement = document.querySelector(".green-text");
-  const alertElement = document.querySelector(".red-text");
+  const noticeElement = document.getElementById("notice");
+  const alertElement = document.getElementById("alert");
 
-  if (noticeElement) {
+  if (noticeElement.innerHTML.trim() === "" || alertElement.innerHTML.trim() === "") {
     setTimeout(function() {
       noticeElement.style.display = "none";
-    }, 5000);
-  }
-
-  if (alertElement) {
-    setTimeout(function() {
       alertElement.style.display = "none";
+      location.reload();
     }, 5000);
   }
 });
