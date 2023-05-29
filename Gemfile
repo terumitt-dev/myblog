@@ -52,11 +52,11 @@ gem 'bootsnap', require: false
 # devise certification
 gem 'devise'
 
-# envfile
-gem 'dotenv-rails'
+# envfile railsのcredentialsを使うため使用しない
+# gem 'dotenv-rails'
 
-# twitter
-gem 'twitter'
+# twitter Twitter v2に対応してないみたい
+# gem 'twitter'
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

@@ -63,13 +63,14 @@ class BlogsController < ApplicationController
 
   # Twitter
   def tweet(title)
-    client = Twitter::Client.new {
-      config.consumer_key = Rails.application.credentials.twitter[:consumer_key],
-      config.consumer_secret = Rails.application.credentials.twitter[:consumer_secret],
-      config.access_token = Rails.application.credentials.twitter[:access_token],
-      config.access_token_secret = Rails.application.credentials.twitter[:access_token_secret],
-    }
-    client.post('statuses/update', { status: "New blog post: #{title}" })
+    client = Twitter::REST::Client.new do |config|
+      config.consumer_key        = Rails.application.credentials.twitter[:consumer_key]
+      config.consumer_secret     = Rails.application.credentials.twitter[:consumer_secret]
+      config.access_token        = Rails.application.credentials.twitter[:access_token]
+      config.access_token_secret = Rails.application.credentials.twitter[:access_token_secret]
+    end
+  
+    client.update("New blog post: #{title}")
   end
 
 end
