@@ -12,12 +12,8 @@
   </head>
 
   <body>
-    <div id="notice" class="green-text">
-      <%= flash[:notice] %>
-    </div>
-    <div id="alert" class="red-text">
-      <%= flash[:alert] %>
-    </div>
+    <p id="notice" class="green-text"><%= flash[:notice] %></p>
+    <p id="alert" class="red-text"><%= flash[:alert] %></p>
     <%= yield %>
   </body>
 </html>
