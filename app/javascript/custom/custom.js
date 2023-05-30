@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function() {
   const noticeElement = document.getElementById("notice");
   const alertElement = document.getElementById("alert");
 
-  if (noticeElement.innerHTML.trim() == null && alertElement.innerHTML.trim() == null ) {
+  if (noticeElement.innerHTML.trim() === null && alertElement.innerHTML.trim() === null) {
     return;
   }
 
