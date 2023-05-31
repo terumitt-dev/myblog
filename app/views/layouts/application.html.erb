@@ -12,8 +12,10 @@
   </head>
 
   <body>
-    <p id="notice" class="green-text"><%= flash[:notice] %></p>
-    <p id="alert" class="red-text"><%= flash[:alert] %></p>
+    <%# ここから %>
+    <p id="notice" class="green-text" data-notice="<%= flash[:notice] %>"><%= flash[:notice] %></p>
+    <p id="alert" class="red-text" data-alert="<%= flash[:alert] %>"><%= flash[:alert] %></p>
+    <%# ここについては作業保留 %>
     <%= yield %>
   </body>
 </html>
