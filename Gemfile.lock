@@ -233,6 +233,7 @@ GEM
 PLATFORMS
   aarch64-linux
   arm64-darwin-21
+  arm64-darwin-22
 
 DEPENDENCIES
   bootsnap
@@ -241,7 +242,6 @@ DEPENDENCIES
   factory_bot_rails
   importmap-rails
   jbuilder
-  nokogiri
   pg
   puma (~> 5.0)
   rails (~> 7.0.4, >= 7.0.4.3)
