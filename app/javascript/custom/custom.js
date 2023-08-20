@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const noticeMessage = element.getAttribute("data-notice");
     const alertMessage = element.getAttribute("data-alert");
 
-    if ((noticeMessage && noticeMessage.trim() !== "") || (alertMessage && alertMessage.trim() !== "")) {
+    if ((noticeMessage !== null && noticeMessage.trim() !== "") || (alertMessage !== null && alertMessage.trim() !== "")) {
       element.style.opacity = "1";
 
       setTimeout(function() {
