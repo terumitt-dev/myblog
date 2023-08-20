@@ -20,10 +20,10 @@ body {
   height: 100%;
 }
 
-.green-text {
+.notice {
   color: rgb(0, 211, 7);
 }
 
-.red-text {
+.alert {
   color: rgb(255, 0, 0);
 }

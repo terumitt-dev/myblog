@@ -1,16 +1,17 @@
 document.addEventListener("DOMContentLoaded", function() {
-  const noticeElement = document.getElementById("notice").dataset.notice;
-  const alertElement = document.getElementById("alert").dataset.alert;
+  const elements = document.querySelectorAll(".notice, .alert");
 
-  if (noticeElement.textContent.trim() !== "" || alertElement.textContent.trim() !== "") {
-    noticeElement.style.opacity = "1";
-    alertElement.style.opacity = "1";
+  elements.forEach(function(element) {
+    const noticeMessage = element.getAttribute("data-notice");
+    const alertMessage = element.getAttribute("data-alert");
 
-    setTimeout(function() {
-      noticeElement.style.transition = "opacity 3s";
-      alertElement.style.transition = "opacity 3s";
-      noticeElement.style.opacity = "0";
-      alertElement.style.opacity = "0";
-    }, 2000);
-  }
+    if ((noticeMessage && noticeMessage.trim() !== "") || (alertMessage && alertMessage.trim() !== "")) {
+      element.style.opacity = "1";
+
+      setTimeout(function() {
+        element.style.transition = "opacity 3s";
+        element.style.opacity = "0";
+      }, 2000);
+    }
+  });
 });
