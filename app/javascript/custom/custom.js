@@ -1,17 +1,27 @@
 document.addEventListener("DOMContentLoaded", function() {
-  const elements = document.querySelectorAll(".notice, .alert");
+  const noticeElements = document.querySelectorAll(".notice");
+  const alertElements = document.querySelectorAll(".alert");
 
-  elements.forEach(function(element) {
-    const noticeMessage = element.getAttribute("data-notice");
-    const alertMessage = element.getAttribute("data-alert");
+  console.log("noticeElements:", noticeElements);
+  console.log("alertElements:", alertElements);
 
-    if ((noticeMessage !== null && noticeMessage.trim() !== "") || (alertMessage !== null && alertMessage.trim() !== "")) {
-      element.style.opacity = "1";
+  noticeElements.forEach(function(noticeElement) {
+    const noticeMessage = noticeElement.textContent.trim();
+    console.log("noticeMessage:", noticeMessage);
 
-      setTimeout(function() {
-        element.style.transition = "opacity 3s";
-        element.style.opacity = "0";
-      }, 2000);
-    }
+    setTimeout(function() {
+      noticeElement.style.transition = "opacity 3s";
+      noticeElement.style.opacity = "0";
+    }, 2000);
+  });
+
+  alertElements.forEach(function(alertElement) {
+    const alertMessage = alertElement.textContent.trim();
+    console.log("alertMessage:", alertMessage);
+
+    setTimeout(function() {
+      alertElement.style.transition = "opacity 3s";
+      alertElement.style.opacity = "0";
+    }, 2000);
   });
 });
