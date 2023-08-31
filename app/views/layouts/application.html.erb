@@ -12,8 +12,8 @@
   </head>
 
   <body>
-    <div class="notice" data-notice="<%= flash[:notice] %>"><%= flash[:notice] %></div>
-    <div class="alert" data-alert="<%= flash[:alert] %>"><%= flash[:alert] %></div>
+    <div class="notice"><%= flash[:notice] %>.to_s</div>
+    <div class="alert"><%= flash[:alert] %>.to_s</div>
     <%= yield %>
   </body>
 </html>
