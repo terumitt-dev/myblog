@@ -12,8 +12,12 @@
   </head>
 
   <body>
-    <div class="notice"><span><%= flash[:notice] %></span></div>
-    <div class="alert"><span><%= flash[:alert] %></span></div>
+    <div class="notice"><%= flash[:notice] %></div>
+    <div class="alert"><%= flash[:alert] %></div>
+<!--     <div class="notice" data-notice="<%= flash[:notice] %>"><%= flash[:notice] %></div>
+    <div class="alert" data-alert="<%= flash[:alert] %>"><%= flash[:alert] %></div> -->
+<!--     <div class="notice">"正"</div>
+    <div class="alert">"誤"</div> -->
     <%= yield %>
   </body>
 </html>
