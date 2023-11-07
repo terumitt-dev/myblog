@@ -1,19 +1,25 @@
 const noticeElements = document.getElementsByClassName("notice");
 const alertElements = document.getElementsByClassName("alert");
-
 console.log(noticeElements);
 console.log(alertElements);
 
-function fadeout() {
-  noticeElements[0].style.opacity = 1;
-  noticeElements[0].style.transition = "opacity 3s linear";
-  noticeElements[0].style.opacity = 0;
-  noticeElements[0].style.display = "none";
-
-  alertElements[0].style.opacity = 1;
-  alertElements[0].style.transition = "opacity 3s linear";
-  alertElements[0].style.opacity = 0;
-  alertElements[0].style.display = "none";
+if (noticeElements[0] === null && alertElements[0] === null) {
+  modalDialog.style.display = "none";
 }
 
-setTimeout(fadeout, 5000);
+const modalDialog = document.querySelector(".modal_dialog");
+console.log(modalDialog);
+
+modalDialog.style.display = "block";
+
+if (noticeElements[0]) {
+  modalDialog.appendChild(noticeElements[0]);
+}
+
+if (alertElements[0]) {
+  modalDialog.appendChild(alertElements[0]);
+}
+
+modalDialog.querySelector(".close_button").addEventListener("click", () => {
+  modalDialog.style.display = "none";
+});
