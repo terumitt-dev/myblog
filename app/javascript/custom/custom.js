@@ -3,23 +3,30 @@ const alertElements = document.getElementsByClassName("alert");
 console.log(noticeElements);
 console.log(alertElements);
 
-if (noticeElements[0] === null && alertElements[0] === null) {
-  modalDialog.style.display = "none";
+function showMessage(message) {
+  // ポップアップの要素を作成
+  const popup = document.createElement("div");
+  popup.classList.add("popup");
+  popup.textContent = message;
+
+  // ポップアップを表示
+  document.body.appendChild(popup);
+
+  // ポップアップを閉じるボタンを作成
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "閉じる";
+  popup.appendChild(closeButton);
+
+  // ポップアップを閉じるイベントを追加
+  closeButton.addEventListener("click", () => {
+    popup.remove();
+  });
 }
 
-const modalDialog = document.querySelector(".modal_dialog");
-console.log(modalDialog);
-
-modalDialog.style.display = "block";
-
-if (noticeElements[0]) {
-  modalDialog.appendChild(noticeElements[0]);
+if (noticeElements.textContent !== "") {
+  showMessage(noticeElements.textContent);
 }
 
-if (alertElements[0]) {
-  modalDialog.appendChild(alertElements[0]);
+if (alertElements.textContent !== "") {
+  showMessage(alertElements.textContent);
 }
-
-modalDialog.querySelector(".close_button").addEventListener("click", () => {
-  modalDialog.style.display = "none";
-});
