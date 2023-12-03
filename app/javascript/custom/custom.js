@@ -3,30 +3,21 @@ const alertElements = document.getElementsByClassName("alert");
 console.log(noticeElements);
 console.log(alertElements);
 
-function showMessage(message) {
-  // ポップアップの要素を作成
-  const popup = document.createElement("div");
-  popup.classList.add("popup");
-  popup.textContent = message;
 
-  // ポップアップを表示
-  document.body.appendChild(popup);
+setTimeout(() => {
+  noticeElements[0].style.display = "block";
+  alertElements[0].style.display = "block";
+}, 5000);
 
-  // ポップアップを閉じるボタンを作成
-  const closeButton = document.createElement("button");
-  closeButton.textContent = "閉じる";
-  popup.appendChild(closeButton);
+// フラッシュメッセージを15秒かけてフェードアウトする
+setTimeout(() => {
+  noticeElements[0].style.opacity = 1;
+  noticeElements[0].style.transition = "opacity 15s linear";
+  noticeElements[0].style.opacity = 0;
+  noticeElements[0].style.display = "none";
 
-  // ポップアップを閉じるイベントを追加
-  closeButton.addEventListener("click", () => {
-    popup.remove();
-  });
-}
-
-if (noticeElements.textContent !== "") {
-  showMessage(noticeElements.textContent);
-}
-
-if (alertElements.textContent !== "") {
-  showMessage(alertElements.textContent);
-}
+  alertElements[0].style.opacity = 1;
+  alertElements[0].style.transition = "opacity 15s linear";
+  alertElements[0].style.opacity = 0;
+  alertElements[0].style.display = "none";
+}, 10000);
