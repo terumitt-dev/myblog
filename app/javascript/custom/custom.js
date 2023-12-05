@@ -1,7 +1,12 @@
-const noticeElements = document.getElementsByClassName("notice");
-const alertElements = document.getElementsByClassName("alert");
+let noticeElements = document.getElementsByClassName("notice");
+let alertElements = document.getElementsByClassName("alert");
 console.log(noticeElements);
 console.log(alertElements);
+
+function resetElements() {
+  noticeElements = [];
+  alertElements = [];
+}
 
 setTimeout(() => {
   noticeElements[0].style.display = "block";
@@ -18,4 +23,6 @@ setTimeout(() => {
   alertElements[0].style.transition = "opacity 15s linear";
   alertElements[0].style.opacity = 0;
   alertElements[0].style.display = "none";
+
+  resetElements();
 }, 10000);
