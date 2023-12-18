@@ -27,3 +27,80 @@ body {
 .alert {
   color: rgb(255, 0, 0);
 }
+
+
+/*テスト記述*/
+#opener {
+  position: relative;
+  top: 50vh;
+  left: 50%;
+  display: block;
+  width: 200px;
+  padding: 1rem 0;
+  font-weight: bold;
+  border: 1px solid #fefefe;
+  border-radius: 1.5rem;
+  background-color: #fefefe;
+  transform: translate(-50%, -50%);
+  transition: background-color 0.3s;
+  letter-spacing: .1em;
+  
+  &:hover {
+    cursor: pointer;
+    color: #fefefe;
+    background-color: transparent;
+  }
+}
+
+#dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.2);
+  backdrop-filter: blur(3px);
+  z-index: 1;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.3s, opacity 0.3s;
+    
+  &.inview {
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+.dialog-window {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 240px;
+  padding: 2rem;
+  text-align: center;
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%);
+  background-color: #fff;
+  z-index: 1;
+}
+
+#closer {
+  margin-top: 1rem;
+  width: 100px;
+  padding: 1rem 0;
+  color: #fff;
+  border: 1px solid #222;
+  background-color: #222;
+  border-radius: 1.5rem;
+  transition: color 0.3s, background-color 0.3s;
+  letter-spacing: .1em;
+  
+  &:hover {
+    color: #222;
+    background-color: transparent;
+    cursor: pointer;
+  }
+}
+/*テスト記述*/
