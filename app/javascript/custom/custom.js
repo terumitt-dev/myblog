@@ -1,28 +1,17 @@
-let noticeElements = document.getElementsByClassName("notice");
-let alertElements = document.getElementsByClassName("alert");
-console.log(noticeElements);
-console.log(alertElements);
+let dialog = document.getElementById("dialog");
+let closer = document.getElementById("closer");
 
-function resetElements() {
-  noticeElements = [];
-  alertElements = [];
+// フラッシュメッセージを取得できれば問題が解決する
+let notice = document.getElementById("notice");
+let alert = document.getElementById("alert");
+
+console.log(notice);
+console.log(alert);
+
+if (notice.textContent || alert.textContent) {
+  dialog.classList.add("inview");
 }
 
-setTimeout(() => {
-  noticeElements[0].style.display = "block";
-  alertElements[0].style.display = "block";
-}, 5000);
-
-setTimeout(() => {
-  noticeElements[0].style.opacity = 1;
-  noticeElements[0].style.transition = "opacity 15s linear";
-  noticeElements[0].style.opacity = 0;
-  noticeElements[0].style.display = "none";
-
-  alertElements[0].style.opacity = 1;
-  alertElements[0].style.transition = "opacity 15s linear";
-  alertElements[0].style.opacity = 0;
-  alertElements[0].style.display = "none";
-
-  resetElements();
-}, 10000);
+closer.addEventListener("click", () => {
+  dialog.classList.remove("inview");
+}, false);
