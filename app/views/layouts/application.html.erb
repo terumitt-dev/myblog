@@ -12,20 +12,15 @@
   </head>
 
   <body>
-    <div class="flash-message-container">
-      <%= flash[:notice] %>
-      <%= flash[:alert] %>
+<%# <テスト記述> %>
+    <div id="dialog">
+      <div class="dialog-window">
+        <div id="notice"><%= flash[:notice] %></div>
+        <div id="alert"><%= flash[:alert] %></div>
+        <button id="closer">CLOSE</button>
+      </div>
     </div>
-    <%= yield %>
 <%# <テスト記述> %>
-    <%# <div id="dialog"> %>
-      <%# <div class="dialog-window"> %>
-        <%# <p>Hello,Dialog!</p> %>
-        <%# <div id="notice"><%= flash[:notice] %></div> %>
-        <%# <div id="alert"><%= flash[:alert] %></div> %>
-        <%# <button id="closer">CLOSE</button> %>
-      <%# </div> %>
-    <%# </div> %>
-<%# <テスト記述> %>
+  <%= yield %>
   </body>
 </html>
