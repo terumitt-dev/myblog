@@ -28,29 +28,6 @@ body {
   color: rgb(255, 0, 0);
 }
 
-/*テスト記述*/
-#opener {
-  position: relative;
-  top: 50vh;
-  left: 50%;
-  display: block;
-  width: 200px;
-  padding: 1rem 0;
-  font-weight: bold;
-  border: 1px solid #fefefe;
-  border-radius: 1.5rem;
-  background-color: #fefefe;
-  transform: translate(-50%, -50%);
-  transition: background-color 0.3s;
-  letter-spacing: .1em;
-  
-  &:hover {
-    cursor: pointer;
-    color: #fefefe;
-    background-color: transparent;
-  }
-}
-
 #dialog {
   position: fixed;
   top: 0;
@@ -74,7 +51,7 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 240px;
+  width: 300px;
   padding: 2rem;
   text-align: center;
   border: none;
@@ -102,4 +79,3 @@ body {
     cursor: pointer;
   }
 }
-/*テスト記述*/
