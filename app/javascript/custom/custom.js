@@ -1,17 +1,36 @@
-let dialog = document.getElementById("dialog");
-let closer = document.getElementById("closer");
+document.addEventListener("turbo:load", () => {
+  let dialog = document.getElementById("dialog");
+  let noticeElement = document.getElementById("notice");
+  let closer = document.getElementById("closer");
 
-// フラッシュメッセージを取得できれば問題が解決する
-let notice = document.getElementById("notice");
-let alert = document.getElementById("alert");
+  if (!dialog || !noticeElement || !closer) return;
 
-console.log(notice);
-console.log(alert);
+  let noticeText = noticeElement.textContent.trim();
+  if (noticeText) {
+    setTimeout(() => {
+      dialog.classList.add("inview");
+    }, 1000);
+  }
 
-if (notice.textContent || alert.textContent) {
-  dialog.classList.add("inview");
+  closer.addEventListener("click", closeDialog);
+  setTimeout(closeDialog, 5000);
+});
+
+document.addEventListener("turbo:submit-end", () => {
+  setTimeout(() => {
+    let dialog = document.getElementById("dialog");
+    let alertElement = document.getElementById("alert");
+
+    if (!dialog || !alertElement) return;
+
+    let alertText = alertElement.textContent.trim();
+    if (alertText) {
+      dialog.classList.add("inview");
+      setTimeout(closeDialog, 5000);
+    }
+  }, 50);
+});
+
+function closeDialog() {
+  document.getElementById("dialog")?.classList.remove("inview");
 }
-
-closer.addEventListener("click", () => {
-  dialog.classList.remove("inview");
-}, false);

@@ -3,5 +3,3 @@ import "@hotwired/turbo-rails"
 import "controllers"
 
 // import "./custom/custom";
-// テスト記述
-import "./custom/custom_test";
