@@ -1,7 +1,7 @@
 document.addEventListener("turbo:load", () => {
-  let dialog = document.getElementById("dialog");
-  let noticeElement = document.getElementById("notice");
-  let closer = document.getElementById("closer");
+  const dialog = document.getElementById("dialog");
+  const noticeElement = document.getElementById("notice");
+  const closer = document.getElementById("closer");
 
   if (!dialog || !noticeElement || !closer) return;
 
