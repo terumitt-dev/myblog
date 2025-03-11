@@ -7,10 +7,18 @@
     <%= csp_meta_tag %>
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    
     <%= javascript_importmap_tags %>
   </head>
 
   <body>
-    <%= yield %>
+    <div id="dialog">
+      <div class="dialog-window">
+        <div id="notice"><%= flash[:notice] %></div>
+        <div id="alert"><%= flash[:alert] %></div>
+        <button id="closer">CLOSE</button>
+      </div>
+    </div>
+  <%= yield %>
   </body>
 </html>

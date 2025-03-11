@@ -8,9 +8,9 @@ class CommentsController < ApplicationController
     @comment = Comment.new(comment_params)
 
     if @comment.save
-      redirect_to blog_url(@blog), notice: 'Comment was successfully created.'
+      redirect_to blog_url(@blog), notice: t('controllers.common.notice_create', name: Comment.model_name.human)
     else
-      redirect_to blog_url(@blog), notice: 'Comment was not created.'
+      redirect_to blog_url(@blog), alert: t('controllers.common.alert_create', name: Comment.model_name.human)
     end
   end
 

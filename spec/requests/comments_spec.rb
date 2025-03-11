@@ -56,7 +56,7 @@ RSpec.describe '/comments', type: :request do
 
       it 'エラーメッセージが表示されること' do
         post blog_comments_path(blog), params: { comment: FactoryBot.attributes_for(:comment, user_name: '') }
-        expect(flash[:notice]).to eq('Comment was not created.')
+        expect(flash[:alert]).to eq('コメントが作成できませんでした。')
       end
     end
   end

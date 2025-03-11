@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   devise_for :admins
 
   authenticated :admin do
-    root to: 'admins#index', as: :admin_root
+    get 'admin', to: 'admins#index', as: :admin_root
     resources :blogs
   end
 

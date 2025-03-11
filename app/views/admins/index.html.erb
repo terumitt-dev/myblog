@@ -1,20 +1,30 @@
-<p style="color: green"><%= notice %></p>
-
-<h1>Admin</h1>
-
-<h2>Blogs</h2>
-<% @blogs.each do |blog| %>
-  <div id="<%= dom_id blog %>">
-    <div class="output">
-      <strong>Title:</strong>
-      <%= link_to blog.title, blog %>
-    </div>
-  </div>
-<% end %>
-
-<h2>New blog</h2>
-<div id="form">
-  <%= render "blogs/form", blog: @blog %>
+<div class="top">
+  <h1 class="admin_title"><%= t('views.common.admins.admin_title', name: Admin.model_name.human) %></h1>
 </div>
 
-<%= button_to "Logout", destroy_admin_session_path, method: :delete %>
+<div class="admin_contents">
+  <div class="admin_content">
+    <div class="new_blogs_form">
+      <h2 class="admin_contents_title"><%= t('views.common.blogs.new', name: Blog.model_name.human) %></h2>
+      <%= render "blogs/form", blog: @blog %>
+    </div>
+
+    <div class="blogs_index">
+      <h2 class="admin_contents_title"><%= t('views.common.blogs.index', name: Blog.model_name.human) %></h2>
+      <% @blogs.each do |blog| %>
+        <div id="<%= dom_id blog %>">
+          <div class="title_output">
+            <strong>Title:</strong>
+            <%= link_to blog.title, blog %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="session">
+    <div class="logout">
+      <%= button_to t('views.common.admins.logout', name: Admin.model_name.human.downcase), destroy_admin_session_path, method: :delete %>
+    </div>
+  </div>
+</div>

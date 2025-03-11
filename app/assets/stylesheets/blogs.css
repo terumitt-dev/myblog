@@ -1,0 +1,140 @@
+/* index */
+.top img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.blog_title {
+  position: absolute;
+  top: 130px;
+  left: 0;
+  width: 100%;
+  height: auto;
+  text-align: center;
+  color: blue;
+}
+
+.blog_contents {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 2.5%;
+  margin-bottom: 0;
+}
+
+.contents {
+  width: 80%;
+  background-color: aliceblue;
+}
+
+.blogs_content {
+  display: flex;
+  margin: 0 2.5% 2.5%;
+  flex-wrap: wrap;
+  background-color: rgb(250, 250, 250);
+}
+
+.contents_title {
+  text-align: center;
+}
+
+.blog {
+  width: 20%;
+  margin: 2.5%;
+}
+
+.title_output {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.category_output {
+  font-size: small;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.admin {
+  width: 20%;
+  font-size: small;
+  text-align: center;
+  position: relative;
+}
+
+.login_or_signup {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 2.5%;
+}
+
+/* show */
+.show_blog {
+  display: flex;
+  justify-content: space-between;
+  margin: 2.5%;
+  margin-bottom: 0;
+}
+
+.show_content {
+  width: 50%;
+  overflow: hidden;
+}
+
+.output {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.comment_from {
+  margin-top: 3.5%;
+  background-color: rgb(215, 244, 250);
+  padding: 3.5%;
+  padding-top: 1.5%;
+}
+
+.comment_from input {
+  width: 100%;
+  height: 30px;
+  margin-bottom: 1.5%;
+}
+
+.comment_from textarea {
+  width: 100%;
+  height: 300px;
+}
+
+.comments {
+  width: 50%;
+  margin-left: 2.5%;
+  padding: 1.5%;
+  background-color: rgb(250, 250, 250);
+  margin-bottom: 0;
+}
+
+.blog_edit_title {
+  text-align: center;
+}
+
+/* edit */
+.edit_content {
+  margin: 2%;
+  padding: 2.5%;
+  background-color: rgb(255, 240, 255);
+}
+
+.comments_title {
+  text-align: center;
+}
+
+.edit_content textarea {
+  width: 100%;
+  height: 300px;
+}
