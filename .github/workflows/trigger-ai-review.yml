@@ -23,10 +23,20 @@ jobs:
         id: check
         run: |
           COMMENTER=${{ github.event.comment.user.login }}
-          TEAM_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/orgs/terumitt-dev/teams/ai-reviewers/members | jq -r '.[].login')
 
-          if echo "$TEAM_MEMBERS" | grep -q "^$COMMENTER$"; then
+          # GitHub APIを叩く
+          TEAM_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            https://api.github.com/orgs/terumitt-dev/teams/ai-reviewers/members)
+
+          # レスポンスの中身を表示（ログで確認用）
+          echo "=== GitHub API Response ==="
+          echo "$TEAM_MEMBERS"
+
+          # ログイン名だけ抽出
+          LOGINS=$(echo "$TEAM_MEMBERS" | jq -r '.[].login')
+
+          # 一致するか判定
+          if echo "$LOGINS" | grep -q "^$COMMENTER$"; then
             echo "allowed=true" >> "$GITHUB_OUTPUT"
           else
             echo "allowed=false" >> "$GITHUB_OUTPUT"
