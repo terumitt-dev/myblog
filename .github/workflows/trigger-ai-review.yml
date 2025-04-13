@@ -25,7 +25,7 @@ jobs:
           COMMENTER=${{ github.event.comment.user.login }}
 
           # GitHub APIを叩く
-          TEAM_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.ORG_TOKEN }}" \
+          TEAM_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.TEAM_PAT }}" \
             https://api.github.com/orgs/terumitt-dev/teams/ai-reviewers/members)
 
           # レスポンスの中身を表示（ログで確認用）
