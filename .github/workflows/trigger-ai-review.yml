@@ -4,6 +4,10 @@ on:
   issue_comment:
     types: [created]
 
+permissions:
+  contents: read
+  workflows: read  # ※workflow再利用に必要
+
 jobs:
   check-team-member:
     if: github.event.comment.body == 'AIレビュー'
@@ -30,12 +34,8 @@ jobs:
   ai-review:
     needs: check-team-member
     if: needs.check-team-member.outputs.allowed == 'true'
-    uses: your-org/github_actions_ci-cd/.github/workflows/reusable-ci.yml@main
+    uses: terumitt-dev/github_actions_ci-cd/.github/workflows/reusable-ci.yml@main
     with:
       pr_number: ${{ github.event.issue.number }}
     secrets:
       OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-
-permissions:
-  contents: read
-  workflows: read
