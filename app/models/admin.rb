@@ -6,7 +6,7 @@ class Admin < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  validate :only_one_admin_allowed
+  validate :only_one_admin_allowed, on: :create
 
   private
 
