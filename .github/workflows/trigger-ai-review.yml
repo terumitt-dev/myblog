@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: read
-  workflows: read  # ※workflow再利用に必要
 
 jobs:
   check-team-member:
