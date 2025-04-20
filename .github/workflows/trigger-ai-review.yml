@@ -11,7 +11,10 @@ permissions:
 
 jobs:
   check-team-member:
-    if: github.event.comment.body == 'AIレビュー'
+    if: |
+      github.event.comment.body == '/review' ||
+      github.event.comment.body == '/describe' ||
+      github.event.comment.body == '/improve'
     runs-on: ubuntu-latest
     outputs:
       allowed: ${{ steps.check.outputs.allowed }}
@@ -24,18 +27,11 @@ jobs:
         run: |
           COMMENTER=${{ github.event.comment.user.login }}
 
-          # GitHub APIを叩く
           TEAM_MEMBERS=$(curl -s -H "Authorization: Bearer ${{ secrets.TEAM_PAT }}" \
             https://api.github.com/orgs/terumitt-dev/teams/ai-reviewers/members)
 
-          # レスポンスの中身を表示（ログで確認用）
-          echo "=== GitHub API Response ==="
-          echo "$TEAM_MEMBERS"
-
-          # ログイン名だけ抽出
           LOGINS=$(echo "$TEAM_MEMBERS" | jq -r '.[].login')
 
-          # 一致するか判定
           if echo "$LOGINS" | grep -q "^$COMMENTER$"; then
             echo "allowed=true" >> "$GITHUB_OUTPUT"
           else
@@ -48,5 +44,7 @@ jobs:
     uses: terumitt-dev/github_actions_ci-cd/.github/workflows/reusable-ci.yml@main
     with:
       pr_number: ${{ github.event.issue.number }}
+      command: ${{ github.event.comment.body }}
+      target_repo: ${{ github.repository }}
     secrets:
       OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
