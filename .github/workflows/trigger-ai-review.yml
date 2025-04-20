@@ -50,4 +50,3 @@ jobs:
       pr_number: ${{ github.event.issue.number }}
     secrets:
       OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
-
