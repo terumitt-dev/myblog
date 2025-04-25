@@ -1,20 +1,18 @@
-[review]
-prompt = """
-このPRのコードを日本語でレビューしてください。
+[pr_reviewer]
+extra_instructions="""\
+Emphasize the following:
+- Please use Japanese for everything.
 """
 
-[describe]
-prompt = """
-このPRの変更内容を日本語で簡単にまとめてください。
+[pr_description]
+extra_instructions="""\
+Emphasize the following:
+- Please use Japanese for everything.
 """
 
-[improve]
-prompt = """
-このPRのコードを改善するための提案を日本語で出してください。
-"""
-
-[help]
-prompt = """
-このPRエージェントの使い方を日本語で説明してください。
+[pr_code_suggestions]
+extra_instructions="""\
+Emphasize the following:
+- Please use Japanese for everything.
 """
 
