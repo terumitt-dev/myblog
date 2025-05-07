@@ -36,6 +36,12 @@ RSpec.describe Admin, type: :model do
         admin.valid?
         expect(admin.errors[:base]).to include('Only one admin allowed')
       end
+      it '既存の管理者がパスワードを再設定できる' do
+        admin.password = 'new_secure_password'
+        admin.password_confirmation = 'new_secure_password'
+        expect(admin).to be_valid
+        expect(admin.save).to be true
+      end
     end
 
     context '管理者が設定されていない場合' do
