@@ -1,0 +1,29 @@
+name: Bot Approve PR
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  pull-requests: write  # これが非常に重要！
+
+jobs:
+  auto-approve:
+    if: |
+      github.event.issue.pull_request &&
+      github.event.comment.body == '/bot-approve'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Approve PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr view ${{ github.event.issue.pull_request.html_url }} --json url -q .url)
+          echo "Approving PR: $PR_URL"
+          gh pr review "$PR_URL" --approve
