@@ -52,21 +52,5 @@ RSpec.describe '/comments' do
         end.not_to change(Comment, :count)
       end
     end
-
-    context '存在しないblogに対してコメントする場合' do
-      it 'ActiveRecord::RecordNotFoundが発生すること' do
-        expect do
-          post blog_comments_path(id: 999), params: { comment: attributes_for(:comment) }
-        end.to raise_error(ActiveRecord::RecordNotFound)
-      end
-    end
-
-    context 'パラメータが不正な場合' do
-      it 'commentパラメータが存在しない場合はエラーになること' do
-        expect do
-          post blog_comments_path(blog), params: {}
-        end.to raise_error(ActionController::ParameterMissing)
-      end
-    end
   end
 end

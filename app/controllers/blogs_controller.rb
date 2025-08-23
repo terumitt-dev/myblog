@@ -29,7 +29,7 @@ class BlogsController < ApplicationController
     if @blog.save
       redirect_to blog_url(@blog), notice: t('controllers.common.notice_create', name: Blog.model_name.human)
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -38,7 +38,7 @@ class BlogsController < ApplicationController
     if @blog.update(blog_params)
       redirect_to blog_url(@blog), notice: t('controllers.common.notice_update', name: Blog.model_name.human)
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

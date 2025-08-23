@@ -50,7 +50,7 @@ RSpec.describe 'Blogs' do
       it '無効なパラメータでは422を返す' do
         invalid_params = { blog: { title: '', category: 'hobby', content: 'Lorem ipsum' } }
         post blogs_url, params: invalid_params
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
@@ -77,7 +77,7 @@ RSpec.describe 'Blogs' do
 
       it '無効なパラメータで更新すると422を返す' do
         patch blog_url(blog), params: { blog: { title: '' } }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
