@@ -9,7 +9,13 @@ Bundler.require(*Rails.groups)
 module Myblog
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.0
+    config.load_defaults 8.0
+
+    # 日本語をデフォルトのlocaleに設定
+    config.i18n.default_locale = :ja
+
+    # 利用可能なlocalesを設定
+    config.i18n.available_locales = [:ja, :en]
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
@@ -22,6 +28,7 @@ module Myblog
     # in config/environments, which are processed later.
     #
     # config.time_zone = "Central Time (US & Canada)"
+    config.time_zone = 'Tokyo'
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end
