@@ -14,7 +14,7 @@ require 'rails_helper'
 # of tools you can use to make these specs even more expressive, but we're
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
-RSpec.describe '/comments', type: :request do
+RSpec.describe '/comments' do
   # This should return the minimal set of attributes required to create a valid
   # Comment. As you add validations to Comment, be sure to
   # adjust the attributes here as well.
@@ -27,17 +27,17 @@ RSpec.describe '/comments', type: :request do
   # end
 
   describe 'POST #create' do
-    let!(:blog) { FactoryBot.create(:blog) }
+    let!(:blog) { create(:blog) }
 
     context 'コメントの属性値が有効な場合' do
       it 'コメントが作成されること' do
         expect do
-          post blog_comments_path(blog), params: { comment: FactoryBot.attributes_for(:comment) }
+          post blog_comments_path(blog), params: { comment: attributes_for(:comment) }
         end.to change(Comment, :count).by(1)
       end
 
       it 'ブログ詳細ページにリダイレクトされること' do
-        post blog_comments_path(blog), params: { comment: FactoryBot.attributes_for(:comment) }
+        post blog_comments_path(blog), params: { comment: attributes_for(:comment) }
         expect(response).to redirect_to(blog_url(blog))
       end
     end
@@ -45,17 +45,17 @@ RSpec.describe '/comments', type: :request do
     context 'コメントの属性値が無効な場合' do
       it '新規コメントページにリダイレクトされること' do
         expect do
-          post blog_comments_path(blog), params: { comment: FactoryBot.attributes_for(:comment, user_name: '') }
-        end.to change(Comment, :count).by(0)
+          post blog_comments_path(blog), params: { comment: attributes_for(:comment, user_name: '') }
+        end.not_to change(Comment, :count)
       end
 
       it 'ブログの詳細ページにリダイレクトされること' do
-        post blog_comments_path(blog), params: { comment: FactoryBot.attributes_for(:comment, user_name: '') }
+        post blog_comments_path(blog), params: { comment: attributes_for(:comment, user_name: '') }
         expect(response).to redirect_to(blog_url(blog))
       end
 
       it 'エラーメッセージが表示されること' do
-        post blog_comments_path(blog), params: { comment: FactoryBot.attributes_for(:comment, user_name: '') }
+        post blog_comments_path(blog), params: { comment: attributes_for(:comment, user_name: '') }
         expect(flash[:alert]).to eq('コメントが作成できませんでした。')
       end
     end

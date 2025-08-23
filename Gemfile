@@ -9,24 +9,24 @@ ruby '3.2.1'
 gem 'rails', '~> 8.0'
 
 # Asset pipeline
-gem 'sprockets-rails', '~> 3.4'  # Rails 8 対応版で最新
+gem 'sprockets-rails', '~> 3.4' # Rails 8 対応版で最新
 
 # DB
 gem 'pg', '~> 1.5'
 
 # Webサーバー
-gem 'puma', '~> 6.6'  # Rails 8 で推奨される 6 系最新
+gem 'puma', '~> 6.6' # Rails 8 で推奨される 6 系最新
 
 # JavaScript & Hotwire
 gem 'importmap-rails', '~> 1.2'
-gem 'turbo-rails', '~> 1.4'
 gem 'stimulus-rails', '~> 1.2'
+gem 'turbo-rails', '~> 1.4'
 
 # JSON builder
-gem 'jbuilder', '~> 2.14'  # 最新安定版
+gem 'jbuilder', '~> 2.14' # 最新安定版
 
 # 認証系
-gem 'devise', '~> 4.9'       # 最新安定版 4.9.4
+gem 'devise', '~> 4.9' # 最新安定版 4.9.4
 gem 'devise-i18n', '~> 1.11'
 
 # Windows 専用
@@ -39,6 +39,12 @@ gem 'logger', '~> 1.7'
 group :development, :test do
   gem 'debug', platforms: %i[mri mingw x64_mingw]
   gem 'rspec-rails', '~> 6.0'
+  gem 'rubocop', require: false
+  gem 'rubocop-capybara', require: false
+  gem 'rubocop-factory_bot', require: false
+  gem 'rubocop-rails', require: false
+  gem 'rubocop-rspec', require: false
+  gem 'rubocop-rspec_rails', require: false
 end
 
 group :development do

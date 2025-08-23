@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'routing to comments', type: :routing do
+RSpec.describe 'routing to comments' do
   it 'routes GET /blogs/:blog_id/comments to comments#index' do
     expect(get: '/blogs/1/comments').to route_to(controller: 'comments', action: 'index', blog_id: '1')
   end
