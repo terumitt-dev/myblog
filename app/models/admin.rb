@@ -11,7 +11,7 @@ class Admin < ApplicationRecord
   private
 
   def only_one_admin_allowed
-    return if Admin.none?
+    return if Admin.count.zero?
 
     errors.add(:base, 'Only one admin allowed')
   end
