@@ -1,0 +1,58 @@
+# .rubocop.yml
+
+# プラグイン
+plugins:
+  - rubocop-rails
+  - rubocop-rspec
+  - rubocop-factory_bot
+  - rubocop-capybara
+  - rubocop-rspec_rails
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  Exclude:
+    - "bin/*"
+    - "db/schema.rb"
+    - "node_modules/**/*"
+    - "vendor/**/*"
+
+# Rails
+Rails:
+  Enabled: true
+
+# Layout
+Layout/EmptyLineAfterMagicComment:
+  Enabled: true
+
+Layout/LineLength:
+  Max: 120
+  Exclude:
+    - "config/initializers/devise.rb"
+    - "db/schema.rb"
+
+# Style
+Style/FrozenStringLiteralComment:
+  Enabled: true
+Style/Documentation:
+  Enabled: false
+
+# Metrics
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+Metrics/MethodLength:
+  Max: 15
+Metrics/ClassLength:
+  Max: 200
+
+# Lint
+Lint/AmbiguousBlockAssociation:
+  Enabled: true
+
+# RSpec
+RSpec:
+  Enabled: true
+
+RSpec/ContextWording:
+  Enabled: false
