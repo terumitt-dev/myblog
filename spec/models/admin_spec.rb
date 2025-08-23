@@ -24,6 +24,18 @@ RSpec.describe Admin do
                                   password_confirmation: 'long_enough_password')
       expect(admin).to be_valid
     end
+
+    it '不正な形式のメールアドレスは無効である' do
+      admin = described_class.new(email: 'invalid-email', password: 'password123', password_confirmation: 'password123')
+      expect(admin).not_to be_valid
+    end
+
+    it '重複したメールアドレスは無効である' do
+      create(:admin, email: 'test@example.com')
+      admin = described_class.new(email: 'test@example.com', password: 'password123',
+                                  password_confirmation: 'password123')
+      expect(admin).not_to be_valid
+    end
   end
 
   describe '#only_one_admin_allowed' do
@@ -52,6 +64,16 @@ RSpec.describe Admin do
         admin.valid?
         expect(admin.errors[:base]).to be_empty
       end
+    end
+  end
+
+  describe 'Devise modules' do
+    it 'database_authenticatable モジュールが含まれている' do
+      expect(described_class.devise_modules).to include(:database_authenticatable)
+    end
+
+    it 'registerable モジュールが含まれている' do
+      expect(described_class.devise_modules).to include(:registerable)
     end
   end
 end
