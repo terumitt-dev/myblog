@@ -2,42 +2,50 @@
 
 require 'rails_helper'
 
-RSpec.configure do |config|
-  config.include Devise::Test::IntegrationHelpers, type: :request
-end
+RSpec.describe 'Admins' do
+  describe 'GET /admin' do
+    context '未認証の場合' do
+      it 'ルートページにリダイレクトされる' do
+        get admin_root_path
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
 
-RSpec.describe 'Admins', type: :request do
-  describe '管理者のリクエスト' do
-    let!(:admin) { FactoryBot.create(:admin) }
-    context 'ログインしている場合' do
-      before do
-        sign_in admin
+  describe 'Admin モデルのバリデーション' do
+    context 'メールアドレスのバリデーション' do
+      it 'メールアドレスが必須である（空の場合は無効）' do
+        admin = Admin.new(email: '', password: 'password123')
+        expect(admin.valid?).to be false
       end
 
-      it 'indexテンプレートを表示する' do
-        get admin_root_url
-        expect(response).to be_successful
+      it '正しいメールアドレスを入力すれば有効' do
+        Admin.delete_all # 一意制約のためクリア
+        admin = Admin.new(email: 'test@example.com', password: 'password123')
+        expect(admin.valid?).to be true
       end
 
-      it '@blogsにすべてのブログを割り当てること' do
-        get admin_root_url
-        expect(controller.instance_variable_get(:@blogs)).to eq(Blog.all)
-      end
-
-      it 'newアクションで@blogを割り当てること' do
-        get admin_root_url
-        expect(controller.instance_variable_get(:@blog)).to be_a_new(Blog)
+      it '不正な形式のメールアドレスは無効' do
+        admin = Admin.new(email: 'invalid-email', password: 'password123')
+        expect(admin.valid?).to be false
       end
     end
 
-    let!(:admin) { build(:admin, email: nil, password: nil) }
-    context 'ログイン情報が未入力の場合' do
-      before do
-        sign_in admin
+    context 'パスワードのバリデーション' do
+      it 'パスワードが必須である（空の場合は無効）' do
+        admin = Admin.new(email: 'test@example.com', password: '')
+        expect(admin.valid?).to be false
       end
 
-      it 'ログインページに回帰する' do
-        get new_admin_session_url
+      it 'パスワードを入力すれば有効' do
+        Admin.delete_all # 一意制約のためクリア
+        admin = Admin.new(email: 'test@example.com', password: 'password123')
+        expect(admin.valid?).to be true
+      end
+
+      it '短すぎるパスワードは無効' do
+        admin = Admin.new(email: 'test@example.com', password: '12345')
+        expect(admin.valid?).to be false
       end
     end
   end

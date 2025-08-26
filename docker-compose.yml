@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   db:
     image: postgres
@@ -19,6 +17,10 @@ services:
       - "3000:3000"
     depends_on:
       - db
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=password
 
 volumes:
   tmp:
