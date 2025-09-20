@@ -4,6 +4,5 @@ FactoryBot.define do
   factory :comment do
     user_name { 'hogehoge' }
     comment { 'testimonials' }
-    blog
   end
 end
