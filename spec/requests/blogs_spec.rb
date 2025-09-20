@@ -14,10 +14,6 @@ require 'rails_helper'
 # of tools you can use to make these specs even more expressive, but we're
 # sticking to rails and rspec-rails APIs to keep things simple and stable.
 
-RSpec.configure do |config|
-  config.include Devise::Test::IntegrationHelpers, type: :request
-end
-
 RSpec.describe 'Blogs', type: :request do
   # This should return the minimal set of attributes required to create a valid
   # Blog. As you add validations to Blog, be sure to
@@ -78,7 +74,7 @@ RSpec.describe 'Blogs', type: :request do
 
           it '422エラーを返すこと (つまり、newテンプレートを表示すること)' do
             post blogs_url, params: { blog: { title: '', category: 'hobby', content: 'Lorem ipsum' } }
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
           end
         end
       end
@@ -106,7 +102,7 @@ RSpec.describe 'Blogs', type: :request do
         context '無効なパラメータの場合' do
           it '422ステータスを返すこと（すなわち、編集テンプレートを表示すること）' do
             patch blog_url(blog), params: { blog: { title: '', category: 'other', content: 'Lorem ipsum' } }
-            expect(response).to have_http_status(:unprocessable_entity)
+            expect(response).to have_http_status(:unprocessable_content)
           end
         end
       end
