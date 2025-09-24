@@ -2,6 +2,7 @@
 
 class BlogsController < ApplicationController
   before_action :set_blog, only: %i[show edit update destroy]
+   before_action :authenticate_admin!, only: [:import_mt]
 
   # GET /blogs or /blogs.json
   def index
@@ -46,6 +47,16 @@ class BlogsController < ApplicationController
   def destroy
     @blog.destroy
     redirect_to admin_root_url, notice: t('controllers.common.notice_destroy', name: Blog.model_name.human)
+  end
+
+  # POST /blogs/import_mt
+  def import_mt
+    if params[:file].present?
+      Blog.import_from_mt(params[:file])
+      redirect_to admin_root_path, notice: "MTデータをインポートしました"
+    else
+      redirect_to admin_root_path, alert: "ファイルが選択されていません"
+    end
   end
 
   private
