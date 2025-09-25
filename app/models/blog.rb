@@ -20,15 +20,18 @@ class Blog < ApplicationRecord
   def self.parse_mt_content(content)
     entries = []
 
-    # 正規表現で記事単位を取得
     content.scan(
-      /TITLE:\s*(.+?)\r?\nBODY:\s*(.+?)(?:\r?\nDATE:\s*(.+?))?(?=\r?\nTITLE:|\z)/m
-    ) do |title, body, date|
+      /TITLE:\s*(.+?)\r?\nBODY:\s*(.+?)(?=\r?\nTITLE:|\z)/m
+    ) do |title, body|
+      title = title.gsub(/BASENAME:.*|STATUS:.*|ALLOW COMMENTS:.*|CONVERT BREAKS:.*|DATE:.*|IMAGE:.*|-----/i, '').strip
+
+      body = body.gsub(/^-{5,}(\s*-+)?(\s*AUTHOR:.*)?$/i, '')
+      body = body.strip
+
       entries << {
-        title: title.strip,
-        content: body.strip,
-        category: :uncategorized,
-        date: date ? (Time.parse(date.strip) rescue nil) : nil
+        title: title,
+        content: body,
+        category: :uncategorized
       }
     end
 
