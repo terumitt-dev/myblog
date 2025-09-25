@@ -7,34 +7,34 @@ class Blog < ApplicationRecord
 
   def self.import_from_mt(file)
     content = File.read(file.path)
-    entries = parse_mt_content(content) # 独自解析メソッド
-
+    entries = parse_mt_content(content)
     entries.each do |entry|
-      create!(
+      Blog.create(
         title: entry[:title],
         content: entry[:content],
-        category: entry[:category] || :uncategorized,
-        created_at: entry[:date] || Time.current
+        category: entry[:category] || :uncategorized
       )
     end
   end
 
   def self.parse_mt_content(content)
     entries = []
+
     content.split("\n\n").each do |block|
-      title_match = block.match(/Title: (.*)/)
-      body_match  = block.match(/Body: (.*)/)
-      date_match  = block.match(/Date: (.*)/)
+      title_match = block.match(/^TITLE:\s*(.*)$/i)
+      body_match  = block.match(/^BODY\s*:\s*(.*)$/im)
+      date_match  = block.match(/^DATE\s*:\s*(.*)$/i)
 
       next unless title_match && body_match
 
       entries << {
-        title: title_match[1],
-        content: body_match[1],
+        title: title_match[1].strip,
+        content: body_match[1].strip,
         category: :uncategorized,
-        date: date_match&.to_time
+        date: date_match ? (Time.parse(date_match[1].strip) rescue nil) : nil
       }
     end
+
     entries
   end
 end
