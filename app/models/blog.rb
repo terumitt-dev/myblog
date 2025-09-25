@@ -20,18 +20,15 @@ class Blog < ApplicationRecord
   def self.parse_mt_content(content)
     entries = []
 
-    content.split("\n\n").each do |block|
-      title_match = block.match(/^TITLE:\s*(.*)$/i)
-      body_match  = block.match(/^BODY\s*:\s*(.*)$/im)
-      date_match  = block.match(/^DATE\s*:\s*(.*)$/i)
-
-      next unless title_match && body_match
-
+    # 正規表現で記事単位を取得
+    content.scan(
+      /TITLE:\s*(.+?)\r?\nBODY:\s*(.+?)(?:\r?\nDATE:\s*(.+?))?(?=\r?\nTITLE:|\z)/m
+    ) do |title, body, date|
       entries << {
-        title: title_match[1].strip,
-        content: body_match[1].strip,
+        title: title.strip,
+        content: body.strip,
         category: :uncategorized,
-        date: date_match ? (Time.parse(date_match[1].strip) rescue nil) : nil
+        date: date ? (Time.parse(date.strip) rescue nil) : nil
       }
     end
 
