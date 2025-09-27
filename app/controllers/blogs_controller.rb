@@ -52,10 +52,13 @@ class BlogsController < ApplicationController
   # POST /blogs/import_mt
   def import_mt
     if params[:file].present?
-      Blog.import_from_mt(params[:file])
-      redirect_to admin_root_path, notice: "MTデータをインポートしました"
+      Rails.logger.info "MT import started by Admin##{current_admin.id}"
+      count = Blog.import_from_mt(params[:file])
+      Rails.logger.info "MT import finished: #{count} entries created"
+
+      redirect_to admin_root_path, notice: t('controllers.common.notice_import', name: Blog.model_name.human, count: count)
     else
-      redirect_to admin_root_path, alert: "ファイルが選択されていません"
+      redirect_to admin_root_path, alert: t('controllers.common.alert_no_file')
     end
   end
 
