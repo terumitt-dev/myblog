@@ -9,8 +9,12 @@ class Blog < ApplicationRecord
     content = File.read(file.path, encoding: "UTF-8")
     entries = parse_mt_content(content)
 
+    return 0 if entries.empty?
+
     transaction do
       entries.each do |entry|
+        next if entry[:title].blank? || entry[:content].blank? # 空タイトル・空本文はスキップ
+
         date = parse_mt_date(entry[:date])
         Blog.create!(
           title: entry[:title],
@@ -18,21 +22,24 @@ class Blog < ApplicationRecord
           category: :uncategorized,
           created_at: date
         )
+      rescue => e
+        Rails.logger.warn "⚠️ Blog import failed for entry #{entry[:title]}: #{e.message}"
+        next
       end
     end
 
-    entries.size
+    entries.count { |e| e[:title].present? && e[:content].present? }
   end
 
   def self.parse_mt_content(content)
     entries = []
 
     content.scan(
-      /AUTHOR:\s*(.+?)\r?\nTITLE:\s*(.+?)\r?\n(?:.*?\r?\n)*?DATE:\s*(.+?)\r?\n(?:.*?\r?\n)*?BODY:\r?\n(.+?)(?:\r?\n-----\r?\n)/m
+      /AUTHOR:\s*(.+?)\r?\nTITLE:\s*(.+?)\r?\n(?:.*?\r?\n)*?DATE:\s*(.+?)\r?\n(?:.*?\r?\n)*?BODY:\r?\n(.*?)(?:\r?\n-{5,}\r?\n|\z)/m
     ) do |_author, title, date, body|
       entries << {
         title: title.strip,
-        content: body.strip,
+        content: body.gsub(/\r\n?/, "\n").strip, # 改行を統一してstrip
         date: date.strip
       }
     end
