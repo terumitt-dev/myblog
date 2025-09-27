@@ -2,6 +2,7 @@
 
 class BlogsController < ApplicationController
   before_action :set_blog, only: %i[show edit update destroy]
+   before_action :authenticate_admin!, only: [:import_mt]
 
   # GET /blogs or /blogs.json
   def index
@@ -46,6 +47,30 @@ class BlogsController < ApplicationController
   def destroy
     @blog.destroy
     redirect_to admin_root_url, notice: t('controllers.common.notice_destroy', name: Blog.model_name.human)
+  end
+
+  # POST /blogs/import_mt
+  def import_mt
+    uploaded_file = params[:file]
+
+    if uploaded_file.blank?
+      redirect_to admin_root_path, alert: t('controllers.common.alert_no_file')
+      return
+    end
+
+    unless uploaded_file.content_type.in?(%w[text/plain application/octet-stream]) && uploaded_file.size <= 5.megabytes
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
+      return
+    end
+
+    Rails.logger.info "MT import started by Admin##{current_admin.id}"
+    count = Blog.import_from_mt(uploaded_file)
+    Rails.logger.info "MT import finished: #{count} entries created"
+
+    redirect_to admin_root_path, notice: t('controllers.common.notice_import', name: Blog.model_name.human, count: count)
+  rescue => e
+    Rails.logger.error "MT import failed: #{e.message}"
+    redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed')
   end
 
   private
