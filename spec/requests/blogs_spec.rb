@@ -122,6 +122,53 @@ RSpec.describe 'Blogs', type: :request do
       end
     end
 
+    describe 'MT形式インポート' do
+      let!(:admin) { FactoryBot.create(:admin) }
+
+      before do
+        sign_in admin
+      end
+
+      it '有効なMTファイルでブログが作成されること' do
+        mt_content = <<~MT
+          AUTHOR: admin
+          TITLE: サンプルブログ
+          DATE: 09/27/2025 14:00:00
+          BODY:
+          こんにちは
+          -----
+        MT
+
+        temp_file = Tempfile.new(['sample', '.mt'])
+        temp_file.write(mt_content)
+        temp_file.rewind
+
+        expect {
+          post import_mt_blogs_path, params: { file: Rack::Test::UploadedFile.new(temp_file.path, 'text/plain') }
+        }.to change(Blog, :count).by(1)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+      end
+
+      it '無効なファイルではブログが作成されないこと' do
+        temp_file = Tempfile.new(['invalid', '.txt'])
+        temp_file.write("無効な内容")
+        temp_file.rewind
+
+        expect {
+          post import_mt_blogs_path, params: { file: Rack::Test::UploadedFile.new(temp_file.path, 'text/plain') }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+      end
+    end
+
     context '一般ユーザーの場合' do
       describe 'GET /index' do
         let!(:blog) { FactoryBot.create(:blog) }
