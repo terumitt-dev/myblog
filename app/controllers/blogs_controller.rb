@@ -64,6 +64,15 @@ class BlogsController < ApplicationController
       redirect_to admin_root_path, alert: t('controllers.common.alert_file_too_large') and return
     end
 
+    extname = File.extname(uploaded_file.original_filename).downcase
+    unless ALLOWED_EXTENSIONS.include?(extname)
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
+    end
+
+    unless ALLOWED_MIME_TYPES.include?(uploaded_file.content_type)
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
+    end
+
     Rails.logger.info "MT import started by Admin##{current_admin.id}"
     count = Blog.import_from_mt(uploaded_file)
     Rails.logger.info "MT import finished: #{count} entries created"
