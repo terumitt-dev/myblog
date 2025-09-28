@@ -2,7 +2,11 @@
 
 class BlogsController < ApplicationController
   before_action :set_blog, only: %i[show edit update destroy]
-   before_action :authenticate_admin!, only: [:import_mt]
+  before_action :authenticate_admin!, only: [:import_mt]
+
+  MAX_UPLOAD_SIZE = 5.megabytes
+  ALLOWED_EXTENSIONS = %w[.txt]
+  ALLOWED_MIME_TYPES = %w[text/plain]
 
   # GET /blogs or /blogs.json
   def index
@@ -57,23 +61,28 @@ class BlogsController < ApplicationController
       redirect_to admin_root_path, alert: t('controllers.common.alert_no_file') and return
     end
 
-    allowed_ext  = %w[.txt]
-    allowed_types = %w[text/plain]
+    # サイズ制限
+    if uploaded_file.size > MAX_UPLOAD_SIZE
+      redirect_to admin_root_path, alert: t('controllers.common.alert_file_too_large') and return
+    end
 
-    ext_ok  = allowed_ext.include?(File.extname(uploaded_file.original_filename).downcase)
-    mime_ok = allowed_types.include?(uploaded_file.content_type) || uploaded_file.content_type.blank?
+    # 拡張子・MIMEタイプチェック
+    ext_ok = ALLOWED_EXTENSIONS.include?(File.extname(uploaded_file.original_filename).downcase)
+    mime_ok = ALLOWED_MIME_TYPES.include?(uploaded_file.content_type.to_s)
 
     unless ext_ok && mime_ok
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
-    # MT形式かチェック
+    # MT形式チェック（最低限）
+    uploaded_file.rewind
     text = uploaded_file.read
     uploaded_file.rewind
     unless text.start_with?("AUTHOR:") && text.include?("TITLE:") && text.include?("BODY:")
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
+    # 実際のインポート
     Rails.logger.info "MT import started by Admin##{current_admin.id}"
     count = Blog.import_from_mt(uploaded_file)
     Rails.logger.info "MT import finished: #{count} entries created"
@@ -93,6 +102,6 @@ class BlogsController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def blog_params
-    params.expect(blog: %i[title content category])
+    params.require(:blog).permit(:title, :content, :category)
   end
 end
