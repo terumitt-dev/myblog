@@ -20,8 +20,8 @@ class Blog < ApplicationRecord
 
     transaction do
       entries.each do |entry|
-        safe_title = sanitize_title(entry[:title])
-        safe_content = sanitize_content(entry[:content])
+        safe_title   = sanitize_text(entry[:title])
+        safe_content = sanitize_text(entry[:content])
 
         begin
           date = parse_mt_date(entry[:date])
@@ -42,44 +42,9 @@ class Blog < ApplicationRecord
     successful_count
   end
 
-  # サニタイズ：タイトル
-  def self.sanitize_title(title)
-    ActionController::Base.helpers.sanitize(title.to_s, tags: [])
-  end
-
-  # サニタイズ：コンテンツ
-  def self.sanitize_content(content)
-    sanitized = ActionController::Base.helpers.sanitize(
-      content.to_s,
-      tags: %w[p br img a ul ol li h1 h2 h3 pre code],
-      attributes: %w[href src alt title]
-    )
-
-    # img/src チェック
-    sanitized.gsub!(/<img [^>]*src="([^"]+)"[^>]*>/i) do |tag|
-      begin
-        uri = URI.parse($1)
-        uri.scheme =~ /\Ahttps?\z/i ? tag : ""
-      rescue URI::InvalidURIError
-        ""
-      end
-    end
-
-    # a/href チェック + rel/target 付与
-    sanitized.gsub!(/<a [^>]*href="([^"]+)"[^>]*>/i) do |tag|
-      begin
-        uri = URI.parse($1)
-        if uri.scheme =~ /\Ahttps?\z/i
-          tag.sub(/<a /i, '<a target="_blank" rel="noopener noreferrer nofollow" ')
-        else
-          ""
-        end
-      rescue URI::InvalidURIError
-        ""
-      end
-    end
-
-    sanitized
+  # サニタイズ（タイトル・コンテンツ共通）
+  def self.sanitize_text(text)
+    ActionController::Base.helpers.sanitize(text.to_s, tags: [])
   end
 
   def self.parse_mt_content(content)
