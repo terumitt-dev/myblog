@@ -139,7 +139,7 @@ RSpec.describe 'Blogs', type: :request do
           -----
         MT
 
-        temp_file = Tempfile.new(['sample', '.mt'])
+        temp_file = Tempfile.new(['sample', '.txt'])
         temp_file.write(mt_content)
         temp_file.rewind
 

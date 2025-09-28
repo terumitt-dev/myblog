@@ -5,7 +5,7 @@
 <div class="import">
   <h2>MT形式データインポート</h2>
     <%= form_with url: import_mt_blogs_path, local: true, multipart: true do |f| %>
-      <%= f.file_field :file, accept: ".txt,.mt" %>
+      <%= f.file_field :file, accept: ".txt" %>
       <%= f.submit "インポート", class: "btn btn-primary" %>
     <% end %>
 </div>
