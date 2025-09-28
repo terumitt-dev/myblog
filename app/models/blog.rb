@@ -20,9 +20,9 @@ class Blog < ApplicationRecord
 
     transaction do
       entries.each do |entry|
-        # サニタイズ
+
         safe_title = ActionController::Base.helpers.sanitize(entry[:title], tags: [])
-        safe_content = ActionController::Base.helpers.sanitize(entry[:content], tags: %w[p br strong em a])
+        safe_content = ActionController::Base.helpers.sanitize(entry[:content], tags: %w[img], attributes: %w[src alt title])
 
         begin
           date = parse_mt_date(entry[:date])

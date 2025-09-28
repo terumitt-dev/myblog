@@ -58,18 +58,24 @@ class BlogsController < ApplicationController
       return
     end
 
-    # 拡張子チェック（.txtのみ許可）
     unless File.extname(uploaded_file.original_filename).downcase == ".txt"
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_extension')
       return
     end
 
-    # MIMEタイプ + サイズ制限
-    unless uploaded_file.content_type.in?(%w[text/plain application/octet-stream]) && uploaded_file.size <= 5.megabytes
+    unless uploaded_file.content_type == "text/plain" && uploaded_file.size <= 5.megabytes
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
       return
     end
 
+    uploaded_file.rewind
+    text = uploaded_file.read
+    unless text.start_with?("AUTHOR:") && text.include?("TITLE:") && text.include?("BODY:")
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
+      return
+    end
+
+    uploaded_file.rewind
     Rails.logger.info "MT import started by Admin##{current_admin.id}"
     count = Blog.import_from_mt(uploaded_file)
     Rails.logger.info "MT import finished: #{count} entries created"
