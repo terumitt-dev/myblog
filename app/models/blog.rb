@@ -25,11 +25,13 @@ class Blog < ApplicationRecord
 
         begin
           date = parse_mt_date(entry[:date])
+          now  = Time.zone.now
           Blog.create!(
             title: safe_title,
             content: safe_content,
             category: :uncategorized,
-            created_at: date
+            created_at: date,
+            updated_at: now
           )
           successful_count += 1
         rescue => e

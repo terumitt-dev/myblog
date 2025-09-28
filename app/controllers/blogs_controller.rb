@@ -56,38 +56,23 @@ class BlogsController < ApplicationController
   # POST /blogs/import_mt
   def import_mt
     uploaded_file = params[:file]
-
     if uploaded_file.blank?
       redirect_to admin_root_path, alert: t('controllers.common.alert_no_file') and return
     end
 
-    # サイズ制限
     if uploaded_file.size > MAX_UPLOAD_SIZE
       redirect_to admin_root_path, alert: t('controllers.common.alert_file_too_large') and return
     end
 
-    # 拡張子・MIMEタイプチェック
-    ext_ok = ALLOWED_EXTENSIONS.include?(File.extname(uploaded_file.original_filename).downcase)
-    mime_ok = ALLOWED_MIME_TYPES.include?(uploaded_file.content_type.to_s)
-
-    unless ext_ok && mime_ok
-      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
-    end
-
-    # MT形式チェック（最低限）
-    uploaded_file.rewind
-    text = uploaded_file.read
-    uploaded_file.rewind
-    unless text.start_with?("AUTHOR:") && text.include?("TITLE:") && text.include?("BODY:")
-      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
-    end
-
-    # 実際のインポート
     Rails.logger.info "MT import started by Admin##{current_admin.id}"
     count = Blog.import_from_mt(uploaded_file)
     Rails.logger.info "MT import finished: #{count} entries created"
 
-    redirect_to admin_root_path, notice: t('controllers.common.notice_import', name: Blog.model_name.human, count: count)
+    if count.zero?
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
+    else
+      redirect_to admin_root_path, notice: t('controllers.common.notice_import', name: Blog.model_name.human, count: count)
+    end
   rescue => e
     Rails.logger.error "MT import failed: #{e.message}"
     redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed')
