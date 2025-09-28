@@ -20,13 +20,15 @@ class Blog < ApplicationRecord
 
     transaction do
       entries.each do |entry|
-        next if entry[:title].blank? || entry[:content].blank? # 空タイトル・空本文はスキップ
+        # サニタイズ
+        safe_title = ActionController::Base.helpers.sanitize(entry[:title], tags: [])
+        safe_content = ActionController::Base.helpers.sanitize(entry[:content], tags: %w[p br strong em a])
 
         begin
           date = parse_mt_date(entry[:date])
           Blog.create!(
-            title: entry[:title],
-            content: entry[:content],
+            title: safe_title,
+            content: safe_content,
             category: :uncategorized,
             created_at: date
           )
