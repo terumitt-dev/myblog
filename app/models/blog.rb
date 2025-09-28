@@ -6,29 +6,39 @@ class Blog < ApplicationRecord
   enum :category, { uncategorized: 0, hobby: 1, tech: 2, other: 3 }, default: :uncategorized
 
   def self.import_from_mt(file)
-    content = File.read(file.path, encoding: "UTF-8")
-    entries = parse_mt_content(content)
+    begin
+      content = File.read(file.path, encoding: "UTF-8")
+    rescue => e
+      Rails.logger.error "⚠️ Failed to read file: #{e.message}"
+      return 0
+    end
 
+    entries = parse_mt_content(content)
     return 0 if entries.empty?
+
+    successful_count = 0
 
     transaction do
       entries.each do |entry|
         next if entry[:title].blank? || entry[:content].blank? # 空タイトル・空本文はスキップ
 
-        date = parse_mt_date(entry[:date])
-        Blog.create!(
-          title: entry[:title],
-          content: entry[:content],
-          category: :uncategorized,
-          created_at: date
-        )
-      rescue => e
-        Rails.logger.warn "⚠️ Blog import failed for entry #{entry[:title]}: #{e.message}"
-        next
+        begin
+          date = parse_mt_date(entry[:date])
+          Blog.create!(
+            title: entry[:title],
+            content: entry[:content],
+            category: :uncategorized,
+            created_at: date
+          )
+          successful_count += 1
+        rescue => e
+          Rails.logger.warn "⚠️ Blog import failed for entry #{entry[:title]}: #{e.message}"
+          next
+        end
       end
     end
 
-    entries.count { |e| e[:title].present? && e[:content].present? }
+    successful_count
   end
 
   def self.parse_mt_content(content)
@@ -52,9 +62,9 @@ class Blog < ApplicationRecord
 
     case date_str
     when %r{\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}} # 12/17/2024 19:00:00
-      DateTime.strptime(date_str, "%m/%d/%Y %H:%M:%S")
+      Time.zone.strptime(date_str, "%m/%d/%Y %H:%M:%S")
     when /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/   # 2023-06-04 22:57:15
-      DateTime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+      Time.zone.strptime(date_str, "%Y-%m-%d %H:%M:%S")
     else
       Time.zone.now
     end

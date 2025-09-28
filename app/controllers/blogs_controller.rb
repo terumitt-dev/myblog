@@ -58,6 +58,13 @@ class BlogsController < ApplicationController
       return
     end
 
+    # 拡張子チェック（.txtのみ許可）
+    unless File.extname(uploaded_file.original_filename).downcase == ".txt"
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_extension')
+      return
+    end
+
+    # MIMEタイプ + サイズ制限
     unless uploaded_file.content_type.in?(%w[text/plain application/octet-stream]) && uploaded_file.size <= 5.megabytes
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
       return
