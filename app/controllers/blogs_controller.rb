@@ -54,35 +54,26 @@ class BlogsController < ApplicationController
     uploaded_file = params[:file]
 
     if uploaded_file.blank?
-      redirect_to admin_root_path, alert: t('controllers.common.alert_no_file')
-      return
+      redirect_to admin_root_path, alert: t('controllers.common.alert_no_file') and return
     end
 
-    # 拡張子・MIMEタイプ検証
-    allowed_ext = %w[.txt]
+    allowed_ext  = %w[.txt]
     allowed_types = %w[text/plain]
+
     ext_ok  = allowed_ext.include?(File.extname(uploaded_file.original_filename).downcase)
     mime_ok = allowed_types.include?(uploaded_file.content_type) || uploaded_file.content_type.blank?
 
-    unless ext_ok
-      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_extension')
-      return
+    unless ext_ok && mime_ok
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
-    unless mime_ok && uploaded_file.size <= 5.megabytes
-      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
-      return
-    end
-
-    # 簡易内容チェック
-    uploaded_file.rewind
+    # MT形式かチェック
     text = uploaded_file.read
+    uploaded_file.rewind
     unless text.start_with?("AUTHOR:") && text.include?("TITLE:") && text.include?("BODY:")
-      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
-      return
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
-    uploaded_file.rewind
     Rails.logger.info "MT import started by Admin##{current_admin.id}"
     count = Blog.import_from_mt(uploaded_file)
     Rails.logger.info "MT import finished: #{count} entries created"

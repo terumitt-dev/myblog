@@ -20,13 +20,23 @@ class Blog < ApplicationRecord
 
     transaction do
       entries.each do |entry|
-
         safe_title = ActionController::Base.helpers.sanitize(entry[:title], tags: [])
-        safe_content = ActionController::Base.helpers.sanitize(entry[:content], tags: %w[img], attributes: %w[src alt title])
-        safe_content = safe_content.gsub(/<img [^>]*src="([^"]+)"[^>]*>/) do |tag|
+        safe_content = ActionController::Base.helpers.sanitize(
+          entry[:content],
+          tags: %w[img a p br],
+          attributes: %w[src alt title href]
+        )
+
+        # img の src チェック
+        safe_content = safe_content.gsub(/<img [^>]*src="([^"]+)"[^>]*>/i) do |tag|
           src = $1
-          next "" unless src =~ /\Ahttps?:\/\//i
-          tag
+          src =~ /\Ahttps?:\/\//i ? tag : ""
+        end
+
+        # a の href チェック + rel 属性付与
+        safe_content = safe_content.gsub(/<a [^>]*href="([^"]+)"[^>]*>/i) do |tag|
+          href = $1
+          href =~ /\Ahttps?:\/\//i ? tag.sub(/<a /i, '<a rel="noopener noreferrer nofollow" ') : ""
         end
 
         begin
