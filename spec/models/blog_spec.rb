@@ -36,7 +36,7 @@ RSpec.describe Blog, type: :model do
 
   describe '.import_from_mt' do
     it '正しいMTファイルでブログが作成されること' do
-      temp_file = Tempfile.new(['sample', '.mt'])
+      temp_file = Tempfile.new(['sample', '.txt'])
       temp_file.write("AUTHOR: test\nTITLE: サンプルブログ\nDATE: 12/17/2024 19:00:00\nBODY:\n本文です\n-----\n")
       temp_file.rewind
 
