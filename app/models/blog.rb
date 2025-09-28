@@ -23,6 +23,11 @@ class Blog < ApplicationRecord
 
         safe_title = ActionController::Base.helpers.sanitize(entry[:title], tags: [])
         safe_content = ActionController::Base.helpers.sanitize(entry[:content], tags: %w[img], attributes: %w[src alt title])
+        safe_content = safe_content.gsub(/<img [^>]*src="([^"]+)"[^>]*>/) do |tag|
+          src = $1
+          next "" unless src =~ /\Ahttps?:\/\//i
+          tag
+        end
 
         begin
           date = parse_mt_date(entry[:date])

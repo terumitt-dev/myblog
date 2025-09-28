@@ -58,16 +58,23 @@ class BlogsController < ApplicationController
       return
     end
 
-    unless File.extname(uploaded_file.original_filename).downcase == ".txt"
+    # 拡張子・MIMEタイプ検証
+    allowed_ext = %w[.txt]
+    allowed_types = %w[text/plain]
+    ext_ok  = allowed_ext.include?(File.extname(uploaded_file.original_filename).downcase)
+    mime_ok = allowed_types.include?(uploaded_file.content_type) || uploaded_file.content_type.blank?
+
+    unless ext_ok
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_extension')
       return
     end
 
-    unless uploaded_file.content_type == "text/plain" && uploaded_file.size <= 5.megabytes
+    unless mime_ok && uploaded_file.size <= 5.megabytes
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
       return
     end
 
+    # 簡易内容チェック
     uploaded_file.rewind
     text = uploaded_file.read
     unless text.start_with?("AUTHOR:") && text.include?("TITLE:") && text.include?("BODY:")
