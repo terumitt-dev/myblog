@@ -10,7 +10,7 @@ class Blog < ApplicationRecord
   MAX_UPLOAD_SIZE = 5.megabytes
 
   def self.import_from_mt(uploaded_file)
-    return 0 if uploaded_file.blank? || uploaded_file.size > MAX_UPLOAD_SIZE
+    return 0 if uploaded_file.blank?
 
     content = uploaded_file.read.force_encoding("UTF-8")
     entries = parse_mt_content(content)

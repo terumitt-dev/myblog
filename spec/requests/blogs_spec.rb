@@ -176,6 +176,7 @@ RSpec.describe 'Blogs', type: :request do
         uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'application/octet-stream')
 
         allow(Marcel::MimeType).to receive(:for).and_return('application/octet-stream')
+
         expect {
           post import_mt_blogs_path, params: { file: uploaded_file }
         }.not_to change(Blog, :count)
@@ -241,7 +242,7 @@ RSpec.describe 'Blogs', type: :request do
       end
 
       it 'サイズ上限を超えたファイルは弾かれること' do
-        large_content = 'a' * (BlogsController::MAX_UPLOAD_SIZE + 1)
+        large_content = 'a' * (Blog::MAX_UPLOAD_SIZE + 1)  # ← ここ修正
         temp_file = Tempfile.new(['large', '.txt'])
         temp_file.write(large_content)
         temp_file.rewind
