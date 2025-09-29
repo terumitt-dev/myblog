@@ -175,6 +175,7 @@ RSpec.describe 'Blogs', type: :request do
 
         uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'application/octet-stream')
 
+        allow(Marcel::MimeType).to receive(:for).and_return('application/octet-stream')
         expect {
           post import_mt_blogs_path, params: { file: uploaded_file }
         }.not_to change(Blog, :count)
@@ -183,7 +184,7 @@ RSpec.describe 'Blogs', type: :request do
         temp_file.unlink
 
         expect(response).to redirect_to(admin_root_path)
-        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_no_entries')
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_invalid_file')
       end
 
       it '拡張子不正のファイルは弾かれること' do
@@ -236,7 +237,7 @@ RSpec.describe 'Blogs', type: :request do
         temp_file.unlink
 
         expect(response).to redirect_to(admin_root_path)
-        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_no_entries')
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_invalid_file')
       end
 
       it 'サイズ上限を超えたファイルは弾かれること' do

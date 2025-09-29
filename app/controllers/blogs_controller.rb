@@ -59,12 +59,12 @@ class BlogsController < ApplicationController
 
     # 空ファイルチェック
     if uploaded_file.blank?
-      redirect_to admin_root_path, alert: t('controllers.common.alert_no_file') and return
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
     # サイズチェック
-    if uploaded_file.size > MAX_UPLOAD_SIZE
-      redirect_to admin_root_path, alert: t('controllers.common.alert_file_too_large') and return
+    if uploaded_file.blank? || uploaded_file.size.zero?
+      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
     # MIMEタイプチェック
