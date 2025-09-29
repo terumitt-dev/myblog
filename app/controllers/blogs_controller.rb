@@ -56,15 +56,18 @@ class BlogsController < ApplicationController
   # POST /blogs/import_mt
   def import_mt
     uploaded_file = params[:file]
+
+    # 空ファイルチェック
     if uploaded_file.blank?
       redirect_to admin_root_path, alert: t('controllers.common.alert_no_file') and return
     end
 
+    # サイズチェック
     if uploaded_file.size > MAX_UPLOAD_SIZE
       redirect_to admin_root_path, alert: t('controllers.common.alert_file_too_large') and return
     end
 
-    # MIME判定
+    # MIMEタイプチェック
     detected_type = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
     unless ALLOWED_MIME_TYPES.include?(detected_type)
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
@@ -77,14 +80,19 @@ class BlogsController < ApplicationController
     end
 
     Rails.logger.info "MT import started by Admin##{current_admin.id}"
+
+    # MTインポート
     count = Blog.import_from_mt(uploaded_file)
     Rails.logger.info "MT import finished: #{count} entries created"
 
+    # MT解析0件チェック
     if count.zero?
-      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file')
-    else
-      redirect_to admin_root_path, notice: t('controllers.common.notice_import', name: Blog.model_name.human, count: count)
+      redirect_to admin_root_path, alert: t('controllers.common.alert_no_entries') and return
     end
+
+    # 成功時
+    redirect_to admin_root_path, notice: t('controllers.common.notice_import', name: Blog.model_name.human, count: count)
+
   rescue => e
     Rails.logger.error "MT import failed: #{e.message}"
     redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed')

@@ -41,6 +41,7 @@ ja:
       alert_invalid_file: "無効なファイル形式またはサイズです"
       alert_import_failed: "インポート中にエラーが発生しました"
       alert_invalid_extension: "拡張子が不正です"
+      alert_no_entries: "インポート対象のエントリが存在しません"
 
   helpers:
     submit:

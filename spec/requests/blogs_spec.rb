@@ -167,11 +167,77 @@ RSpec.describe 'Blogs', type: :request do
 
         expect(response).to redirect_to(admin_root_path)
       end
-    end
 
-    describe 'MT形式インポート追加テスト' do
-      let!(:admin) { FactoryBot.create(:admin) }
-      before { sign_in admin }
+      it 'MIMEタイプ不正のファイルは弾かれること' do
+        temp_file = Tempfile.new(['invalid_mime', '.txt'])
+        temp_file.write('こんにちは')
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'application/octet-stream')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_no_entries')
+      end
+
+      it '拡張子不正のファイルは弾かれること' do
+        temp_file = Tempfile.new(['invalid_ext', '.csv'])
+        temp_file.write('こんにちは')
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'text/plain')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_invalid_file')
+      end
+
+      it 'MTファイルに0件の場合は警告表示されること' do
+        temp_file = Tempfile.new(['empty_mt', '.txt'])
+        temp_file.write("無効な内容") # MT解析で0件になる内容
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'text/plain')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_no_entries')
+      end
+
+      it '空ファイルは弾かれること' do
+        temp_file = Tempfile.new(['empty', '.txt'])
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'text/plain')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_no_entries')
+      end
 
       it 'サイズ上限を超えたファイルは弾かれること' do
         large_content = 'a' * (BlogsController::MAX_UPLOAD_SIZE + 1)
