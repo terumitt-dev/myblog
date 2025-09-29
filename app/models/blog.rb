@@ -35,7 +35,7 @@ class Blog < ApplicationRecord
           )
           successful_count += 1
         rescue => e
-          Rails.logger.warn "⚠️ Blog import failed for entry #{entry[:title]}: #{e.message}"
+          Rails.logger.warn "⚠️ Blog import failed for an entry: #{e.class} #{e.message}"
           next
         end
       end
