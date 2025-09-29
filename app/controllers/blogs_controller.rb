@@ -64,12 +64,15 @@ class BlogsController < ApplicationController
       redirect_to admin_root_path, alert: t('controllers.common.alert_file_too_large') and return
     end
 
-    extname = File.extname(uploaded_file.original_filename).downcase
-    unless ALLOWED_EXTENSIONS.include?(extname)
+    # MIME判定
+    detected_type = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
+    unless ALLOWED_MIME_TYPES.include?(detected_type)
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
-    unless ALLOWED_MIME_TYPES.include?(uploaded_file.content_type)
+    # 拡張子チェック（小文字化）
+    ext = File.extname(uploaded_file.original_filename.to_s).downcase
+    unless ALLOWED_EXTENSIONS.include?(ext)
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
