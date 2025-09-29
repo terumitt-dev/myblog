@@ -169,6 +169,29 @@ RSpec.describe 'Blogs', type: :request do
       end
     end
 
+    describe 'MT形式インポート追加テスト' do
+      let!(:admin) { FactoryBot.create(:admin) }
+      before { sign_in admin }
+
+      it 'サイズ上限を超えたファイルは弾かれること' do
+        large_content = 'a' * (BlogsController::MAX_UPLOAD_SIZE + 1)
+        temp_file = Tempfile.new(['large', '.txt'])
+        temp_file.write(large_content)
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'text/plain')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+      end
+    end
+
     context '一般ユーザーの場合' do
       describe 'GET /index' do
         let!(:blog) { FactoryBot.create(:blog) }
