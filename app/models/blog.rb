@@ -70,16 +70,29 @@ class Blog < ApplicationRecord
   def self.parse_mt_date(date_str)
     return Time.zone.now if date_str.blank?
 
-    case date_str
-    when %r{\d{2}/\d{2}/\d{4} \d{2}:\d{2}:\d{2}}
-      Time.zone.strptime(date_str, "%m/%d/%Y %H:%M:%S")
-    when /\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/
-      Time.zone.strptime(date_str, "%Y-%m-%d %H:%M:%S")
-    else
-      Time.zone.now
+    formats = [
+      "%m/%d/%Y %H:%M:%S",   # 例: 12/31/2023 23:59:59
+      "%Y-%m-%d %H:%M:%S",   # 例: 2023-12-31 23:59:59
+      "%Y/%m/%d %H:%M:%S",   # 例: 2023/12/31 23:59:59
+      "%a %b %d %H:%M:%S %Y" # 例: Sun Dec 31 23:59:59 2023
+    ]
+
+    formats.each do |fmt|
+      begin
+        return Time.zone.strptime(date_str, fmt)
+      rescue ArgumentError
+        next
+      end
     end
-  rescue => e
-    Rails.logger.warn "⚠️ DATE parse failed: #{date_str} (#{e.message})"
+
+    begin
+      parsed = Time.zone.parse(date_str)
+      return parsed if parsed.present?
+    rescue => e
+      Rails.logger.warn "⚠️ Time.zone.parse also failed: #{date_str} (#{e.message})"
+    end
+
+    Rails.logger.warn "⚠️ DATE parse failed, fallback to now: #{date_str}"
     Time.zone.now
   end
 end
