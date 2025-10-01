@@ -9,27 +9,46 @@ class Blog < ApplicationRecord
   enum :category, { uncategorized: 0, hobby: 1, tech: 2, other: 3 }, default: :uncategorized
 
   MAX_UPLOAD_SIZE = 5.megabytes
+  ALLOWED_EXTENSIONS = %w[.txt]
+  ALLOWED_MIME_TYPES = %w[text/plain]
 
+  # --- ファイルバリデーション ---
   def self.valid_mt_file?(uploaded_file)
     return false unless uploaded_file
-
-    allowed_types = ["text/plain", "text/markdown", "application/octet-stream"]
-    allowed_exts  = [".txt", ".text", ".md"]
+    return false if uploaded_file.size > MAX_UPLOAD_SIZE
 
     ext = File.extname(uploaded_file.original_filename).downcase
     mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename)
 
-    content = uploaded_file.read
-    uploaded_file.rewind
+    begin
+      content = uploaded_file.read
+      uploaded_file.rewind
+    rescue => e
+      Rails.logger.warn "⚠️ Failed to read uploaded file: #{e.message}"
+      return false
+    end
+
     is_text = content[0..1024].ascii_only? || !content[0..1024].each_byte.any?(&:zero?)
 
-    allowed_types.include?(mime) && allowed_exts.include?(ext) && is_text
+    ALLOWED_EXTENSIONS.include?(ext) && ALLOWED_MIME_TYPES.include?(mime) && is_text
   end
 
+  # --- MTファイルからのインポート ---
   def self.import_from_mt(uploaded_file)
-    return 0 if uploaded_file.blank?
+    return 0 unless valid_mt_file?(uploaded_file)
 
-    content = NKF.nkf("-w", uploaded_file.read)
+    content = nil
+    begin
+      content = NKF.nkf("-w", uploaded_file.read)
+    rescue => e
+      Rails.logger.warn "⚠️ Failed to convert MT file to UTF-8: #{e.message}"
+      return 0
+    ensure
+      uploaded_file.rewind
+    end
+
+    # BOM除去
+    content.sub!(/\A\uFEFF/, "")
 
     entries = parse_mt_content(content)
     return 0 if entries.empty?
@@ -62,34 +81,37 @@ class Blog < ApplicationRecord
     successful_count
   end
 
+  # --- タグ除去サニタイズ ---
   def self.sanitize_text(text)
     ActionController::Base.helpers.sanitize(text.to_s, tags: [])
   end
 
+  # --- MTパース（堅牢化） ---
   def self.parse_mt_content(content)
     entries = []
 
     content.scan(
-      /AUTHOR:\s*(.+?)\r?\nTITLE:\s*(.+?)\r?\n(?:.*?\r?\n)*?DATE:\s*(.+?)\r?\n(?:.*?\r?\n)*?BODY:\r?\n(.*?)(?:\r?\n-{5,}\r?\n|\z)/m
+      /AUTHOR:\s*(.*?)\r?\nTITLE:\s*(.*?)\r?\n(?:.*?\r?\n)*?DATE:\s*(.*?)\r?\n(?:.*?\r?\n)*?BODY:\r?\n(.*?)(?:\r?\n-{3,}\r?\n|\z)/m
     ) do |_author, title, date, body|
       entries << {
-        title: title.strip,
-        content: body.gsub(/\r\n?/, "\n").strip,
-        date: date.strip
+        title: title.to_s.strip,
+        content: body.to_s.gsub(/\r\n?/, "\n").strip,
+        date: date.to_s.strip
       }
     end
 
     entries
   end
 
+  # --- 日付パース（複数フォーマット対応） ---
   def self.parse_mt_date(date_str)
     return Time.zone.now if date_str.blank?
 
     formats = [
-      "%m/%d/%Y %H:%M:%S",   # 例: 12/31/2023 23:59:59
-      "%Y-%m-%d %H:%M:%S",   # 例: 2023-12-31 23:59:59
-      "%Y/%m/%d %H:%M:%S",   # 例: 2023/12/31 23:59:59
-      "%a %b %d %H:%M:%S %Y" # 例: Sun Dec 31 23:59:59 2023
+      "%m/%d/%Y %H:%M:%S",
+      "%Y-%m-%d %H:%M:%S",
+      "%Y/%m/%d %H:%M:%S",
+      "%a %b %d %H:%M:%S %Y"
     ]
 
     formats.each do |fmt|
