@@ -62,7 +62,6 @@ class Blog < ApplicationRecord
     successful_count
   end
 
-  # サニタイズ（タイトル・コンテンツ共通）
   def self.sanitize_text(text)
     ActionController::Base.helpers.sanitize(text.to_s, tags: [])
   end
