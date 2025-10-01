@@ -10,6 +10,22 @@ class Blog < ApplicationRecord
 
   MAX_UPLOAD_SIZE = 5.megabytes
 
+  def self.valid_mt_file?(uploaded_file)
+    return false unless uploaded_file
+
+    allowed_types = ["text/plain", "text/markdown", "application/octet-stream"]
+    allowed_exts  = [".txt", ".text", ".md"]
+
+    ext = File.extname(uploaded_file.original_filename).downcase
+    mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename)
+
+    content = uploaded_file.read
+    uploaded_file.rewind
+    is_text = content[0..1024].ascii_only? || !content[0..1024].each_byte.any?(&:zero?)
+
+    allowed_types.include?(mime) && allowed_exts.include?(ext) && is_text
+  end
+
   def self.import_from_mt(uploaded_file)
     return 0 if uploaded_file.blank?
 
