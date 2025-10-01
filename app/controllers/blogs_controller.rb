@@ -4,9 +4,6 @@ class BlogsController < ApplicationController
   before_action :set_blog, only: %i[show edit update destroy]
   before_action :authenticate_admin!, only: [:import_mt]
 
-  ALLOWED_EXTENSIONS = %w[.txt]
-  ALLOWED_MIME_TYPES = %w[text/plain]
-
   # GET /blogs or /blogs.json
   def index
     @blogs = Blog.all
@@ -56,20 +53,14 @@ class BlogsController < ApplicationController
   def import_mt
     uploaded_file = params[:file]
 
-    # サイズと空ファイルチェック
     if uploaded_file.blank? || uploaded_file.size.zero? || uploaded_file.size > Blog::MAX_UPLOAD_SIZE
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
-    # MIMEタイプと拡張子チェック
-    detected_type = Marcel::MimeType.for(uploaded_file.tempfile, name: uploaded_file.original_filename) || ""
-    ext = File.extname(uploaded_file.original_filename.to_s).downcase
-
-    unless ALLOWED_MIME_TYPES.include?(detected_type) && ALLOWED_EXTENSIONS.include?(ext)
+    unless Blog.valid_mt_file?(uploaded_file)
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
-    # 実際のインポート処理
     count = Blog.import_from_mt(uploaded_file)
 
     if count.zero?

@@ -15,22 +15,14 @@ class Blog < ApplicationRecord
   # --- ファイルバリデーション ---
   def self.valid_mt_file?(uploaded_file)
     return false unless uploaded_file
-    return false if uploaded_file.size > MAX_UPLOAD_SIZE
 
-    ext = File.extname(uploaded_file.original_filename).downcase
-    mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename)
+    ext = File.extname(uploaded_file.original_filename.to_s).downcase
+    mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
 
-    begin
-      content = uploaded_file.read
-      uploaded_file.rewind
-    rescue => e
-      Rails.logger.warn "⚠️ Failed to read uploaded file: #{e.message}"
-      return false
-    end
+    ext_ok  = ALLOWED_EXTENSIONS.include?(ext)
+    mime_ok = ALLOWED_MIME_TYPES.include?(mime)
 
-    is_text = content[0..1024].ascii_only? || !content[0..1024].each_byte.any?(&:zero?)
-
-    ALLOWED_EXTENSIONS.include?(ext) && ALLOWED_MIME_TYPES.include?(mime) && is_text
+    ext_ok && mime_ok
   end
 
   # --- MTファイルからのインポート ---
