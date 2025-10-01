@@ -2,6 +2,14 @@
   <h1 class="admin_title"><%= t('views.common.admins.admin_title', name: Admin.model_name.human) %></h1>
 </div>
 
+<div class="import">
+  <h2>MT形式データインポート</h2>
+    <%= form_with url: import_mt_blogs_path, local: true, multipart: true do |f| %>
+      <%= f.file_field :file, accept: ".txt" %>
+      <%= f.submit "インポート", class: "btn btn-primary" %>
+    <% end %>
+</div>
+
 <div class="admin_contents">
   <div class="admin_content">
     <div class="new_blogs_form">
