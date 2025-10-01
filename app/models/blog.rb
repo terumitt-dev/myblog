@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "uri"
+require "nkf"
 
 class Blog < ApplicationRecord
   has_many :comments, dependent: :destroy
@@ -12,7 +13,8 @@ class Blog < ApplicationRecord
   def self.import_from_mt(uploaded_file)
     return 0 if uploaded_file.blank?
 
-    content = uploaded_file.read.force_encoding("UTF-8")
+    content = NKF.nkf("-w", uploaded_file.read)
+
     entries = parse_mt_content(content)
     return 0 if entries.empty?
 
