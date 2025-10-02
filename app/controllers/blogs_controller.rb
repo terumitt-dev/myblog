@@ -68,8 +68,34 @@ class BlogsController < ApplicationController
     else
       redirect_to admin_root_path, notice: t('controllers.common.notice_import', name: "ブログ", count: count)
     end
-  rescue => e
-    Rails.logger.error "Blog import failed: #{e.class} #{e.message}"
+
+  rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.error({
+      context: "Blog import failed (validation)",
+      error_class: e.class.name,
+      model: e.record.class.name,
+      errors: e.record.errors.to_hash,
+      time: Time.current.iso8601
+    }.to_json)
+    redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_validation')
+
+  rescue ArgumentError => e
+    Rails.logger.error({
+      context: "Blog import failed (argument error)",
+      message: e.message,
+      backtrace: e.backtrace.take(5),
+      time: Time.current.iso8601
+    }.to_json)
+    redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_format')
+
+  rescue StandardError => e
+    Rails.logger.error({
+      context: "Blog import failed (unexpected)",
+      error_class: e.class.name,
+      message: e.message,
+      backtrace: e.backtrace.take(5),
+      time: Time.current.iso8601
+    }.to_json)
     redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed')
   end
 
