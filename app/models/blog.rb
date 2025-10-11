@@ -26,8 +26,8 @@ class Blog < ApplicationRecord
     begin
       mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
       uploaded_file.rewind
-    rescue => e
-      Rails.logger.info "MIME detection failed, fallback to extension check: #{e.message}"
+    rescue StandardError => e
+      Rails.logger.info "MIME detection failed for #{uploaded_file.original_filename}: #{e.class.name}"
       mime = "" # 拡張子のみで判定
     end
 

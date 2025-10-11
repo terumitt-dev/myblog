@@ -73,8 +73,8 @@ class BlogsController < ApplicationController
     else
       success_message = t('controllers.common.notice_import', name: "ブログ", count: import_result[:success])
       if import_result[:errors].any?
-        warning_message = "#{success_message} (#{import_result[:errors].size}件でエラー)"
-        redirect_to admin_root_path, notice: warning_message
+        warning_message = "#{success_message} ただし#{import_result[:errors].size}件でエラーが発生しました"
+        redirect_to admin_root_path, alert: warning_message
       else
         redirect_to admin_root_path, notice: success_message
       end
