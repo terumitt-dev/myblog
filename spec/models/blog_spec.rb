@@ -40,10 +40,16 @@ RSpec.describe Blog, type: :model do
       temp_file.write("AUTHOR: test\nTITLE: サンプルブログ\nDATE: 12/17/2024 19:00:00\nBODY:\n本文です\n-----\n")
       temp_file.rewind
 
-      expect(Blog.valid_mt_file?(temp_file)).to be true
+      uploaded_file = ActionDispatch::Http::UploadedFile.new(
+        tempfile: temp_file,
+        filename: 'sample.txt',
+        type: 'text/plain'
+      )
+
+      expect(Blog.valid_mt_file?(uploaded_file)).to be true
 
       expect {
-        Blog.import_from_mt(temp_file)
+        Blog.import_from_mt(uploaded_file)
       }.to change(Blog, :count).by(1)
 
       blog = Blog.last
@@ -59,8 +65,15 @@ RSpec.describe Blog, type: :model do
       temp_file.write("無効な内容")
       temp_file.rewind
 
+      # UploadedFileのモック
+      uploaded_file = ActionDispatch::Http::UploadedFile.new(
+        tempfile: temp_file,
+        filename: 'invalid.txt',
+        type: 'text/plain'
+      )
+
       expect {
-        Blog.import_from_mt(temp_file)
+        Blog.import_from_mt(uploaded_file)
       }.to_not change(Blog, :count)
 
       temp_file.close

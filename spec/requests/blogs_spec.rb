@@ -169,7 +169,7 @@ RSpec.describe 'Blogs', type: :request do
       end
 
       it 'MIMEタイプ不正のファイルは弾かれること' do
-        temp_file = Tempfile.new(['invalid_mime', '.txt'])
+        temp_file = Tempfile.new(['invalid_mime', '.csv'])  # 拡張子を.csvに変更
         temp_file.write('こんにちは')
         temp_file.rewind
 
