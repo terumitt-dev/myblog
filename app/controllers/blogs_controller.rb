@@ -75,8 +75,12 @@ class BlogsController < ApplicationController
       if import_result[:errors].empty?
         redirect_to admin_root_path, notice: success_message
       else
-        warning_message = t('controllers.common.alert_partial_success', success: import_result[:success], errors: import_result[:errors].size)
-        redirect_to admin_root_path, alert: warning_message
+        total_count = import_result[:success] + import_result[:errors].size
+        result_message = t('controllers.common.notice_import_result',
+                          total: total_count,
+                          success: import_result[:success],
+                          errors: import_result[:errors].size)
+        redirect_to admin_root_path, notice: result_message
       end
     end
   end

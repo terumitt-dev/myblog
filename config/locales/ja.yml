@@ -48,7 +48,7 @@ ja:
       alert_too_many_entries: "エントリ数が上限を超えています"
       alert_entry_too_large: "エントリのサイズが大きすぎます"
       alert_import_failed_general: "インポート処理中にエラーが発生しました"
-      alert_partial_success: "%{success}件インポート完了。%{errors}件でエラーが発生しました"
+      notice_import_result: "%{total}件中%{success}件成功、%{errors}件失敗"
 
   helpers:
     submit:
