@@ -92,14 +92,14 @@ class Blog < ApplicationRecord
 
     import_result = { success: 0, errors: [] }
 
-    entries.each_slice(100).with_index do |batch, batch_num|
-      total_batches = (entries.size / 100.0).ceil
+    entries.each_slice(5).with_index do |batch, batch_num|
+      total_batches = (entries.size / 5.0).ceil
       Rails.logger.info "Processing batch #{batch_num + 1}/#{total_batches} (#{batch.size} entries)"
 
       transaction do
         batch.each_with_index do |entry, batch_index|
-          # 全体でのインデックス計算
-          global_index = batch_num * 100 + batch_index
+
+          global_index = batch_num * 5 + batch_index
 
           begin
             safe_title = sanitize_text(entry[:title])
