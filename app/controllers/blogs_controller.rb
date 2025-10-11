@@ -69,9 +69,8 @@ class BlogsController < ApplicationController
     when import_result[:success].zero? && import_result[:errors].any? { |e| e.include?("Too many entries") }
       redirect_to admin_root_path, alert: t('controllers.common.alert_too_many_entries')
     when import_result[:success].zero?
-      error_summary = import_result[:errors].first || "Unknown error"
-      Rails.logger.warn "Import failed: #{error_summary}"
-      redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed', reason: error_summary)
+      Rails.logger.warn "Import failed: #{import_result[:errors].join('; ')}"
+      redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_general')
     else
       success_message = t('controllers.common.notice_import', name: "ブログ", count: import_result[:success])
       if import_result[:errors].any?

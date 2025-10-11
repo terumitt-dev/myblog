@@ -47,6 +47,7 @@ ja:
       alert_import_failed_format: "インポートに失敗しました（ファイル形式エラー）"
       alert_too_many_entries: "エントリ数が上限を超えています"
       alert_entry_too_large: "エントリのサイズが大きすぎます"
+      alert_import_failed_general: "インポート処理中にエラーが発生しました"
 
   helpers:
     submit:
