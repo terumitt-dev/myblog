@@ -63,12 +63,11 @@ class BlogsController < ApplicationController
 
     import_result = Blog.import_from_mt(uploaded_file)
 
-    case
-    when import_result[:success].zero? && import_result[:errors].any? { |e| e.include?("No valid entries found") }
+    if import_result[:success].zero? && import_result[:error_type] == :no_entries
       redirect_to admin_root_path, alert: t('controllers.common.alert_no_entries')
-    when import_result[:success].zero? && import_result[:errors].any? { |e| e.include?("Too many entries") }
+    elsif import_result[:success].zero? && import_result[:error_type] == :too_many_entries
       redirect_to admin_root_path, alert: t('controllers.common.alert_too_many_entries')
-    when import_result[:success].zero?
+    elsif import_result[:success].zero?
       Rails.logger.warn "Import failed: #{import_result[:errors].join('; ')}"
       redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_general')
     else

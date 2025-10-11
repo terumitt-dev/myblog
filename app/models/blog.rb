@@ -39,14 +39,14 @@ class Blog < ApplicationRecord
 
   # --- MTファイルからのインポート ---
   def self.import_from_mt(uploaded_file)
-    return { success: 0, errors: ["Invalid file"] } unless valid_mt_file?(uploaded_file)
+    return { success: 0, errors: [], error_type: :invalid_file } unless valid_mt_file?(uploaded_file)
 
     content = nil
     begin
       content = NKF.nkf("-w", uploaded_file.read)
     rescue => e
       Rails.logger.warn "⚠️ Failed to convert MT file to UTF-8: #{e.message}"
-      return { success: 0, errors: ["File encoding conversion failed"] }
+      return { success: 0, errors: ["File encoding conversion failed"], error_type: :encoding_error }
     ensure
       uploaded_file.rewind
     end
@@ -56,13 +56,13 @@ class Blog < ApplicationRecord
 
     entries = parse_mt_content(content)
     if entries.empty?
-      return { success: 0, errors: ["No valid entries found in file"] }
+      return { success: 0, errors: ["No valid entries found in file"], error_type: :no_entries }
     end
 
     # エントリ数上限チェック
     if entries.size > MAX_ENTRIES_COUNT
       Rails.logger.warn "⚠️ Too many entries: #{entries.size} (max: #{MAX_ENTRIES_COUNT})"
-      return { success: 0, errors: ["Too many entries in file (max: #{MAX_ENTRIES_COUNT})"] }
+      return { success: 0, errors: ["Too many entries in file (max: #{MAX_ENTRIES_COUNT})"], error_type: :too_many_entries }
     end
 
     import_result = { success: 0, errors: [] }
