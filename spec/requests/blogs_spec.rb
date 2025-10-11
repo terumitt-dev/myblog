@@ -122,6 +122,144 @@ RSpec.describe 'Blogs', type: :request do
       end
     end
 
+    describe 'MT形式インポート' do
+      let!(:admin) { FactoryBot.create(:admin) }
+
+      before do
+        sign_in admin
+      end
+
+      it '有効なMTファイルでブログが作成されること' do
+        mt_content = <<~MT
+          AUTHOR: admin
+          TITLE: サンプルブログ
+          DATE: 09/27/2025 14:00:00
+          BODY:
+          こんにちは
+          -----
+        MT
+
+        temp_file = Tempfile.new(['sample', '.txt'])
+        temp_file.write(mt_content)
+        temp_file.rewind
+
+        expect {
+          post import_mt_blogs_path, params: { file: Rack::Test::UploadedFile.new(temp_file.path, 'text/plain') }
+        }.to change(Blog, :count).by(1)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+      end
+
+      it '無効なファイルではブログが作成されないこと' do
+        temp_file = Tempfile.new(['invalid', '.txt'])
+        temp_file.write("無効な内容")
+        temp_file.rewind
+
+        expect {
+          post import_mt_blogs_path, params: { file: Rack::Test::UploadedFile.new(temp_file.path, 'text/plain') }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+      end
+
+      it 'MIMEタイプ不正のファイルは弾かれること' do
+        temp_file = Tempfile.new(['invalid_mime', '.csv'])  # 拡張子を.csvに変更
+        temp_file.write('こんにちは')
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'application/octet-stream')
+
+        allow(Marcel::MimeType).to receive(:for).and_return('application/octet-stream')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_invalid_file')
+      end
+
+      it '拡張子不正のファイルは弾かれること' do
+        temp_file = Tempfile.new(['invalid_ext', '.csv'])
+        temp_file.write('こんにちは')
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'text/plain')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_invalid_file')
+      end
+
+      it 'MTファイルに0件の場合は警告表示されること' do
+        temp_file = Tempfile.new(['empty_mt', '.txt'])
+        temp_file.write("無効な内容") # MT解析で0件になる内容
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'text/plain')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_no_entries')
+      end
+
+      it '空ファイルは弾かれること' do
+        temp_file = Tempfile.new(['empty', '.txt'])
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'text/plain')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+        expect(flash[:alert]).to eq I18n.t('controllers.common.alert_invalid_file')
+      end
+
+      it 'サイズ上限を超えたファイルは弾かれること' do
+        large_content = 'a' * (Blog::MAX_UPLOAD_SIZE + 1)  # ← ここ修正
+        temp_file = Tempfile.new(['large', '.txt'])
+        temp_file.write(large_content)
+        temp_file.rewind
+
+        uploaded_file = Rack::Test::UploadedFile.new(temp_file.path, 'text/plain')
+
+        expect {
+          post import_mt_blogs_path, params: { file: uploaded_file }
+        }.not_to change(Blog, :count)
+
+        temp_file.close
+        temp_file.unlink
+
+        expect(response).to redirect_to(admin_root_path)
+      end
+    end
+
     context '一般ユーザーの場合' do
       describe 'GET /index' do
         let!(:blog) { FactoryBot.create(:blog) }

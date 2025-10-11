@@ -2,6 +2,7 @@
 
 class BlogsController < ApplicationController
   before_action :set_blog, only: %i[show edit update destroy]
+  before_action :authenticate_admin!, only: [:import_mt]
 
   # GET /blogs or /blogs.json
   def index
@@ -48,7 +49,51 @@ class BlogsController < ApplicationController
     redirect_to admin_root_url, notice: t('controllers.common.notice_destroy', name: Blog.model_name.human)
   end
 
+  # POST /blogs/import_mt
+  def import_mt
+    uploaded_file = params[:file]
+
+    if uploaded_file.blank? || uploaded_file.size.zero? || uploaded_file.size > Blog::MAX_UPLOAD_SIZE
+      return redirect_to_with_alert('alert_invalid_file')
+    end
+
+    unless Blog.valid_mt_file?(uploaded_file)
+      return redirect_to_with_alert('alert_invalid_file')
+    end
+
+    import_result = Blog.import_from_mt(uploaded_file)
+
+    if import_result[:success].zero? && import_result[:error_type] == :no_entries
+      redirect_to admin_root_path, alert: t('controllers.common.alert_no_entries')
+    elsif import_result[:success].zero? && import_result[:error_type] == :too_many_entries
+      redirect_to admin_root_path, alert: t('controllers.common.alert_too_many_entries')
+    elsif import_result[:success].zero?
+      Rails.logger.warn "Import completely failed: #{import_result[:errors].size} errors occurred"
+      Rails.logger.warn "Import error details: #{import_result[:errors].first(3).join('; ')}#{'...' if import_result[:errors].size > 3}"
+      redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_general')
+    else
+      success_message = t('controllers.common.notice_import', name: "ブログ", count: import_result[:success])
+      if import_result[:errors].empty?
+        Rails.logger.info "Import completed successfully: #{import_result[:success]} entries imported"
+        redirect_to admin_root_path, notice: success_message
+      else
+        total_count = import_result[:success] + import_result[:errors].size
+        Rails.logger.info "Import completed with partial success: #{import_result[:success]}/#{total_count} succeeded"
+        Rails.logger.warn "Import error summary: #{import_result[:errors].first(5).join('; ')}#{'...' if import_result[:errors].size > 5}"
+        result_message = t('controllers.common.notice_import_result',
+                          total: total_count,
+                          success: import_result[:success],
+                          errors: import_result[:errors].size)
+        redirect_to admin_root_path, notice: result_message
+      end
+    end
+  end
+
   private
+
+  def redirect_to_with_alert(alert_key)
+    redirect_to admin_root_path, alert: t("controllers.common.#{alert_key}")
+  end
 
   # Use callbacks to share common setup or constraints between actions.
   def set_blog
@@ -57,6 +102,6 @@ class BlogsController < ApplicationController
 
   # Only allow a list of trusted parameters through.
   def blog_params
-    params.expect(blog: %i[title content category])
+    params.require(:blog).permit(:title, :content, :category)
   end
 end
