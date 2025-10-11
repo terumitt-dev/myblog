@@ -96,12 +96,12 @@ class Blog < ApplicationRecord
       total_batches = (entries.size / 5.0).ceil
       Rails.logger.info "Processing batch #{batch_num + 1}/#{total_batches} (#{batch.size} entries)"
 
-      transaction do
-        batch.each_with_index do |entry, batch_index|
+      batch.each_with_index do |entry, batch_index|
+        global_index = batch_num * 5 + batch_index
 
-          global_index = batch_num * 5 + batch_index
-
-          begin
+        # エントリごとに独立して処理
+        begin
+          transaction do  # 1件ずつトランザクション
             safe_title = sanitize_text(entry[:title])
             safe_content = sanitize_text(entry[:content])
 
@@ -131,17 +131,18 @@ class Blog < ApplicationRecord
               updated_at: now
             )
             import_result[:success] += 1
-
-          rescue ActiveRecord::RecordInvalid => e
-            Rails.logger.warn "Entry #{global_index + 1}: Validation failed (#{e.record.errors.count} errors)"
-            import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
-          rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
-            Rails.logger.error "Entry #{global_index + 1}: Database error (#{e.class.name})"
-            import_result[:errors] << "Entry #{global_index + 1}: Database error"
-          rescue StandardError => e
-            Rails.logger.warn "Entry #{global_index + 1}: Import failed (#{e.class.name})"
-            import_result[:errors] << "Entry #{global_index + 1}: Import failed (#{e.class.name})"
+            Rails.logger.debug "Entry #{global_index + 1}: Successfully imported"
           end
+
+        rescue ActiveRecord::RecordInvalid => e
+          Rails.logger.warn "Entry #{global_index + 1}: Validation failed (#{e.record.errors.count} errors) - SKIPPED"
+          import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
+        rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
+          Rails.logger.error "Entry #{global_index + 1}: Database error (#{e.class.name}) - SKIPPED"
+          import_result[:errors] << "Entry #{global_index + 1}: Database error"
+        rescue StandardError => e
+          Rails.logger.warn "Entry #{global_index + 1}: Import failed (#{e.class.name}) - SKIPPED"
+          import_result[:errors] << "Entry #{global_index + 1}: Import failed (#{e.class.name})"
         end
       end
     end
