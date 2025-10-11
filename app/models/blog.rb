@@ -22,17 +22,17 @@ class Blog < ApplicationRecord
 
     ext = File.extname(uploaded_file.original_filename.to_s).downcase
 
-    # MIME判定の強化
+    # MIME判定の強化（フォールバック付き）
     begin
       mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
       uploaded_file.rewind
     rescue => e
-      Rails.logger.warn "⚠️ MIME detection failed: #{e.message}"
-      return false
+      Rails.logger.info "MIME detection failed, fallback to extension check: #{e.message}"
+      mime = "" # 拡張子のみで判定
     end
 
     ext_ok  = ALLOWED_EXTENSIONS.include?(ext)
-    mime_ok = ALLOWED_MIME_TYPES.include?(mime)
+    mime_ok = ALLOWED_MIME_TYPES.include?(mime) || mime.empty? # MIME空の場合は拡張子で判定
 
     ext_ok && mime_ok
   end
@@ -73,6 +73,13 @@ class Blog < ApplicationRecord
           safe_title = sanitize_text(entry[:title])
           safe_content = sanitize_text(entry[:content])
 
+          # 空データチェック
+          if safe_title.blank? || safe_content.blank?
+            Rails.logger.info "Entry #{index + 1}: Skipped due to empty title or content"
+            import_result[:errors] << "Entry #{index + 1}: Empty title or content"
+            next
+          end
+
           # エントリサイズチェック
           entry_size = safe_title.bytesize + safe_content.bytesize
           if entry_size > MAX_ENTRY_SIZE
@@ -94,11 +101,10 @@ class Blog < ApplicationRecord
           import_result[:success] += 1
 
         rescue ActiveRecord::RecordInvalid => e
-          error_msg = e.record.errors.full_messages.join(", ")
-          Rails.logger.warn "⚠️ Blog validation failed for entry #{index + 1}: #{error_msg}"
-          import_result[:errors] << "Entry #{index + 1}: #{error_msg}"
+          Rails.logger.info "Entry #{index + 1}: Validation failed (#{e.record.errors.count} errors)"
+          import_result[:errors] << "Entry #{index + 1}: Validation failed"
         rescue => e
-          Rails.logger.warn "⚠️ Blog import failed for entry #{index + 1}: #{e.class} #{e.message}"
+          Rails.logger.info "Entry #{index + 1}: Import failed (#{e.class.name})"
           import_result[:errors] << "Entry #{index + 1}: Import failed (#{e.class.name})"
         end
       end
