@@ -63,7 +63,12 @@ class BlogsController < ApplicationController
 
     import_result = Blog.import_from_mt(uploaded_file)
 
-    if import_result[:success].zero?
+    case
+    when import_result[:success].zero? && import_result[:errors].any? { |e| e.include?("No valid entries found") }
+      redirect_to admin_root_path, alert: t('controllers.common.alert_no_entries')
+    when import_result[:success].zero? && import_result[:errors].any? { |e| e.include?("Too many entries") }
+      redirect_to admin_root_path, alert: t('controllers.common.alert_too_many_entries')
+    when import_result[:success].zero?
       error_summary = import_result[:errors].first || "Unknown error"
       Rails.logger.warn "Import failed: #{error_summary}"
       redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed', reason: error_summary)
@@ -76,9 +81,6 @@ class BlogsController < ApplicationController
         redirect_to admin_root_path, notice: success_message
       end
     end
-  rescue => e
-    Rails.logger.error "Unexpected import error: #{e.class} #{e.message}"
-    redirect_to admin_root_path, alert: t('controllers.common.alert_unexpected_error')
   end
 
   private

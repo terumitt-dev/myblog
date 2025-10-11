@@ -11,13 +11,24 @@ class Blog < ApplicationRecord
   MAX_UPLOAD_SIZE = 5.megabytes
   ALLOWED_EXTENSIONS = %w[.txt]
   ALLOWED_MIME_TYPES = %w[text/plain]
+  MAX_ENTRIES_COUNT = 1000
+  MAX_ENTRY_SIZE = 100.kilobytes
 
   # --- ファイルバリデーション ---
   def self.valid_mt_file?(uploaded_file)
     return false unless uploaded_file
+    return false if uploaded_file.size.zero?
 
     ext = File.extname(uploaded_file.original_filename.to_s).downcase
-    mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
+
+    # MIME判定の強化
+    begin
+      mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
+      uploaded_file.rewind
+    rescue => e
+      Rails.logger.warn "⚠️ MIME detection failed: #{e.message}"
+      return false
+    end
 
     ext_ok  = ALLOWED_EXTENSIONS.include?(ext)
     mime_ok = ALLOWED_MIME_TYPES.include?(mime)
@@ -47,6 +58,12 @@ class Blog < ApplicationRecord
       return { success: 0, errors: ["No valid entries found in file"] }
     end
 
+    # エントリ数上限チェック
+    if entries.size > MAX_ENTRIES_COUNT
+      Rails.logger.warn "⚠️ Too many entries: #{entries.size} (max: #{MAX_ENTRIES_COUNT})"
+      return { success: 0, errors: ["Too many entries in file (max: #{MAX_ENTRIES_COUNT})"] }
+    end
+
     import_result = { success: 0, errors: [] }
 
     transaction do
@@ -54,6 +71,15 @@ class Blog < ApplicationRecord
         begin
           safe_title = sanitize_text(entry[:title])
           safe_content = sanitize_text(entry[:content])
+
+          # エントリサイズチェック
+          entry_size = safe_title.bytesize + safe_content.bytesize
+          if entry_size > MAX_ENTRY_SIZE
+            Rails.logger.warn "⚠️ Entry #{index + 1} too large: #{entry_size} bytes"
+            import_result[:errors] << "Entry #{index + 1}: Content too large (#{entry_size} bytes)"
+            next
+          end
+
           date = parse_mt_date(entry[:date])
           now = Time.zone.now
 
