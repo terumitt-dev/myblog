@@ -72,11 +72,11 @@ class BlogsController < ApplicationController
       redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_general')
     else
       success_message = t('controllers.common.notice_import', name: "ブログ", count: import_result[:success])
-      if import_result[:errors].any?
+      if import_result[:errors].empty?
+        redirect_to admin_root_path, notice: success_message
+      else
         warning_message = t('controllers.common.alert_partial_success', success: import_result[:success], errors: import_result[:errors].size)
         redirect_to admin_root_path, alert: warning_message
-      else
-        redirect_to admin_root_path, notice: success_message
       end
     end
   end
