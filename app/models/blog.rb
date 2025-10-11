@@ -27,20 +27,17 @@ class Blog < ApplicationRecord
       mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
       uploaded_file.rewind
 
-      # MIME判定失敗時は拒否（セキュリティ強化）
       if mime.empty?
-        Rails.logger.info "MIME detection returned empty for #{uploaded_file.original_filename}"
-        return false
+        Rails.logger.info "MIME detection returned empty for #{uploaded_file.original_filename}, fallback to extension check"
       end
     rescue StandardError => e
-      Rails.logger.info "MIME detection failed for #{uploaded_file.original_filename}: #{e.class.name}"
-      return false
+      Rails.logger.info "MIME detection failed for #{uploaded_file.original_filename}: #{e.class.name}, fallback to extension check"
     end
 
     ext_ok  = ALLOWED_EXTENSIONS.include?(ext)
     mime_ok = ALLOWED_MIME_TYPES.include?(mime)
 
-    ext_ok && mime_ok
+    ext_ok || mime_ok  # どちらかがOKなら通す
   end
 
   # --- MTファイルからのインポート ---
