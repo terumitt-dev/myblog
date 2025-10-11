@@ -27,14 +27,14 @@ class Blog < ApplicationRecord
 
   # --- MTファイルからのインポート ---
   def self.import_from_mt(uploaded_file)
-    return 0 unless valid_mt_file?(uploaded_file)
+    return { success: 0, errors: ["Invalid file"] } unless valid_mt_file?(uploaded_file)
 
     content = nil
     begin
       content = NKF.nkf("-w", uploaded_file.read)
     rescue => e
       Rails.logger.warn "⚠️ Failed to convert MT file to UTF-8: #{e.message}"
-      return 0
+      return { success: 0, errors: ["File encoding conversion failed"] }
     ensure
       uploaded_file.rewind
     end
@@ -43,18 +43,20 @@ class Blog < ApplicationRecord
     content.sub!(/\A\uFEFF/, "")
 
     entries = parse_mt_content(content)
-    return 0 if entries.empty?
+    if entries.empty?
+      return { success: 0, errors: ["No valid entries found in file"] }
+    end
 
-    successful_count = 0
+    import_result = { success: 0, errors: [] }
 
     transaction do
-      entries.each do |entry|
-        safe_title   = sanitize_text(entry[:title])
-        safe_content = sanitize_text(entry[:content])
-
+      entries.each_with_index do |entry, index|
         begin
+          safe_title = sanitize_text(entry[:title])
+          safe_content = sanitize_text(entry[:content])
           date = parse_mt_date(entry[:date])
-          now  = Time.zone.now
+          now = Time.zone.now
+
           Blog.create!(
             title: safe_title,
             content: safe_content,
@@ -62,15 +64,20 @@ class Blog < ApplicationRecord
             created_at: date,
             updated_at: now
           )
-          successful_count += 1
+          import_result[:success] += 1
+
+        rescue ActiveRecord::RecordInvalid => e
+          error_msg = e.record.errors.full_messages.join(", ")
+          Rails.logger.warn "⚠️ Blog validation failed for entry #{index + 1}: #{error_msg}"
+          import_result[:errors] << "Entry #{index + 1}: #{error_msg}"
         rescue => e
-          Rails.logger.warn "⚠️ Blog import failed for an entry: #{e.class} #{e.message}"
-          next
+          Rails.logger.warn "⚠️ Blog import failed for entry #{index + 1}: #{e.class} #{e.message}"
+          import_result[:errors] << "Entry #{index + 1}: Import failed (#{e.class.name})"
         end
       end
     end
 
-    successful_count
+    import_result
   end
 
   # --- タグ除去サニタイズ ---
@@ -82,17 +89,70 @@ class Blog < ApplicationRecord
   def self.parse_mt_content(content)
     entries = []
 
-    content.scan(
-      /AUTHOR:\s*(.*?)\r?\nTITLE:\s*(.*?)\r?\n(?:.*?\r?\n)*?DATE:\s*(.*?)\r?\n(?:.*?\r?\n)*?BODY:\r?\n(.*?)(?:\r?\n-{3,}\r?\n|\z)/m
-    ) do |_author, title, date, body|
-      entries << {
-        title: title.to_s.strip,
-        content: body.to_s.gsub(/\r\n?/, "\n").strip,
-        date: date.to_s.strip
-      }
+    # より堅牢な区切り文字でエントリを分割
+    entry_blocks = content.split(/\r?\n-{5,}\r?\n/)
+
+    entry_blocks.each_with_index do |block, index|
+      next if block.strip.empty?
+
+      begin
+        entry = parse_mt_entry_block(block.strip)
+        entries << entry if entry
+      rescue => e
+        Rails.logger.warn "⚠️ Failed to parse entry block #{index + 1}: #{e.message}"
+        next
+      end
+    end
+
+    # 従来の正規表現方式もフォールバック
+    if entries.empty?
+      content.scan(
+        /AUTHOR:\s*(.*?)\r?\nTITLE:\s*(.*?)\r?\n(?:.*?\r?\n)*?DATE:\s*(.*?)\r?\n(?:.*?\r?\n)*?BODY:\r?\n(.*?)(?:\r?\n-{3,}\r?\n|\z)/m
+      ) do |_author, title, date, body|
+        entries << {
+          title: title.to_s.strip,
+          content: body.to_s.gsub(/\r\n?/, "\n").strip,
+          date: date.to_s.strip
+        }
+      end
     end
 
     entries
+  end
+
+  # --- MTエントリブロックのパース（フィールド順序に依存しない） ---
+  def self.parse_mt_entry_block(block)
+    fields = {}
+    current_field = nil
+    current_content = []
+
+    block.split(/\r?\n/).each do |line|
+      if line =~ /^([A-Z]+):\s*(.*)$/
+        # 前のフィールドを保存
+        if current_field
+          fields[current_field.downcase.to_sym] = current_content.join("\n").strip
+        end
+        # 新しいフィールドを開始
+        current_field = $1
+        current_content = [$2]
+      elsif current_field
+        current_content << line
+      end
+    end
+
+    # 最後のフィールドを保存
+    if current_field
+      fields[current_field.downcase.to_sym] = current_content.join("\n").strip
+    end
+
+    # 必須フィールドチェック
+    return nil unless fields[:title] && fields[:body]
+
+    {
+      title: fields[:title],
+      content: fields[:body].gsub(/\r\n?/, "\n"),
+      date: fields[:date] || ""
+    }
   end
 
   # --- 日付パース（複数フォーマット対応） ---

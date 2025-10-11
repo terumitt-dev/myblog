@@ -61,42 +61,24 @@ class BlogsController < ApplicationController
       redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
     end
 
-    count = Blog.import_from_mt(uploaded_file)
+    import_result = Blog.import_from_mt(uploaded_file)
 
-    if count.zero?
-      redirect_to admin_root_path, alert: t('controllers.common.alert_no_entries')
+    if import_result[:success].zero?
+      error_summary = import_result[:errors].first || "Unknown error"
+      Rails.logger.warn "Import failed: #{error_summary}"
+      redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed', reason: error_summary)
     else
-      redirect_to admin_root_path, notice: t('controllers.common.notice_import', name: "ブログ", count: count)
+      success_message = t('controllers.common.notice_import', name: "ブログ", count: import_result[:success])
+      if import_result[:errors].any?
+        warning_message = "#{success_message} (#{import_result[:errors].size}件でエラー)"
+        redirect_to admin_root_path, notice: warning_message
+      else
+        redirect_to admin_root_path, notice: success_message
+      end
     end
-
-  rescue ActiveRecord::RecordInvalid => e
-    Rails.logger.error({
-      context: "Blog import failed (validation)",
-      error_class: e.class.name,
-      model: e.record.class.name,
-      errors: e.record.errors.to_hash,
-      time: Time.current.iso8601
-    }.to_json)
-    redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_validation')
-
-  rescue ArgumentError => e
-    Rails.logger.error({
-      context: "Blog import failed (argument error)",
-      message: e.message,
-      backtrace: e.backtrace.take(5),
-      time: Time.current.iso8601
-    }.to_json)
-    redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_format')
-
-  rescue StandardError => e
-    Rails.logger.error({
-      context: "Blog import failed (unexpected)",
-      error_class: e.class.name,
-      message: e.message,
-      backtrace: e.backtrace.take(5),
-      time: Time.current.iso8601
-    }.to_json)
-    redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed')
+  rescue => e
+    Rails.logger.error "Unexpected import error: #{e.class} #{e.message}"
+    redirect_to admin_root_path, alert: t('controllers.common.alert_unexpected_error')
   end
 
   private
