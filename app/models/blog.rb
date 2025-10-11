@@ -15,7 +15,7 @@ class Blog < ApplicationRecord
   MAX_ENTRIES_COUNT = 1000
   MAX_ENTRY_SIZE = 100.kilobytes
 
-  # --- ファイルバリデーション ---
+  # ファイルバリデーション
   def self.valid_mt_file?(uploaded_file)
     return false unless uploaded_file
     return false if uploaded_file.size.zero?
@@ -42,10 +42,23 @@ class Blog < ApplicationRecord
 
     # 条件付き判定
     if mime_detection_failed
-      ext_ok
+      ext_ok && valid_text_content?(uploaded_file)
     else
       ext_ok && mime_ok
     end
+  end
+
+  # テキストファイルの内容妥当性チェック
+  def self.valid_text_content?(uploaded_file)
+    sample = uploaded_file.read(1024)  # 先頭1KB
+    uploaded_file.rewind
+
+    return false if sample.empty?
+
+    # 制御文字の比率が低く、印刷可能文字が多い
+    printable_chars = sample.count(" -~\t\n\r") + sample.scan(/[^\x00-\x7F]/).size  # ASCII印刷可能文字 + 非ASCII文字
+    printable_ratio = printable_chars.to_f / sample.size
+    printable_ratio > 0.8  # 80%以上が妥当な文字
   end
 
   # --- MTファイルからのインポート ---
@@ -79,48 +92,56 @@ class Blog < ApplicationRecord
 
     import_result = { success: 0, errors: [] }
 
-    transaction do
-      entries.each_with_index do |entry, index|
-        begin
-          safe_title = sanitize_text(entry[:title])
-          safe_content = sanitize_text(entry[:content])
+    entries.each_slice(100).with_index do |batch, batch_num|
+      total_batches = (entries.size / 100.0).ceil
+      Rails.logger.info "Processing batch #{batch_num + 1}/#{total_batches} (#{batch.size} entries)"
 
-          # 空データチェック
-          if safe_title.blank? || safe_content.blank?
-            Rails.logger.info "Entry #{index + 1}: Skipped due to empty title or content"
-            import_result[:errors] << "Entry #{index + 1}: Empty title or content"
-            next
+      transaction do
+        batch.each_with_index do |entry, batch_index|
+          # 全体でのインデックス計算
+          global_index = batch_num * 100 + batch_index
+
+          begin
+            safe_title = sanitize_text(entry[:title])
+            safe_content = sanitize_text(entry[:content])
+
+            # 空データチェック
+            if safe_title.blank? || safe_content.blank?
+              Rails.logger.info "Entry #{global_index + 1}: Skipped due to empty title or content"
+              import_result[:errors] << "Entry #{global_index + 1}: Empty title or content"
+              next
+            end
+
+            # エントリサイズチェック
+            entry_size = safe_title.bytesize + safe_content.bytesize
+            if entry_size > MAX_ENTRY_SIZE
+              Rails.logger.warn "⚠️ Entry #{global_index + 1} too large: #{entry_size} bytes"
+              import_result[:errors] << "Entry #{global_index + 1}: Content too large (#{entry_size} bytes)"
+              next
+            end
+
+            date = parse_mt_date(entry[:date])
+            now = Time.zone.now
+
+            Blog.create!(
+              title: safe_title,
+              content: safe_content,
+              category: :uncategorized,
+              created_at: date,
+              updated_at: now
+            )
+            import_result[:success] += 1
+
+          rescue ActiveRecord::RecordInvalid => e
+            Rails.logger.warn "Entry #{global_index + 1}: Validation failed (#{e.record.errors.count} errors)"
+            import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
+          rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
+            Rails.logger.error "Entry #{global_index + 1}: Database error (#{e.class.name})"
+            import_result[:errors] << "Entry #{global_index + 1}: Database error"
+          rescue StandardError => e
+            Rails.logger.warn "Entry #{global_index + 1}: Import failed (#{e.class.name})"
+            import_result[:errors] << "Entry #{global_index + 1}: Import failed (#{e.class.name})"
           end
-
-          # エントリサイズチェック
-          entry_size = safe_title.bytesize + safe_content.bytesize
-          if entry_size > MAX_ENTRY_SIZE
-            Rails.logger.warn "⚠️ Entry #{index + 1} too large: #{entry_size} bytes"
-            import_result[:errors] << "Entry #{index + 1}: Content too large (#{entry_size} bytes)"
-            next
-          end
-
-          date = parse_mt_date(entry[:date])
-          now = Time.zone.now
-
-          Blog.create!(
-            title: safe_title,
-            content: safe_content,
-            category: :uncategorized,
-            created_at: date,
-            updated_at: now
-          )
-          import_result[:success] += 1
-
-        rescue ActiveRecord::RecordInvalid => e
-          Rails.logger.warn "Entry #{index + 1}: Validation failed (#{e.record.errors.count} errors)"  # info → warn
-          import_result[:errors] << "Entry #{index + 1}: Validation failed"
-        rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
-          Rails.logger.error "Entry #{index + 1}: Database error (#{e.class.name})"
-          import_result[:errors] << "Entry #{index + 1}: Database error"
-        rescue StandardError => e
-          Rails.logger.warn "Entry #{index + 1}: Import failed (#{e.class.name})"
-          import_result[:errors] << "Entry #{index + 1}: Import failed (#{e.class.name})"
         end
       end
     end
