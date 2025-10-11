@@ -54,11 +54,11 @@ class BlogsController < ApplicationController
     uploaded_file = params[:file]
 
     if uploaded_file.blank? || uploaded_file.size.zero? || uploaded_file.size > Blog::MAX_UPLOAD_SIZE
-      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
+      return redirect_to_with_alert('alert_invalid_file')
     end
 
     unless Blog.valid_mt_file?(uploaded_file)
-      redirect_to admin_root_path, alert: t('controllers.common.alert_invalid_file') and return
+      return redirect_to_with_alert('alert_invalid_file')
     end
 
     import_result = Blog.import_from_mt(uploaded_file)
@@ -86,6 +86,10 @@ class BlogsController < ApplicationController
   end
 
   private
+
+  def redirect_to_with_alert(alert_key)
+    redirect_to admin_root_path, alert: t("controllers.common.#{alert_key}")
+  end
 
   # Use callbacks to share common setup or constraints between actions.
   def set_blog
