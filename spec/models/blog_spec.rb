@@ -40,6 +40,8 @@ RSpec.describe Blog, type: :model do
       temp_file.write("AUTHOR: test\nTITLE: サンプルブログ\nDATE: 12/17/2024 19:00:00\nBODY:\n本文です\n-----\n")
       temp_file.rewind
 
+      expect(Blog.valid_mt_file?(temp_file)).to be true
+
       expect {
         Blog.import_from_mt(temp_file)
       }.to change(Blog, :count).by(1)

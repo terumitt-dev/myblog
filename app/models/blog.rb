@@ -49,6 +49,7 @@ class Blog < ApplicationRecord
 
     content = nil
     begin
+      uploaded_file.rewind
       content = NKF.nkf("-w", uploaded_file.read)
     rescue => e
       Rails.logger.warn "⚠️ Failed to convert MT file to UTF-8: #{e.message}"
