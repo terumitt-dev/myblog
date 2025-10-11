@@ -108,13 +108,13 @@ class Blog < ApplicationRecord
           import_result[:success] += 1
 
         rescue ActiveRecord::RecordInvalid => e
-          Rails.logger.info "Entry #{index + 1}: Validation failed (#{e.record.errors.count} errors)"
+          Rails.logger.warn "Entry #{index + 1}: Validation failed (#{e.record.errors.count} errors)"  # info → warn
           import_result[:errors] << "Entry #{index + 1}: Validation failed"
         rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
           Rails.logger.error "Entry #{index + 1}: Database error (#{e.class.name})"
           import_result[:errors] << "Entry #{index + 1}: Database error"
         rescue StandardError => e
-          Rails.logger.info "Entry #{index + 1}: Import failed (#{e.class.name})"
+          Rails.logger.warn "Entry #{index + 1}: Import failed (#{e.class.name})"
           import_result[:errors] << "Entry #{index + 1}: Import failed (#{e.class.name})"
         end
       end
