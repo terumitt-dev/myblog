@@ -22,17 +22,23 @@ class Blog < ApplicationRecord
 
     ext = File.extname(uploaded_file.original_filename.to_s).downcase
 
-    # MIME判定の強化（フォールバック付き）
+    # MIME判定
     begin
       mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename) || ""
       uploaded_file.rewind
+
+      # MIME判定失敗時は拒否（セキュリティ強化）
+      if mime.empty?
+        Rails.logger.info "MIME detection returned empty for #{uploaded_file.original_filename}"
+        return false
+      end
     rescue StandardError => e
       Rails.logger.info "MIME detection failed for #{uploaded_file.original_filename}: #{e.class.name}"
-      mime = "" # 拡張子のみで判定
+      return false
     end
 
     ext_ok  = ALLOWED_EXTENSIONS.include?(ext)
-    mime_ok = ALLOWED_MIME_TYPES.include?(mime) || mime.empty? # MIME空の場合は拡張子で判定
+    mime_ok = ALLOWED_MIME_TYPES.include?(mime)
 
     ext_ok && mime_ok
   end
@@ -103,7 +109,10 @@ class Blog < ApplicationRecord
         rescue ActiveRecord::RecordInvalid => e
           Rails.logger.info "Entry #{index + 1}: Validation failed (#{e.record.errors.count} errors)"
           import_result[:errors] << "Entry #{index + 1}: Validation failed"
-        rescue => e
+        rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
+          Rails.logger.error "Entry #{index + 1}: Database error (#{e.class.name})"
+          import_result[:errors] << "Entry #{index + 1}: Database error"
+        rescue StandardError => e
           Rails.logger.info "Entry #{index + 1}: Import failed (#{e.class.name})"
           import_result[:errors] << "Entry #{index + 1}: Import failed (#{e.class.name})"
         end
