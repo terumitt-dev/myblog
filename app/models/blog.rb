@@ -48,17 +48,24 @@ class Blog < ApplicationRecord
     end
   end
 
-  # テキストファイルの内容妥当性チェック
+  # テキストファイルの内容妥当性チェック（厳格版）
   def self.valid_text_content?(uploaded_file)
-    sample = uploaded_file.read(1024)  # 先頭1KB
+    sample = uploaded_file.read(2048)
     uploaded_file.rewind
 
     return false if sample.empty?
 
-    # 制御文字の比率が低く、印刷可能文字が多い
-    printable_chars = sample.count(" -~\t\n\r") + sample.scan(/[^\x00-\x7F]/).size  # ASCII印刷可能文字 + 非ASCII文字
+    # UTF-8エンコーディング確認
+    return false unless sample.valid_encoding?
+
+    # 危険な制御文字の存在チェック（NULL文字など）
+    dangerous_chars = sample.count("\x00-\x08\x0B\x0C\x0E-\x1F\x7F")
+    return false if dangerous_chars > 0
+
+    # 印刷可能文字の比率を厳格化（95%以上が妥当な文字）
+    printable_chars = sample.count(" -~\t\n\r") + sample.scan(/[^\x00-\x7F]/).size
     printable_ratio = printable_chars.to_f / sample.size
-    printable_ratio > 0.8  # 80%以上が妥当な文字
+    printable_ratio > 0.95
   end
 
   # --- MTファイルからのインポート ---
