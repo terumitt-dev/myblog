@@ -40,15 +40,18 @@ class Blog < ApplicationRecord
     ext_ok  = ALLOWED_EXTENSIONS.include?(ext)
     mime_ok = ALLOWED_MIME_TYPES.include?(mime)
 
-    # 条件付き判定
-    if mime_detection_failed
-      ext_ok && valid_text_content?(uploaded_file)
+    # 基本バリデーション
+    base_valid = if mime_detection_failed
+      ext_ok
     else
       ext_ok && mime_ok
     end
+
+    # セキュリティのため常時内容妥当性をチェック
+    base_valid && valid_text_content?(uploaded_file)
   end
 
-  # テキストファイルの内容妥当性チェック（厳格版）
+  # テキストファイルの内容妥当性チェック
   def self.valid_text_content?(uploaded_file)
     sample = uploaded_file.read(2048)
     uploaded_file.rewind
