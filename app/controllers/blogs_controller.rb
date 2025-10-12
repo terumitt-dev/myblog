@@ -69,6 +69,7 @@ class BlogsController < ApplicationController
       redirect_to admin_root_path, alert: t('controllers.common.alert_too_many_entries')
     elsif import_result[:success].zero?
       Rails.logger.warn "Import failed: 0/#{import_result[:errors].size} (all failed)"
+      Rails.logger.debug "Error details: #{import_result[:errors].first(3).join('; ')}#{'...' if import_result[:errors].size > 3}"
       redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_general')
     else
       success_message = t('controllers.common.notice_import', name: "ブログ", count: import_result[:success])
@@ -78,6 +79,7 @@ class BlogsController < ApplicationController
       else
         total_count = import_result[:success] + import_result[:errors].size
         Rails.logger.info "Import completed: #{import_result[:success]}/#{total_count} (#{import_result[:errors].size} failed)"
+        Rails.logger.debug "Error details: #{import_result[:errors].first(5).join('; ')}#{'...' if import_result[:errors].size > 5}"
         result_message = t('controllers.common.notice_import_result',
                           total: total_count,
                           success: import_result[:success],
