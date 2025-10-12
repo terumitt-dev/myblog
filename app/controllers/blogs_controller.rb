@@ -68,18 +68,16 @@ class BlogsController < ApplicationController
     elsif import_result[:success].zero? && import_result[:error_type] == :too_many_entries
       redirect_to admin_root_path, alert: t('controllers.common.alert_too_many_entries')
     elsif import_result[:success].zero?
-      Rails.logger.warn "Import completely failed: #{import_result[:errors].size} errors occurred"
-      Rails.logger.warn "Import error details: #{import_result[:errors].first(3).join('; ')}#{'...' if import_result[:errors].size > 3}"
+      Rails.logger.warn "Import failed: 0/#{import_result[:errors].size} (all failed)"
       redirect_to admin_root_path, alert: t('controllers.common.alert_import_failed_general')
     else
       success_message = t('controllers.common.notice_import', name: "ブログ", count: import_result[:success])
       if import_result[:errors].empty?
-        Rails.logger.info "Import completed successfully: #{import_result[:success]} entries imported"
+        Rails.logger.info "Import completed: #{import_result[:success]}/#{import_result[:success]} (all succeeded)"
         redirect_to admin_root_path, notice: success_message
       else
         total_count = import_result[:success] + import_result[:errors].size
-        Rails.logger.info "Import completed with partial success: #{import_result[:success]}/#{total_count} succeeded"
-        Rails.logger.warn "Import error summary: #{import_result[:errors].first(5).join('; ')}#{'...' if import_result[:errors].size > 5}"
+        Rails.logger.info "Import completed: #{import_result[:success]}/#{total_count} (#{import_result[:errors].size} failed)"
         result_message = t('controllers.common.notice_import_result',
                           total: total_count,
                           success: import_result[:success],
