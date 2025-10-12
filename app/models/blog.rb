@@ -65,7 +65,7 @@ class Blog < ApplicationRecord
     # 印刷可能文字の比率を厳格化（95%以上が妥当な文字）
     printable_chars = sample.count(" -~\t\n\r") + sample.scan(/[^\x00-\x7F]/).size
     printable_ratio = printable_chars.to_f / sample.size
-    printable_ratio > 0.95
+    printable_ratio > 0.90
   end
 
   # --- MTファイルからのインポート ---
