@@ -29,11 +29,11 @@ class Blog < ApplicationRecord
       uploaded_file.rewind
 
       if mime.empty?
-        Rails.logger.info "MIME detection returned empty for #{uploaded_file.original_filename}, using extension-only check"
+        Rails.logger.info "MIME detection returned empty for uploaded file, using extension-only check"
         mime_detection_failed = true
       end
     rescue StandardError => e
-      Rails.logger.info "MIME detection failed for #{uploaded_file.original_filename}: #{e.class.name}, using extension-only check"
+      Rails.logger.info "MIME detection failed for uploaded file: #{e.class.name}, using extension-only check"
       mime_detection_failed = true
     end
 
