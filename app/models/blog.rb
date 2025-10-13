@@ -111,7 +111,7 @@ class Blog < ApplicationRecord
 
         # エントリごとに独立して処理
         begin
-          transaction do  # 1件ずつトランザクション
+          Blog.transaction do  # 1件ずつトランザクション
             safe_title = sanitize_text(entry[:title])
             safe_content = sanitize_text(entry[:content])
 
