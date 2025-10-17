@@ -2,6 +2,7 @@
 
 require "uri"
 require "nkf"
+require "cgi"
 
 class Blog < ApplicationRecord
   has_many :comments, dependent: :destroy
@@ -159,10 +160,10 @@ class Blog < ApplicationRecord
     import_result
   end
 
-  # --- HTMLサニタイズ ---
+  # --- HTMLエンティティをデコードするサニタイズ ---
   def self.sanitize_text(text)
-    sanitized = ActionController::Base.helpers.sanitize(text.to_s, tags: [])
-    sanitized.gsub('&nbsp;', ' ').strip
+    unescaped = CGI.unescapeHTML(text.to_s)
+    ActionController::Base.helpers.sanitize(unescaped, tags: []).gsub('&nbsp;', ' ').strip
   end
 
   # --- MTパース（堅牢化） ---
