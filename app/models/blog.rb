@@ -112,34 +112,11 @@ class Blog < ApplicationRecord
         # エントリごとに独立して処理
         begin
           Blog.transaction do  # 1件ずつトランザクション
-            safe_title = sanitize_text(entry[:title])
-            safe_content = sanitize_text(entry[:content])
+            blog = Blog.new
+            attributes = blog.prepare_mt_attributes(entry, global_index)
+            blog.assign_attributes(attributes)
+            blog.save!
 
-            # 空データチェック
-            if safe_title.blank? || safe_content.blank?
-              Rails.logger.info "Entry #{global_index + 1}: Skipped due to empty title or content"
-              import_result[:errors] << "Entry #{global_index + 1}: Empty title or content"
-              next
-            end
-
-            # エントリサイズチェック
-            entry_size = safe_title.bytesize + safe_content.bytesize
-            if entry_size > MAX_ENTRY_SIZE
-              Rails.logger.warn "⚠️ Entry #{global_index + 1} too large: #{entry_size} bytes"
-              import_result[:errors] << "Entry #{global_index + 1}: Content too large (#{entry_size} bytes)"
-              next
-            end
-
-            date = parse_mt_date(entry[:date])
-            now = Time.zone.now
-
-            Blog.create!(
-              title: safe_title,
-              content: safe_content,
-              category: :uncategorized,
-              created_at: date,
-              updated_at: now
-            )
             import_result[:success] += 1
             Rails.logger.debug "Entry #{global_index + 1}: Successfully imported"
           end
@@ -158,12 +135,6 @@ class Blog < ApplicationRecord
     end
 
     import_result
-  end
-
-  # --- HTMLエンティティをデコードするサニタイズ ---
-  def self.sanitize_text(text)
-    unescaped = CGI.unescapeHTML(text.to_s)
-    ActionController::Base.helpers.sanitize(unescaped, tags: []).gsub('&nbsp;', ' ').strip
   end
 
   # --- MTパース（堅牢化） ---
@@ -236,8 +207,46 @@ class Blog < ApplicationRecord
     }
   end
 
-  # --- 日付パース（複数フォーマット対応） ---
-  def self.parse_mt_date(date_str)
+  # MTエントリデータから個別レコードの属性を準備
+  def prepare_mt_attributes(entry, index)
+    safe_title = sanitize_text(entry[:title])
+    safe_content = sanitize_text(entry[:content])
+
+    # 空データチェック
+    if safe_title.blank? || safe_content.blank?
+      Rails.logger.info "Entry #{index + 1}: Skipped due to empty title or content"
+      raise "Entry #{index + 1}: Empty title or content"
+    end
+
+    # エントリサイズチェック
+    entry_size = safe_title.bytesize + safe_content.bytesize
+    if entry_size > MAX_ENTRY_SIZE
+      Rails.logger.warn "⚠️ Entry #{index + 1} too large: #{entry_size} bytes"
+      raise "Entry #{index + 1}: Content too large (#{entry_size} bytes)"
+    end
+
+    date = parse_mt_date(entry[:date])
+    now = Time.zone.now
+
+    {
+      title: safe_title,
+      content: safe_content,
+      category: :uncategorized,
+      created_at: date,
+      updated_at: now
+    }
+  end
+
+  private
+
+  # HTMLエンティティをデコードするサニタイズ（インスタンスメソッド）
+  def sanitize_text(text)
+    unescaped = CGI.unescapeHTML(text.to_s)
+    ActionController::Base.helpers.sanitize(unescaped, tags: []).gsub('&nbsp;', ' ').strip
+  end
+
+  # 日付パース（複数フォーマット対応）（インスタンスメソッド）
+  def parse_mt_date(date_str)
     return Time.zone.now if date_str.blank?
 
     formats = [
