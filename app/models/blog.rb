@@ -102,35 +102,36 @@ class Blog < ApplicationRecord
 
     import_result = { success: 0, errors: [] }
 
-    entries.each_slice(5).with_index do |batch, batch_num|
-      total_batches = (entries.size / 5.0).ceil
+    entries.each_slice(50).with_index do |batch, batch_num|
+      total_batches = (entries.size / 50.0).ceil
       Rails.logger.info "Processing batch #{batch_num + 1}/#{total_batches} (#{batch.size} entries)"
 
-      batch.each_with_index do |entry, batch_index|
-        global_index = batch_num * 5 + batch_index
+      begin
+        Blog.transaction do  # バッチ全体を1つのトランザクションに
+          batch.each_with_index do |entry, batch_index|
+            global_index = batch_num * 50 + batch_index
 
-        # エントリごとに独立して処理
-        begin
-          Blog.transaction do  # 1件ずつトランザクション
-            blog = Blog.new
-            attributes = blog.prepare_mt_attributes(entry, global_index)
-            blog.assign_attributes(attributes)
-            blog.save!
+            begin
+              blog = Blog.new
+              attributes = blog.prepare_mt_attributes(entry, global_index)
+              blog.assign_attributes(attributes)
+              blog.save!
 
-            import_result[:success] += 1
-            Rails.logger.debug "Entry #{global_index + 1}: Successfully imported"
+              import_result[:success] += 1
+              Rails.logger.debug "Entry #{global_index + 1}: Successfully imported"
+
+            rescue ActiveRecord::RecordInvalid => e
+              Rails.logger.warn "Entry #{global_index + 1}: Validation failed - SKIPPED"
+              import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
+            rescue StandardError => e
+              Rails.logger.warn "Entry #{global_index + 1}: Import failed - SKIPPED"
+              import_result[:errors] << "Entry #{global_index + 1}: Import failed"
+            end
           end
-
-        rescue ActiveRecord::RecordInvalid => e
-          Rails.logger.warn "Entry #{global_index + 1}: Validation failed (#{e.record.errors.count} errors) - SKIPPED"
-          import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
-        rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
-          Rails.logger.error "Entry #{global_index + 1}: Database error (#{e.class.name}) - SKIPPED"
-          import_result[:errors] << "Entry #{global_index + 1}: Database error"
-        rescue StandardError => e
-          Rails.logger.warn "Entry #{global_index + 1}: Import failed (#{e.class.name}) - SKIPPED"
-          import_result[:errors] << "Entry #{global_index + 1}: Import failed (#{e.class.name})"
         end
+      rescue => e
+        Rails.logger.error "Batch #{batch_num + 1}: Transaction failed - #{e.message}"
+        import_result[:errors] << "Batch #{batch_num + 1}: Transaction failed"
       end
     end
 
