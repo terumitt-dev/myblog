@@ -126,11 +126,11 @@ class Blog < ApplicationRecord
               Rails.logger.debug "Entry #{global_index + 1}: Successfully imported"
 
             rescue ActiveRecord::RecordInvalid => e
-              Rails.logger.warn "Entry #{global_index + 1}: Validation failed - SKIPPED"
-              import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
+              Rails.logger.warn "Entry #{global_index + 1}: Validation failed - #{e.message}"
+              import_result[:errors] << "Entry #{global_index + 1}: Validation failed (#{e.record.errors.full_messages.join(', ')})"
             rescue StandardError => e
-              Rails.logger.warn "Entry #{global_index + 1}: Import failed - SKIPPED"
-              import_result[:errors] << "Entry #{global_index + 1}: Import failed"
+              Rails.logger.warn "Entry #{global_index + 1}: Import failed - #{e.message}"
+              import_result[:errors] << "Entry #{global_index + 1}: Import failed (#{e.class.name})"
             end
           end
         end
