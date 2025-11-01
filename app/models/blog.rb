@@ -126,11 +126,11 @@ class Blog < ApplicationRecord
               Rails.logger.debug "Entry #{global_index + 1}: Successfully imported"
 
             rescue ActiveRecord::RecordInvalid => e
-              Rails.logger.warn "Entry #{global_index + 1}: Validation failed - #{e.message}"
-              import_result[:errors] << "Entry #{global_index + 1}: Validation failed (#{e.record.errors.full_messages.join(', ')})"
+              Rails.logger.warn "Entry #{global_index + 1}: Validation failed (#{e.record.errors.count} validation errors)"
+              import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
             rescue StandardError => e
-              Rails.logger.warn "Entry #{global_index + 1}: Import failed - #{e.message}"
-              import_result[:errors] << "Entry #{global_index + 1}: Import failed (#{e.class.name})"
+              Rails.logger.warn "Entry #{global_index + 1}: Import failed (#{e.class.name})"
+              import_result[:errors] << "Entry #{global_index + 1}: Import failed"
             end
           end
         end
@@ -157,7 +157,7 @@ class Blog < ApplicationRecord
         entry = parse_mt_entry_block(block.strip)
         entries << entry if entry
       rescue => e
-        Rails.logger.warn "⚠️ Failed to parse entry block #{index + 1}: #{e.message}"
+        Rails.logger.warn "⚠️ Failed to parse entry block #{index + 1} (#{e.class.name})"
         next
       end
     end
