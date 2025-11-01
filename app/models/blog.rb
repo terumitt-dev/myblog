@@ -58,16 +58,21 @@ class Blog < ApplicationRecord
 
     return false if sample.empty?
 
-    # UTF-8エンコーディング確認
-    return false unless sample.valid_encoding?
+    # NKF変換してからUTF-8エンコーディング確認
+    begin
+      utf8_sample = NKF.nkf("-w", sample)
+      return false unless utf8_sample.valid_encoding?
+    rescue
+      return false
+    end
 
     # 危険な制御文字の存在チェック（NULL文字など）
-    dangerous_chars = sample.count("\x00-\x08\x0B\x0C\x0E-\x1F\x7F")
+    dangerous_chars = utf8_sample.count("\x00-\x08\x0B\x0C\x0E-\x1F\x7F")
     return false if dangerous_chars > 0
 
     # 印刷可能文字の比率を厳格化（95%以上が妥当な文字）
-    printable_chars = sample.count(" -~\t\n\r") + sample.scan(/[^\x00-\x7F]/).size
-    printable_ratio = printable_chars.to_f / sample.size
+    printable_chars = utf8_sample.count(" -~\t\n\r") + utf8_sample.scan(/[^\x00-\x7F]/).size
+    printable_ratio = printable_chars.to_f / utf8_sample.size
     printable_ratio > 0.90
   end
 
