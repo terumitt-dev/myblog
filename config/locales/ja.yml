@@ -17,7 +17,7 @@ ja:
       admins:
         admin_title: "%{name}ページ"
         logout: "%{name}ログアウト"
-    
+
       blogs:
         blog_name: "ブログタイトル（未定）"
         login: "%{name}ログイン"
@@ -36,11 +36,24 @@ ja:
       notice_update: "%{name}が更新されました。"
       notice_destroy: "%{name}が削除されました。"
       alert_create: "%{name}が作成できませんでした。"
+      notice_import: "%{name}をインポートしました（%{count}件）"
+      alert_no_file: "ファイルが選択されていません"
+      alert_invalid_file: "無効なファイル形式またはサイズです"
+      alert_import_failed: "インポートに失敗しました: %{reason}"
+      alert_unexpected_error: "予期しないエラーが発生しました"
+      alert_invalid_extension: "拡張子が不正です"
+      alert_no_entries: "インポート対象のエントリが存在しません"
+      alert_import_failed_validation: "インポートに失敗しました（バリデーションエラー）"
+      alert_import_failed_format: "インポートに失敗しました（ファイル形式エラー）"
+      alert_too_many_entries: "エントリ数が上限を超えています"
+      alert_entry_too_large: "エントリのサイズが大きすぎます"
+      alert_import_failed_general: "インポート処理中にエラーが発生しました"
+      notice_import_result: "%{total}件中%{success}件成功、%{errors}件失敗"
 
   helpers:
     submit:
       create: 記録する
-      update: 更新する 
+      update: 更新する
 
   shared:
     links:

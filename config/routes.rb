@@ -5,7 +5,12 @@ Rails.application.routes.draw do
 
   authenticated :admin do
     get 'admin', to: 'admins#index', as: :admin_root
-    resources :blogs
+    # resources :blogs
+    resources :blogs do
+        collection do
+          post :import_mt   # MT形式インポート用
+        end
+      end
   end
 
   resources :blogs, only: %i[index show] do
