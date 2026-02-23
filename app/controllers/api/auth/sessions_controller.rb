@@ -28,7 +28,13 @@ module Api
 
       def destroy
         if current_admin
-          JwtBlacklist.create(jti: current_admin.jti)
+          jwt_payload = request.env['warden-jwt_auth.token']
+          if jwt_payload
+            JwtBlacklist.create(
+              jti: jwt_payload['jti'],
+              exp: Time.at(jwt_payload['exp'])
+            )
+          end
           render json: {
             status: 'success',
             message: 'Logged out successfully'

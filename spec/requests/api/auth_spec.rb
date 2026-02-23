@@ -21,6 +21,11 @@ RSpec.describe 'Api::Auth', type: :request do
         expect(json_response['status']).to eq('success')
         expect(json_response['data']['email']).to eq('newadmin@example.com')
       end
+
+      it 'Authorization ヘッダーにJWTトークンを返す' do
+        post '/api/auth/sign_up', params: params, as: :json
+        expect(response.headers['Authorization']).to match(/^Bearer /)
+      end
     end
 
     context '無効なパラメータの場合' do
@@ -43,6 +48,34 @@ RSpec.describe 'Api::Auth', type: :request do
   end
 
   describe 'POST /api/auth/sign_in' do
+    context '正常なメールアドレスとパスワードの場合' do
+      let(:params) do
+        {
+          admin: {
+            email: 'admin@example.com',
+            password: 'password123'
+          }
+        }
+      end
+
+      before do
+        Admin.delete_all
+        create(:admin, email: 'admin@example.com', password: 'password123')
+      end
+
+      it '成功レスポンスを返す' do
+        post '/api/auth/sign_in', params: params, as: :json
+        expect(response).to have_http_status(:ok)
+        expect(json_response['status']).to eq('success')
+        expect(json_response['data']['email']).to eq('admin@example.com')
+      end
+
+      it 'Authorization ヘッダーにJWTトークンを返す' do
+        post '/api/auth/sign_in', params: params, as: :json
+        expect(response.headers['Authorization']).to match(/^Bearer /)
+      end
+    end
+
     context '無効なメールアドレスの場合' do
       let(:params) do
         {
@@ -57,6 +90,29 @@ RSpec.describe 'Api::Auth', type: :request do
         post '/api/auth/sign_in', params: params, as: :json
         expect(response).to have_http_status(:unauthorized)
         expect(json_response['status']).to eq('error')
+      end
+    end
+
+    context '不正なOriginヘッダーの場合' do
+      let(:params) do
+        {
+          admin: {
+            email: 'admin@example.com',
+            password: 'password123'
+          }
+        }
+      end
+
+      before do
+        Admin.delete_all
+        create(:admin, email: 'admin@example.com', password: 'password123')
+      end
+
+      it 'CSRF保護により403 Forbiddenを返す' do
+        post '/api/auth/sign_in', params: params, as: :json, headers: { 'Origin' => 'https://evil.com' }
+        expect(response).to have_http_status(:forbidden)
+        expect(json_response['status']).to eq('error')
+        expect(json_response['message']).to eq('Origin not allowed')
       end
     end
   end

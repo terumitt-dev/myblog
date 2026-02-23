@@ -7,6 +7,7 @@ module Api
         @admin = Admin.new(admin_params)
 
         if @admin.save
+          request.env['warden'].set_user(@admin, scope: :admin)
           render json: {
             status: 'success',
             message: 'Admin registered successfully',
