@@ -15,12 +15,24 @@ module CsrfProtection
 
   def verify_origin
     origin = request.headers['Origin']
+
+    # Originヘッダーがない場合はブラウザ外クライアント（curlやモバイルアプリ等）からのリクエスト。
+    # JWT認証で保護されているため、Originなしリクエストも許可する。
+    # ブラウザからのリクエストは必ずOriginを送るため、CSRFリスクはない。
     return if origin.blank?
 
     allowed_origins = if Rails.env.production?
-                        ['https://go-lilaregard.com', 'https://www.go-lilaregard.com']
+                        [
+                          'https://go-lilaregard.com',
+                          'https://www.go-lilaregard.com'
+                        ]
                       else
-                        ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173', 'http://127.0.0.1:3000']
+                        [
+                          'http://localhost:5173',
+                          'http://localhost:3000',
+                          'http://127.0.0.1:5173',
+                          'http://127.0.0.1:3000'
+                        ]
                       end
 
     return if allowed_origins.include?(origin)

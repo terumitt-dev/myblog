@@ -28,13 +28,11 @@ module Api
 
       def destroy
         if current_admin
-          jwt_payload = request.env['warden-jwt_auth.token']
-          if jwt_payload
-            JwtBlacklist.create(
-              jti: jwt_payload['jti'],
-              exp: Time.at(jwt_payload['exp'])
-            )
-          end
+          # devise-jwt の revocation_requests 設定により、
+          # DELETE /api/auth/sign_out へのリクエスト時にミドルウェア層で
+          # 自動的にトークンがブラックリスト登録される。
+          # ここで手動登録すると二重登録になるため、wardenでサインアウトのみ行う。
+          request.env['warden'].logout(:admin)
           render json: {
             status: 'success',
             message: 'Logged out successfully'
