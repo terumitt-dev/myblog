@@ -9,6 +9,7 @@ module Api
         @admin = Admin.find_by(email: session_params[:email])
 
         if @admin&.valid_password?(session_params[:password])
+          sign_in(@admin)
           render json: {
             status: 'success',
             message: 'Logged in successfully',
