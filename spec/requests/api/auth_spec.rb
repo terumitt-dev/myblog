@@ -15,6 +15,10 @@ RSpec.describe 'Api::Auth', type: :request do
         }
       end
 
+      before do
+        Admin.delete_all
+      end
+
       it '成功レスポンスを返す' do
         post '/api/auth/sign_up', params: params, as: :json
         expect(response).to have_http_status(:created)
