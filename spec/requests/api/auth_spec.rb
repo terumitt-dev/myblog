@@ -162,7 +162,8 @@ RSpec.describe 'Api::Auth', type: :request do
     let(:token) do
       post '/api/auth/sign_in',
            params: { admin: { email: 'admin@example.com', password: 'password123' } },
-           as: :json
+           as: :json,
+           headers: { 'Origin' => 'http://localhost:5173' }
       response.headers['Authorization']
     end
 
