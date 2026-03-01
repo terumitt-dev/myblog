@@ -15,7 +15,7 @@ class ApplicationController < ActionController::API
     I18n.locale = :ja
   end
 
-  def record_not_found
+  def record_not_found(exception)
     render json: {
       status: 'error',
       message: 'Record not found'

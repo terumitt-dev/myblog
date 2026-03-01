@@ -280,6 +280,8 @@ Devise.setup do |config|
   #
   # API専用: 統一されたJSON形式でエラーを返す
   config.warden do |manager|
+    # CustomDeviseFailureAppを明示的にロード
+    require_dependency 'custom_devise_failure_app'
     manager.failure_app = CustomDeviseFailureApp
   end
 
