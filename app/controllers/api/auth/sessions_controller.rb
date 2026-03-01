@@ -27,22 +27,15 @@ module Api
       end
 
       def destroy
-        if current_admin
-          # devise-jwt の revocation_requests 設定により、
-          # DELETE /api/auth/sign_out へのリクエスト時にミドルウェア層で
-          # 自動的にトークンがブラックリスト登録される。
-          # ここで手動登録すると二重登録になるため、wardenでサインアウトのみ行う。
-          request.env['warden'].logout(:admin)
-          render json: {
-            status: 'success',
-            message: 'Logged out successfully'
-          }, status: :ok
-        else
-          render json: {
-            status: 'error',
-            message: 'Not authenticated'
-          }, status: :unauthorized
-        end
+        # devise-jwt の revocation_requests 設定により、
+        # DELETE /api/auth/sign_out へのリクエスト時にミドルウェア層で
+        # 自動的にトークンがブラックリスト登録される。
+        # ここで手動登録すると二重登録になるため、wardenでサインアウトのみ行う。
+        request.env['warden'].logout(:admin)
+        render json: {
+          status: 'success',
+          message: 'Logged out successfully'
+        }, status: :ok
       end
 
       private
