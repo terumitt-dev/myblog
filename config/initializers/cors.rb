@@ -12,7 +12,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
 
   allow do
     origins(*allowed_origins)
-    resource '*',
+    resource '/api/*',
              headers: :any,
              methods: [:get, :post, :put, :patch, :delete, :options],
              expose: ['Authorization'],
