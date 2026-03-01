@@ -4,7 +4,7 @@ Devise.setup do |config|
   config.jwt do |jwt|
     # JWT専用の秘密鍵を使用（secret_key_baseとは分離）
     # 全環境で jwt.secret_key または JWT_SECRET_KEY を必須化
-    # 環境間でトークン検証の挙動差を防ぐため、フォールバックは使用しない
+    # credentials優先、ENV['JWT_SECRET_KEY']をフォールバックとして許可
     jwt_secret = Rails.application.credentials.dig(:jwt, :secret_key) || ENV['JWT_SECRET_KEY']
     
     if jwt_secret.blank?
