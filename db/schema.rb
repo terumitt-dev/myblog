@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_01_000000) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_01_121756) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,10 +44,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_01_000000) do
   end
 
   create_table "jwt_blacklists", force: :cascade do |t|
-    t.string "jti"
-    t.datetime "exp"
+    t.string "jti", null: false
+    t.datetime "exp", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["exp"], name: "index_jwt_blacklists_on_exp"
     t.index ["jti"], name: "index_jwt_blacklists_on_jti", unique: true
   end
 
