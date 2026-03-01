@@ -21,14 +21,14 @@ RSpec.describe 'Api::Auth', type: :request do
       end
 
       it '成功レスポンスを返す' do
-        post '/api/auth/sign_up', params: params, as: :json, headers: { 'Origin' => 'http://localhost:5173' }
+        post '/api/auth/sign_up', params: params, as: :json
         expect(response).to have_http_status(:created)
         expect(json_response['status']).to eq('success')
         expect(json_response['data']['email']).to eq('newadmin@example.com')
       end
 
       it 'sign_upではJWTトークンを返さない（sign_inで取得する設計）' do
-        post '/api/auth/sign_up', params: params, as: :json, headers: { 'Origin' => 'http://localhost:5173' }
+        post '/api/auth/sign_up', params: params, as: :json
         expect(response.headers['Authorization']).to be_nil
       end
     end
@@ -49,7 +49,7 @@ RSpec.describe 'Api::Auth', type: :request do
       end
 
       it 'エラーレスポンスを返す' do
-        post '/api/auth/sign_up', params: params, as: :json, headers: { 'Origin' => 'http://localhost:5173' }
+        post '/api/auth/sign_up', params: params, as: :json
         expect(response).to have_http_status(:unprocessable_entity)
         expect(json_response['status']).to eq('error')
       end
@@ -65,8 +65,7 @@ RSpec.describe 'Api::Auth', type: :request do
       it '成功レスポンスを返す' do
         post '/api/auth/sign_in',
              params: { admin: { email: 'admin@example.com', password: 'password123' } },
-             as: :json,
-             headers: { 'Origin' => 'http://localhost:5173' }
+             as: :json
         expect(response).to have_http_status(:ok)
         expect(json_response['status']).to eq('success')
         expect(json_response['data']['email']).to eq('admin@example.com')
@@ -75,8 +74,7 @@ RSpec.describe 'Api::Auth', type: :request do
       it 'Authorization ヘッダーにJWTトークンを返す' do
         post '/api/auth/sign_in',
              params: { admin: { email: 'admin@example.com', password: 'password123' } },
-             as: :json,
-             headers: { 'Origin' => 'http://localhost:5173' }
+             as: :json
         expect(response.headers['Authorization']).to match(/^Bearer /)
       end
     end
@@ -85,24 +83,12 @@ RSpec.describe 'Api::Auth', type: :request do
       it 'エラーレスポンスを返す' do
         post '/api/auth/sign_in',
              params: { admin: { email: 'nonexistent@example.com', password: 'password123' } },
-             as: :json,
-             headers: { 'Origin' => 'http://localhost:5173' }
+             as: :json
         expect(response).to have_http_status(:unauthorized)
         expect(json_response['status']).to eq('error')
       end
     end
 
-    context '不正なOriginヘッダーの場合' do
-      it 'CSRF保護により403 Forbiddenを返す' do
-        post '/api/auth/sign_in',
-             params: { admin: { email: 'admin@example.com', password: 'password123' } },
-             headers: { 'Origin' => 'https://evil.com' },
-             as: :json
-        expect(response).to have_http_status(:forbidden)
-        expect(json_response['status']).to eq('error')
-        expect(json_response['message']).to eq('Origin not allowed')
-      end
-    end
   end
 
   describe 'DELETE /api/auth/sign_out' do
@@ -113,15 +99,14 @@ RSpec.describe 'Api::Auth', type: :request do
     let(:token) do
       post '/api/auth/sign_in',
            params: { admin: { email: 'admin@example.com', password: 'password123' } },
-           as: :json,
-           headers: { 'Origin' => 'http://localhost:5173' }
+           as: :json
       response.headers['Authorization']
     end
 
     context '認証されている場合' do
       it '200を返す' do
         delete '/api/auth/sign_out',
-               headers: { 'Authorization' => token, 'Origin' => 'http://localhost:5173' },
+               headers: { 'Authorization' => token },
                as: :json
         expect(response).to have_http_status(:ok)
         expect(json_response['status']).to eq('success')
@@ -131,7 +116,7 @@ RSpec.describe 'Api::Auth', type: :request do
         used_token = token
 
         delete '/api/auth/sign_out',
-              headers: { 'Authorization' => used_token, 'Origin' => 'http://localhost:5173' },
+              headers: { 'Authorization' => used_token },
               as: :json
         expect(response).to have_http_status(:ok)
 
@@ -146,10 +131,9 @@ RSpec.describe 'Api::Auth', type: :request do
     end
 
     context '認証されていない場合' do
-      it 'Originなしで403 Forbiddenを返す' do
+      it '401 Unauthorizedを返す' do
         delete '/api/auth/sign_out', as: :json
-        expect(response).to have_http_status(:forbidden)
-        expect(json_response['message']).to eq('Origin header required')
+        expect(response).to have_http_status(:unauthorized)
       end
     end
   end
@@ -162,8 +146,7 @@ RSpec.describe 'Api::Auth', type: :request do
     let(:token) do
       post '/api/auth/sign_in',
            params: { admin: { email: 'admin@example.com', password: 'password123' } },
-           as: :json,
-           headers: { 'Origin' => 'http://localhost:5173' }
+           as: :json
       response.headers['Authorization']
     end
 

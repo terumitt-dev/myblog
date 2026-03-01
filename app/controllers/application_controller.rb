@@ -3,7 +3,6 @@
 class ApplicationController < ActionController::API
   include ActionController::MimeResponds
   include Devise::Controllers::Helpers
-  include CsrfProtection
 
   before_action :set_locale
 
