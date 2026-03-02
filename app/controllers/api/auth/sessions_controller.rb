@@ -3,8 +3,6 @@
 module Api
   module Auth
     class SessionsController < ApplicationController
-      before_action :authenticate_admin!, only: [:destroy]
-
       def create
         @admin = Admin.find_by(email: session_params[:email])
 

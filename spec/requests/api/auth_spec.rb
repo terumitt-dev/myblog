@@ -131,9 +131,10 @@ RSpec.describe 'Api::Auth', type: :request do
     end
 
     context '認証されていない場合' do
-      it '401 Unauthorizedを返す' do
+      it '200 OKを返す（idempotent設計）' do
         delete '/api/auth/sign_out', as: :json
-        expect(response).to have_http_status(:unauthorized)
+        expect(response).to have_http_status(:ok)
+        expect(JSON.parse(response.body)['status']).to eq('success')
       end
     end
   end
