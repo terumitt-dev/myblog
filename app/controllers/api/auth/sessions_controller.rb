@@ -36,7 +36,7 @@ module Api
       def destroy
         # JWTが付与されている場合のみ認証を走らせ、revocation middlewareに必要な情報をセットする
         # （未認証でも200を返すidempotent設計は維持）
-        warden.authenticate(scope: :admin)
+        warden.authenticate(scope: :admin) if request.headers['Authorization'].present?
 
         warden.logout(:admin)
         render json: {

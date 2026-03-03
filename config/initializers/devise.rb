@@ -281,7 +281,7 @@ Devise.setup do |config|
   # API専用: 統一されたJSON形式でエラーを返す
   config.warden do |manager|
     # CustomDeviseFailureAppを明示的にロード
-    require Rails.root.join('lib/custom_devise_failure_app.rb')
+    require Rails.root.join('lib/custom_devise_failure_app').to_s
     manager.failure_app = CustomDeviseFailureApp
   end
 
