@@ -4,18 +4,27 @@ module Api
   module Auth
     class SessionsController < ApplicationController
       def create
+        # Devise標準の認証フローを使用
         @admin = Admin.find_by(email: session_params[:email])
 
         if @admin&.valid_password?(session_params[:password])
-          sign_in(@admin, store: false)
-          render json: {
-            status: 'success',
-            message: 'Logged in successfully',
-            data: {
-              id: @admin.id,
-              email: @admin.email
-            }
-          }, status: :ok
+          # Deviseの制約チェック（lockable, confirmable等）を考慮
+          if @admin.active_for_authentication?
+            sign_in(:admin, @admin, store: false)
+            render json: {
+              status: 'success',
+              message: 'Logged in successfully',
+              data: {
+                id: @admin.id,
+                email: @admin.email
+              }
+            }, status: :ok
+          else
+            render json: {
+              status: 'error',
+              message: @admin.inactive_message
+            }, status: :unauthorized
+          end
         else
           render json: {
             status: 'error',
@@ -25,11 +34,11 @@ module Api
       end
 
       def destroy
-        # devise-jwt の revocation_requests 設定により、
-        # DELETE /api/auth/sign_out へのリクエスト時にミドルウェア層で
-        # 自動的にトークンがブラックリスト登録される。
-        # ここで手動登録すると二重登録になるため、wardenでサインアウトのみ行う。
-        request.env['warden'].logout(:admin)
+        # JWTが付与されている場合のみ認証を走らせ、revocation middlewareに必要な情報をセットする
+        # （未認証でも200を返すidempotent設計は維持）
+        warden.authenticate(scope: :admin)
+
+        warden.logout(:admin)
         render json: {
           status: 'success',
           message: 'Logged out successfully'
