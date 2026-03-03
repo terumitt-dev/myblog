@@ -37,7 +37,7 @@ module Api
         # JWTが付与されている場合のみ認証を走らせ、revocation middlewareに必要な情報をセットする
         # （未認証でも200を返すidempotent設計は維持）
         if request.headers['Authorization'].present?
-          admin = warden.authenticate(scope: :admin)
+          admin = warden.authenticate(:jwt, scope: :admin)
           sign_out(:admin) if admin
         end
 
