@@ -5,7 +5,7 @@ module Api
     class SessionsController < ApplicationController
       def create
         # Devise標準の認証フローを使用
-        @admin = Admin.find_by(email: session_params[:email])
+        @admin = Admin.find_for_database_authentication(email: session_params[:email])
 
         if @admin&.valid_password?(session_params[:password])
           # Deviseの制約チェック（lockable, confirmable等）を考慮
