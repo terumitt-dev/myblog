@@ -4,33 +4,19 @@ module Api
   module Auth
     class SessionsController < ApplicationController
       def create
-        # Devise標準の認証フローを使用
-        @admin = Admin.find_for_database_authentication(email: session_params[:email])
+        # APIコンテキストでのパラメータ処理のため、request.paramsを更新
+        request.env['devise.allow_params_authentication'] = true
+        admin = warden.authenticate!(scope: :admin)
 
-        if @admin&.valid_password?(session_params[:password])
-          # Deviseの制約チェック（lockable, confirmable等）を考慮
-          if @admin.active_for_authentication?
-            sign_in(:admin, @admin, store: false)
-            render json: {
-              status: 'success',
-              message: 'Logged in successfully',
-              data: {
-                id: @admin.id,
-                email: @admin.email
-              }
-            }, status: :ok
-          else
-            render json: {
-              status: 'error',
-              message: @admin.inactive_message
-            }, status: :unauthorized
-          end
-        else
-          render json: {
-            status: 'error',
-            message: 'Invalid email or password'
-          }, status: :unauthorized
-        end
+        sign_in(:admin, admin, store: false)
+        render json: {
+          status: 'success',
+          message: 'Logged in successfully',
+          data: {
+            id: admin.id,
+            email: admin.email
+          }
+        }, status: :ok
       end
 
       def destroy

@@ -9,6 +9,14 @@ RSpec.describe 'Api::Auth', type: :request do
   end
 
   describe 'POST /api/auth/sign_up' do
+    around do |example|
+      old = ENV['ADMIN_SIGNUP_PASSWORD']
+      ENV['ADMIN_SIGNUP_PASSWORD'] = 'change-this-password-in-production'
+      example.run
+    ensure
+      ENV['ADMIN_SIGNUP_PASSWORD'] = old
+    end
+
     context '正常なパラメータの場合' do
       let(:params) do
         {
