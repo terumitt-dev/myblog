@@ -6,8 +6,11 @@ module Api
       before_action :set_devise_mapping
 
       def create
-        # APIコンテキストでのパラメータ処理のため、request.paramsを更新
         request.env['devise.allow_params_authentication'] = true
+
+        # 入力をここで確定（adminキー欠如時はParameterMissing→400）
+        params[:admin] = session_params
+
         admin = warden.authenticate!(scope: :admin)
 
         sign_in(:admin, admin, store: false)

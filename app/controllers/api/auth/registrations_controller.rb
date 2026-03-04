@@ -3,6 +3,8 @@
 module Api
   module Auth
     class RegistrationsController < ApplicationController
+      before_action :set_devise_mapping
+
       def create
         # 管理者登録用パスワードの検証
         signup_password = params[:signup_password].to_s
@@ -52,6 +54,10 @@ module Api
       end
 
       private
+
+      def set_devise_mapping
+        request.env['devise.mapping'] = Devise.mappings[:admin]
+      end
 
       def admin_params
         params.require(:admin).permit(:email, :password, :password_confirmation)

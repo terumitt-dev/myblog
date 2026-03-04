@@ -3,6 +3,7 @@
 module Api
   module Auth
     class CurrentUsersController < ApplicationController
+      before_action :set_devise_mapping
       before_action :authenticate_admin!
 
       def show
@@ -13,6 +14,12 @@ module Api
             email: current_admin.email
           }
         }, status: :ok
+      end
+
+      private
+
+      def set_devise_mapping
+        request.env['devise.mapping'] = Devise.mappings[:admin]
       end
     end
   end
