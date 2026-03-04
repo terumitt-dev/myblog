@@ -40,8 +40,8 @@ module Api
           begin
             admin = warden.authenticate(:jwt, scope: :admin)
             sign_out(:admin) if admin
-          rescue StandardError
-            # idempotentに200を返すため握りつぶす
+          rescue StandardError => e
+            Rails.logger.warn("[api/auth/sign_out] logout failed: #{e.class}: #{e.message}")
           end
         end
 

@@ -5,8 +5,9 @@ module Api
     class RegistrationsController < ApplicationController
       def create
         # 管理者登録用パスワードの検証
-        signup_password = params[:signup_password]
-        expected_password = Rails.application.credentials.dig(:admin_signup, :password)
+        signup_password = params[:signup_password].to_s
+        expected_password =
+          Rails.application.credentials.dig(:admin_signup, :password) || ENV['ADMIN_SIGNUP_PASSWORD']
 
         if expected_password.blank?
           return render json: {
@@ -15,7 +16,11 @@ module Api
           }, status: :forbidden
         end
 
-        if signup_password != expected_password
+        valid_signup_password =
+          signup_password.bytesize == expected_password.bytesize &&
+          ActiveSupport::SecurityUtils.secure_compare(signup_password, expected_password)
+
+        unless valid_signup_password
           return render json: {
             status: 'error',
             message: 'Invalid signup password'
