@@ -3,6 +3,8 @@
 module Api
   module Auth
     class SessionsController < ApplicationController
+      before_action :set_devise_mapping
+
       def create
         # APIコンテキストでのパラメータ処理のため、request.paramsを更新
         request.env['devise.allow_params_authentication'] = true
@@ -38,6 +40,10 @@ module Api
       end
 
       private
+
+      def set_devise_mapping
+        request.env['devise.mapping'] = Devise.mappings[:admin]
+      end
 
       def session_params
         params.require(:admin).permit(:email, :password)
