@@ -4,6 +4,24 @@ module Api
   module Auth
     class RegistrationsController < ApplicationController
       def create
+        # 管理者登録用パスワードの検証
+        signup_password = params[:signup_password]
+        expected_password = Rails.application.credentials.dig(:admin_signup, :password)
+
+        if expected_password.blank?
+          return render json: {
+            status: 'error',
+            message: 'Admin signup is not configured'
+          }, status: :forbidden
+        end
+
+        if signup_password != expected_password
+          return render json: {
+            status: 'error',
+            message: 'Invalid signup password'
+          }, status: :forbidden
+        end
+
         @admin = Admin.new(admin_params)
 
         if @admin.save

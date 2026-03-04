@@ -16,7 +16,8 @@ RSpec.describe 'Api::Auth', type: :request do
             email: 'newadmin@example.com',
             password: 'password123',
             password_confirmation: 'password123'
-          }
+          },
+          signup_password: 'change-this-password-in-production'
         }
       end
 
@@ -40,7 +41,8 @@ RSpec.describe 'Api::Auth', type: :request do
             email: 'invalid',
             password: 'password123',
             password_confirmation: 'password123'
-          }
+          },
+          signup_password: 'change-this-password-in-production'
         }
       end
 
