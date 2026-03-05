@@ -8,8 +8,8 @@ module Api
       def create
         request.env['devise.allow_params_authentication'] = true
 
-        # 入力をここで確定（adminキー欠如時はParameterMissing→400）
-        params[:admin] = session_params.to_h
+        # strong parameters の検証だけ先に行う（adminキー欠如時はParameterMissing→400）
+        session_params
 
         admin = warden.authenticate!(scope: :admin, store: false)
         sign_in(:admin, admin, store: false)

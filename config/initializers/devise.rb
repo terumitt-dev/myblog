@@ -324,8 +324,11 @@ Devise.setup do |config|
     if jwt_secret.blank?
       if Rails.env.test?
         jwt_secret = 'test-jwt-secret'
-      else
+      elsif Rails.env.production?
         raise 'JWT secret key is not configured. Please set jwt.secret_key in credentials or JWT_SECRET_KEY environment variable.'
+      else
+        Rails.logger.warn('[devise-jwt] JWT secret key is not configured; falling back to secret_key_base for non-production.')
+        jwt_secret = Rails.application.secret_key_base
       end
     end
     
