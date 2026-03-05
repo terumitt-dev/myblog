@@ -12,9 +12,11 @@ class CustomDeviseFailureApp < Devise::FailureApp
     self.status = code
     self.content_type = 'application/json'
     self.headers['WWW-Authenticate'] = 'Bearer' if code == 401
-    self.response_body = {
-      status: 'error',
-      message: i18n_message
-    }.to_json
+    self.response_body = [
+      {
+        status: 'error',
+        message: i18n_message
+      }.to_json
+    ]
   end
 end
