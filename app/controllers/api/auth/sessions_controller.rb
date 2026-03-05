@@ -12,6 +12,7 @@ module Api
         params[:admin] = session_params
 
         admin = warden.authenticate!(scope: :admin, store: false)
+        sign_in(:admin, admin, store: false)
 
         render json: {
           status: 'success',
