@@ -319,14 +319,7 @@ Devise.setup do |config|
     jwt_secret = Rails.application.credentials.dig(:jwt, :secret_key) || ENV['JWT_SECRET_KEY']
 
     if jwt_secret.blank?
-      if Rails.env.test?
-        jwt_secret = 'test-jwt-secret'
-      elsif Rails.env.development?
-        Rails.logger.warn('[devise-jwt] JWT secret key is not configured; using development fallback secret.')
-        jwt_secret = 'development-jwt-secret'
-      else
-        raise 'JWT secret key is not configured. Please set jwt.secret_key in credentials or JWT_SECRET_KEY environment variable.'
-      end
+      raise 'JWT secret key is not configured. Please set jwt.secret_key in credentials or JWT_SECRET_KEY environment variable.'
     end
 
     jwt.secret = jwt_secret
