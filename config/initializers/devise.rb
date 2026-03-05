@@ -316,22 +316,19 @@ Devise.setup do |config|
 
   # ==> JWT configuration
   config.jwt do |jwt|
-    # JWT専用の秘密鍵を使用（secret_key_baseとは分離）
-    # 全環境で jwt.secret_key または JWT_SECRET_KEY を必須化
-    # credentials優先、ENV['JWT_SECRET_KEY']をフォールバックとして許可
     jwt_secret = Rails.application.credentials.dig(:jwt, :secret_key) || ENV['JWT_SECRET_KEY']
-    
+
     if jwt_secret.blank?
       if Rails.env.test?
         jwt_secret = 'test-jwt-secret'
-      elsif Rails.env.production?
-        raise 'JWT secret key is not configured. Please set jwt.secret_key in credentials or JWT_SECRET_KEY environment variable.'
+      elsif Rails.env.development?
+        Rails.logger.warn('[devise-jwt] JWT secret key is not configured; using development fallback secret.')
+        jwt_secret = 'development-jwt-secret'
       else
-        Rails.logger.warn('[devise-jwt] JWT secret key is not configured; falling back to secret_key_base for non-production.')
-        jwt_secret = Rails.application.secret_key_base
+        raise 'JWT secret key is not configured. Please set jwt.secret_key in credentials or JWT_SECRET_KEY environment variable.'
       end
     end
-    
+
     jwt.secret = jwt_secret
     jwt.dispatch_requests = [
       ['POST', %r{^/api/auth/sign_in(\.\w+)?/?$}]
