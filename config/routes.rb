@@ -15,12 +15,10 @@ Rails.application.routes.draw do
       resources :comments, only: %i[create]
     end
 
-    authenticate :admin do
-      namespace :admin do
-        resources :blogs do
-          collection do
-            post :import_mt
-          end
+    namespace :admin do
+      resources :blogs do
+        collection do
+          post :import_mt
         end
       end
     end

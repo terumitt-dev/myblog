@@ -13,7 +13,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     origins(*allowed_origins)
     resource '/api/*',
-             headers: ['Content-Type', 'Authorization', 'Accept'],
+             headers: :any,
              methods: [:get, :post, :put, :patch, :delete, :options],
              expose: ['Authorization'],
              max_age: 3600
