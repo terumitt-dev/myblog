@@ -97,7 +97,7 @@ Devise.setup do |config|
   # Notice that if you are skipping storage for all authentication paths, you
   # may want to disable generating routes to Devise's sessions controller by
   # passing skip: :sessions to `devise_for` in your config/routes.rb
-  config.skip_session_storage = [:http_auth]
+  config.skip_session_storage = [:http_auth, :jwt]
 
   # By default, Devise cleans up the CSRF token on authentication to
   # avoid CSRF token fixation attacks. This means that, when using AJAX
@@ -263,7 +263,8 @@ Devise.setup do |config|
   # should add them to the navigational formats lists.
   #
   # The "*/*" below is required to match Internet Explorer requests.
-  # config.navigational_formats = ['*/*', :html, :turbo_stream]
+  # API-only: 全てのフォーマットで401 JSONレスポンスを返す
+  config.navigational_formats = []
 
   # The default HTTP method used to sign out a resource. Default is :delete.
   config.sign_out_via = :delete
@@ -277,10 +278,12 @@ Devise.setup do |config|
   # If you want to use other strategies, that are not supported by Devise, or
   # change the failure app, you can configure them inside the config.warden block.
   #
-  # config.warden do |manager|
-  #   manager.intercept_401 = false
-  #   manager.default_strategies(scope: :user).unshift :some_external_strategy
-  # end
+  # API専用: 統一されたJSON形式でエラーを返す
+  config.warden do |manager|
+    # CustomDeviseFailureAppを明示的にロード
+    require Rails.root.join('lib/custom_devise_failure_app').to_s
+    manager.failure_app = CustomDeviseFailureApp
+  end
 
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine
@@ -310,4 +313,27 @@ Devise.setup do |config|
   # When set to false, does not sign a user in automatically after their password is
   # changed. Defaults to true, so a user is signed in automatically after changing a password.
   # config.sign_in_after_change_password = true
+
+  # ==> JWT configuration
+  config.jwt do |jwt|
+    jwt_secret = Rails.application.credentials.dig(:jwt, :secret_key) || ENV['JWT_SECRET_KEY']
+
+    if jwt_secret.blank?
+      if Rails.env.production?
+        raise 'JWT secret key is not configured. Please set jwt.secret_key in credentials or JWT_SECRET_KEY environment variable.'
+      end
+      jwt_secret = Rails.application.secret_key_base
+    end
+
+    raise 'JWT secret key is blank.' if jwt_secret.blank?
+
+    jwt.secret = jwt_secret
+    jwt.dispatch_requests = [
+      ['POST', %r{^/api/auth/sign_in(\.\w+)?/?$}]
+    ]
+    jwt.revocation_requests = [
+      ['DELETE', %r{^/api/auth/sign_out(\.\w+)?/?$}]
+    ]
+    jwt.expiration_time = 1.hour.to_i
+  end
 end

@@ -13,6 +13,9 @@ module Myblog
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.0
 
+    # API モードを有効化
+    config.api_only = true
+
     # 日本語をデフォルトのlocaleに設定
     config.i18n.default_locale = :ja
 

@@ -1,25 +1,26 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
-  devise_for :admins
+  devise_for :admins, skip: [:sessions, :registrations]
 
-  authenticated :admin do
-    get 'admin', to: 'admins#index', as: :admin_root
-    # resources :blogs
-    resources :blogs do
+  namespace :api do
+    namespace :auth do
+      post 'sign_up', to: 'registrations#create'
+      post 'sign_in', to: 'sessions#create'
+      delete 'sign_out', to: 'sessions#destroy'
+      get 'current_user', to: 'current_users#show'
+    end
+
+    resources :blogs, only: %i[index show] do
+      resources :comments, only: %i[create]
+    end
+
+    namespace :admin do
+      resources :blogs do
         collection do
-          post :import_mt   # MT形式インポート用
+          post :import_mt
         end
       end
+    end
   end
-
-  resources :blogs, only: %i[index show] do
-    resources :comments
-  end
-
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Defines the root path route ("/")
-  get '*path', to: redirect('/')
-  root 'blogs#index'
 end
