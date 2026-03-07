@@ -325,6 +325,8 @@ Devise.setup do |config|
       jwt_secret = Rails.application.secret_key_base
     end
 
+    raise 'JWT secret key is blank.' if jwt_secret.blank?
+
     jwt.secret = jwt_secret
     jwt.dispatch_requests = [
       ['POST', %r{^/api/auth/sign_in(\.\w+)?/?$}]
