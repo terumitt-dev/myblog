@@ -114,7 +114,7 @@ module Api
       def set_blog
         @blog = Blog.find(params[:id])
       rescue ActiveRecord::RecordNotFound
-        render json: { error: 'Blog not found' }, status: :not_found
+        return render json: { error: 'Blog not found' }, status: :not_found
       end
 
       def blog_params
