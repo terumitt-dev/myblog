@@ -29,7 +29,7 @@ module Api
           }, status: :forbidden
         end
 
-        @admin = Admin.new(admin_params)
+        @admin = ::Admin.new(admin_params)
 
         if @admin.save
           # 登録成功。ログインはクライアント側でsign_inエンドポイントを呼ぶ設計とする。
