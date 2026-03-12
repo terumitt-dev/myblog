@@ -92,7 +92,13 @@ module Api
           return render json: { error: 'Invalid file format' }, status: :unprocessable_entity
         end
 
-        import_result = Blog.import_from_mt(uploaded_file)
+        begin
+          import_result = Blog.import_from_mt(uploaded_file)
+        rescue StandardError => e
+          Rails.logger.error("MT import failed: #{e.class}: #{e.message}")
+          return render json: { error: 'Import failed' }, status: :unprocessable_entity
+        end
+
         success_count = import_result[:success].to_i
         errors_count = Array(import_result[:errors]).size
 

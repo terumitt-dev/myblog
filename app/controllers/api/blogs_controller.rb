@@ -59,6 +59,7 @@ module Api
       @blog = Blog.find(params[:id])
     rescue ActiveRecord::RecordNotFound
       render json: { error: 'Blog not found' }, status: :not_found
+      throw :abort
     end
   end
 end
