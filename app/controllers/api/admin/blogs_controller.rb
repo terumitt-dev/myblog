@@ -15,7 +15,7 @@ module Api
             id: blog.id,
             title: blog.title,
             content: blog.content,
-            category: blog.category,
+            category: blog[:category],
             category_name: blog.category,
             created_at: blog.created_at,
             updated_at: blog.updated_at
@@ -31,7 +31,7 @@ module Api
           id: @blog.id,
           title: @blog.title,
           content: @blog.content,
-          category: @blog.category,
+          category: @blog[:category],
           category_name: @blog.category,
           created_at: @blog.created_at,
           updated_at: @blog.updated_at
@@ -47,7 +47,7 @@ module Api
             id: @blog.id,
             title: @blog.title,
             content: @blog.content,
-            category: @blog.category,
+            category: @blog[:category],
             category_name: @blog.category,
             created_at: @blog.created_at,
             updated_at: @blog.updated_at
@@ -64,7 +64,7 @@ module Api
             id: @blog.id,
             title: @blog.title,
             content: @blog.content,
-            category: @blog.category,
+            category: @blog[:category],
             category_name: @blog.category,
             created_at: @blog.created_at,
             updated_at: @blog.updated_at

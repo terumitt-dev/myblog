@@ -18,7 +18,9 @@ module Api
             Blog.categories[category_param]
           end
 
-        @blogs = @blogs.where(category: category_value) unless category_value.nil?
+        return render json: { error: 'Invalid category' }, status: :unprocessable_entity if category_value.nil?
+
+        @blogs = @blogs.where(category: category_value)
       end
 
       # ページネーション
