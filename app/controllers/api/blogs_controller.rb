@@ -15,8 +15,11 @@ module Api
       end
 
       # ページネーション
-      page = params[:page]&.to_i || 1
-      limit = params[:limit]&.to_i || 20
+      page = params[:page].to_i
+      page = 1 if page < 1
+
+      limit = params[:limit].to_i
+      limit = 20 if limit < 1
       limit = [limit, 100].min # 最大100件
 
       offset = (page - 1) * limit

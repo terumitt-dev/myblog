@@ -93,18 +93,20 @@ module Api
         end
 
         import_result = Blog.import_from_mt(uploaded_file)
+        success_count = import_result[:success].to_i
+        errors_count = Array(import_result[:errors]).size
 
-        if import_result[:success].zero? && import_result[:error_type] == :no_entries
+        if success_count.zero? && import_result[:error_type] == :no_entries
           render json: { error: 'No entries found' }, status: :unprocessable_entity
-        elsif import_result[:success].zero? && import_result[:error_type] == :too_many_entries
+        elsif success_count.zero? && import_result[:error_type] == :too_many_entries
           render json: { error: 'Too many entries' }, status: :unprocessable_entity
-        elsif import_result[:success].zero?
+        elsif success_count.zero?
           render json: { error: 'Import failed' }, status: :unprocessable_entity
         else
           render json: {
             message: 'Import completed',
-            success: import_result[:success],
-            errors: import_result[:errors].size
+            success: success_count,
+            errors: errors_count
           }, status: :ok
         end
       end
