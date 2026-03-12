@@ -92,6 +92,9 @@ module Api
           return render json: { error: 'Invalid file format' }, status: :unprocessable_entity
         end
 
+        io = uploaded_file.respond_to?(:tempfile) ? uploaded_file.tempfile : uploaded_file
+        io.rewind if io.respond_to?(:rewind)
+
         begin
           import_result = Blog.import_from_mt(uploaded_file)
         rescue StandardError => e
