@@ -13,7 +13,8 @@ module Api
         category_param = params[:category].to_s
         category_value =
           if category_param.match?(/\A\d+\z/)
-            category_param.to_i
+            value = category_param.to_i
+            Blog.categories.value?(value) ? value : nil
           else
             Blog.categories[category_param]
           end
@@ -55,7 +56,7 @@ module Api
         id: @blog.id,
         title: @blog.title,
         content: @blog.content,
-        category: @blog.category,
+        category: @blog[:category],
         category_name: @blog.category,
         created_at: @blog.created_at,
         updated_at: @blog.updated_at
