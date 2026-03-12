@@ -93,10 +93,10 @@ module Api
         end
 
         io = uploaded_file.respond_to?(:tempfile) ? uploaded_file.tempfile : uploaded_file
-        io.rewind if io.respond_to?(:rewind)
 
         begin
-          import_result = Blog.import_from_mt(uploaded_file)
+          io.rewind if io.respond_to?(:rewind)
+          import_result = Blog.import_from_mt(io)
         rescue StandardError => e
           Rails.logger.error("MT import failed: #{e.class}: #{e.message}")
           return render json: { error: 'Import failed' }, status: :unprocessable_entity
