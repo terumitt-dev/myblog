@@ -102,6 +102,11 @@ module Api
           return render json: { error: 'Import failed' }, status: :unprocessable_entity
         end
 
+        unless import_result.is_a?(Hash)
+          Rails.logger.error("MT import failed: unexpected result #{import_result.class}")
+          return render json: { error: 'Import failed' }, status: :unprocessable_entity
+        end
+
         success_count = import_result[:success].to_i
         errors_count = Array(import_result[:errors]).size
 

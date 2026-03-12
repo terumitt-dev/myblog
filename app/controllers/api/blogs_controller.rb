@@ -10,8 +10,15 @@ module Api
 
       # カテゴリフィルター
       if params[:category].present?
-        category_value = Blog.categories[params[:category]]
-        @blogs = @blogs.where(category: category_value) if category_value
+        category_param = params[:category].to_s
+        category_value =
+          if category_param.match?(/\A\d+\z/)
+            category_param.to_i
+          else
+            Blog.categories[category_param]
+          end
+
+        @blogs = @blogs.where(category: category_value) unless category_value.nil?
       end
 
       # ページネーション
@@ -30,7 +37,7 @@ module Api
           id: blog.id,
           title: blog.title,
           content: blog.content,
-          category: blog.category,
+          category: blog[:category],
           category_name: blog.category,
           created_at: blog.created_at,
           updated_at: blog.updated_at
