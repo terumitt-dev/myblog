@@ -6,7 +6,16 @@ module Api
 
     # GET /api/blogs/:blog_id/comments
     def index
-      comments = @blog.comments.order(created_at: :desc).map do |c|
+      page = params[:page].to_i
+      page = 1 if page < 1
+
+      limit = params[:limit].to_i
+      limit = 50 if limit < 1
+      limit = [limit, 200].min
+
+      offset = (page - 1) * limit
+
+      comments = @blog.comments.order(created_at: :desc).limit(limit).offset(offset).map do |c|
         {
           id: c.id,
           user_name: c.user_name,

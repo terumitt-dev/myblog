@@ -8,9 +8,19 @@ module Api
 
       # GET /api/admin/blogs
       def index
-        @blogs = Blog.all.order(created_at: :desc)
+        blogs = Blog.order(created_at: :desc)
 
-        blogs_with_category = @blogs.map do |blog|
+        page = params[:page].to_i
+        page = 1 if page < 1
+
+        limit = params[:limit].to_i
+        limit = 50 if limit < 1
+        limit = [limit, 200].min
+
+        offset = (page - 1) * limit
+        blogs = blogs.limit(limit).offset(offset)
+
+        blogs_with_category = blogs.map do |blog|
           {
             id: blog.id,
             title: blog.title,
@@ -76,8 +86,11 @@ module Api
 
       # DELETE /api/admin/blogs/:id
       def destroy
-        @blog.destroy
-        head :no_content
+        if @blog.destroy
+          head :no_content
+        else
+          render json: { errors: @blog.errors.full_messages }, status: :unprocessable_entity
+        end
       end
 
       # POST /api/admin/blogs/import_mt
