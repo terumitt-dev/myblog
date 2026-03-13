@@ -86,7 +86,9 @@ module Api
 
       # DELETE /api/admin/blogs/:id
       def destroy
-        if @blog.destroy
+        @blog.destroy
+
+        if @blog.destroyed?
           head :no_content
         else
           render json: { errors: @blog.errors.full_messages }, status: :unprocessable_entity
@@ -97,7 +99,11 @@ module Api
       def import_mt
         uploaded_file = params[:file]
 
-        if uploaded_file.blank? || uploaded_file.size.zero? || uploaded_file.size > Blog::MAX_UPLOAD_SIZE
+        unless uploaded_file.present? && uploaded_file.respond_to?(:size)
+          return render json: { error: 'Invalid file' }, status: :unprocessable_entity
+        end
+
+        if uploaded_file.size.zero? || uploaded_file.size > Blog::MAX_UPLOAD_SIZE
           return render json: { error: 'Invalid file' }, status: :unprocessable_entity
         end
 
