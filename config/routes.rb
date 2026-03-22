@@ -12,7 +12,7 @@ Rails.application.routes.draw do
     end
 
     resources :blogs, only: %i[index show] do
-      resources :comments, only: %i[create]
+      resources :comments, only: %i[index create]
     end
 
     namespace :admin do
