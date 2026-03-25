@@ -76,8 +76,10 @@ class Blog < ApplicationRecord
   end
 
   # --- MTファイルからのインポート ---
-  # 呼び出し元(コントローラ)でvalid_mt_file?によるバリデーション済みを前提とする
+  # 呼び出し元(コントローラ)でvalid_mt_file?によるバリデーション済みであっても、防御的に再検証する
   def self.import_from_mt(uploaded_file)
+    return { success: 0, errors: [], error_type: :invalid_file } unless valid_mt_file?(uploaded_file)
+
     content = nil
     begin
       uploaded_file.rewind
