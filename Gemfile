@@ -26,7 +26,7 @@ gem 'turbo-rails', '~> 1.4'
 gem 'jbuilder', '~> 2.14' # 最新安定版
 
 # 認証系
-gem 'devise', '~> 4.9' # 最新安定版 4.9.4
+gem 'devise', '~> 5.0' # 最新安定版 4.9.4
 gem 'devise-i18n', '~> 1.11'
 gem 'devise-jwt', '~> 0.11'
 gem 'jwt', '~> 2.7'
