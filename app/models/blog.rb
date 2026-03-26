@@ -76,12 +76,14 @@ class Blog < ApplicationRecord
   end
 
   # --- MTファイルからのインポート ---
+  # 呼び出し元(コントローラ)でvalid_mt_file?によるバリデーション済みであっても、防御的に再検証する
   def self.import_from_mt(uploaded_file)
+    uploaded_file.rewind if uploaded_file.respond_to?(:rewind)
     return { success: 0, errors: [], error_type: :invalid_file } unless valid_mt_file?(uploaded_file)
+    uploaded_file.rewind if uploaded_file.respond_to?(:rewind)
 
     content = nil
     begin
-      uploaded_file.rewind
       content = NKF.nkf("-w", uploaded_file.read)
     rescue => e
       Rails.logger.warn "⚠️ Failed to convert MT file to UTF-8: #{e.message}"
