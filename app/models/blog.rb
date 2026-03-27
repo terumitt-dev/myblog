@@ -5,8 +5,12 @@ require "cgi"
 
 class Blog < ApplicationRecord
   has_many :comments, dependent: :destroy
+  has_many_attached :images
   validates :title, :category, :content, presence: true
   enum :category, { uncategorized: 0, hobby: 1, tech: 2, other: 3 }, default: :uncategorized
+
+  SAFE_TAGS = %w[p br h1 h2 h3 h4 h5 h6 a img figure figcaption ul ol li blockquote pre code em strong].freeze
+  SAFE_ATTRIBUTES = %w[href src alt width height class target rel loading].freeze
 
   MAX_UPLOAD_SIZE = 5.megabytes
   ALLOWED_EXTENSIONS = %w[.txt]
@@ -121,6 +125,10 @@ class Blog < ApplicationRecord
               blog = Blog.new
               attributes = blog.prepare_mt_attributes(entry, global_index)
               blog.assign_attributes(attributes)
+
+              # 外部画像をダウンロードしてActive Storageに保存、URLを書き換え
+              blog.content = blog.rewrite_external_images!(blog.content)
+
               blog.save!
 
               import_result[:success] += 1
@@ -216,8 +224,8 @@ class Blog < ApplicationRecord
 
   # MTエントリデータから個別レコードの属性を準備
   def prepare_mt_attributes(entry, index)
-    safe_title = sanitize_text(entry[:title])
-    safe_content = sanitize_text(entry[:content])
+    safe_title = sanitize_title(entry[:title])
+    safe_content = sanitize_content(entry[:content])
 
     # 空データチェック
     if safe_title.blank? || safe_content.blank?
@@ -244,12 +252,35 @@ class Blog < ApplicationRecord
     }
   end
 
+  # content内の外部画像をダウンロードしてActive Storageに保存し、URLを書き換える
+  def rewrite_external_images!(html)
+    return html if html.blank?
+
+    doc = Nokogiri::HTML.fragment(html)
+    doc.css("img").each do |img|
+      src = img["src"]
+      next if src.blank?
+
+      new_url = ImageDownloader.download_and_attach(src, self)
+      img["src"] = new_url if new_url
+    end
+
+    doc.to_html
+  end
+
   private
 
-  # HTMLエンティティをデコードするサニタイズ（インスタンスメソッド）
-  def sanitize_text(text)
+  # タイトル用サニタイズ（全タグ除去）
+  def sanitize_title(text)
     unescaped = CGI.unescapeHTML(text.to_s)
     ActionController::Base.helpers.sanitize(unescaped, tags: []).gsub('&nbsp;', ' ').strip
+  end
+
+  # コンテンツ用サニタイズ（安全なタグを残す）
+  def sanitize_content(text)
+    unescaped = CGI.unescapeHTML(text.to_s)
+    ActionController::Base.helpers.sanitize(unescaped, tags: SAFE_TAGS, attributes: SAFE_ATTRIBUTES)
+      .gsub('&nbsp;', ' ').strip
   end
 
   # 日付パース（複数フォーマット対応）（インスタンスメソッド）

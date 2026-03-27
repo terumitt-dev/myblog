@@ -21,6 +21,7 @@ Rails.application.routes.draw do
           post :import_mt
         end
       end
+      resources :images, only: [:create]
     end
   end
 end
