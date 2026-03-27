@@ -155,38 +155,114 @@ RSpec.describe Blog, type: :model do
     end
   end
 
-  describe '#sanitize_text' do
+  describe '#sanitize_title' do
     let(:blog) { Blog.new }
 
-    it 'HTMLタグを除去すること' do
+    it '全てのHTMLタグを除去すること' do
       text = '<script>alert("xss")</script>テスト<b>太字</b>'
-      result = blog.send(:sanitize_text, text)
+      result = blog.send(:sanitize_title, text)
       expect(result).to eq 'alert("xss")テスト太字'
     end
 
     it 'HTMLエンティティをデコードすること' do
       text = '&lt;div&gt;テスト&lt;/div&gt;'
-      result = blog.send(:sanitize_text, text)
+      result = blog.send(:sanitize_title, text)
       expect(result).to eq 'テスト'
     end
 
     it '&nbsp;を半角スペースに変換すること' do
       text = 'テスト&nbsp;サンプル&nbsp;文字列'
-      result = blog.send(:sanitize_text, text)
+      result = blog.send(:sanitize_title, text)
       expect(result).to eq 'テスト サンプル 文字列'
     end
 
     it '前後の空白を除去すること' do
       text = '  テスト内容  '
-      result = blog.send(:sanitize_text, text)
+      result = blog.send(:sanitize_title, text)
       expect(result).to eq 'テスト内容'
     end
 
     it '&amp;エンティティの処理を確認すること' do
       text = 'テスト&amp;サンプル'
-      result = blog.send(:sanitize_text, text)
+      result = blog.send(:sanitize_title, text)
       # CGI.unescapeHTMLで&に変換され、sanitizeで&amp;に戻る
       expect(result).to eq 'テスト&amp;サンプル'
+    end
+
+    it 'imgタグも除去すること' do
+      text = 'タイトル<img src="test.jpg">画像付き'
+      result = blog.send(:sanitize_title, text)
+      expect(result).to eq 'タイトル画像付き'
+    end
+  end
+
+  describe '#sanitize_content' do
+    let(:blog) { Blog.new }
+
+    it '安全なHTMLタグを保持すること' do
+      text = '<p>段落</p><img src="test.jpg" alt="テスト"><figure><figcaption>キャプション</figcaption></figure>'
+      result = blog.send(:sanitize_content, text)
+      expect(result).to include('<p>')
+      expect(result).to include('<img')
+      expect(result).to include('<figure>')
+      expect(result).to include('<figcaption>')
+    end
+
+    it 'scriptタグを除去すること' do
+      text = '<p>安全</p><script>alert("xss")</script>'
+      result = blog.send(:sanitize_content, text)
+      expect(result).to include('<p>安全</p>')
+      expect(result).not_to include('<script>')
+    end
+
+    it 'h1-h6, ul, ol, li, blockquote, pre, code, em, strong タグを保持すること' do
+      text = '<h1>見出し</h1><ul><li>項目</li></ul><blockquote>引用</blockquote><pre><code>コード</code></pre><em>強調</em><strong>太字</strong>'
+      result = blog.send(:sanitize_content, text)
+      expect(result).to include('<h1>')
+      expect(result).to include('<ul>')
+      expect(result).to include('<li>')
+      expect(result).to include('<blockquote>')
+      expect(result).to include('<pre>')
+      expect(result).to include('<code>')
+      expect(result).to include('<em>')
+      expect(result).to include('<strong>')
+    end
+
+    it '安全な属性を保持すること' do
+      text = '<a href="https://example.com" target="_blank" rel="noopener">リンク</a><img src="test.jpg" alt="テスト" width="100" height="100" loading="lazy">'
+      result = blog.send(:sanitize_content, text)
+      expect(result).to include('href="https://example.com"')
+      expect(result).to include('target="_blank"')
+      expect(result).to include('src="test.jpg"')
+      expect(result).to include('alt="テスト"')
+      expect(result).to include('loading="lazy"')
+    end
+
+    it '危険な属性を除去すること' do
+      text = '<p onclick="alert(1)" style="color:red">テスト</p>'
+      result = blog.send(:sanitize_content, text)
+      expect(result).not_to include('onclick')
+      expect(result).not_to include('style')
+      expect(result).to include('<p>テスト</p>')
+    end
+
+    it '&nbsp;を半角スペースに変換すること' do
+      text = '<p>テスト&nbsp;サンプル</p>'
+      result = blog.send(:sanitize_content, text)
+      expect(result).to include('テスト サンプル')
+    end
+
+    it '前後の空白を除去すること' do
+      text = '  <p>テスト内容</p>  '
+      result = blog.send(:sanitize_content, text)
+      expect(result).to eq '<p>テスト内容</p>'
+    end
+
+    it 'iframeタグを除去すること' do
+      text = '<p>テスト</p><iframe src="https://evil.com"></iframe>'
+      result = blog.send(:sanitize_content, text)
+      expect(result).to include('<p>テスト</p>')
+      expect(result).not_to include('<iframe')
     end
   end
 
@@ -333,6 +409,38 @@ RSpec.describe Blog, type: :model do
       expect(Rails.logger).to receive(:warn).with(/Entry \d+: Import failed \(RuntimeError\)/)
 
       Blog.import_from_mt(uploaded_file)
+    end
+  end
+
+  describe '#rewrite_external_images!' do
+    let(:blog) { Blog.new(title: 'テスト', category: :tech, content: '本文') }
+
+    it '空のHTMLではそのまま返すこと' do
+      expect(blog.rewrite_external_images!('')).to eq ''
+      expect(blog.rewrite_external_images!(nil)).to be_nil
+    end
+
+    it '画像のないHTMLではそのまま返すこと' do
+      html = '<p>テスト本文</p>'
+      result = blog.rewrite_external_images!(html)
+      expect(result).to include('<p>テスト本文</p>')
+    end
+
+    it '外部画像のURLをImageDownloaderで書き換えること' do
+      html = '<p><img src="https://cdn-ak.f.st-hatena.com/images/test.jpg"></p>'
+      allow(ImageDownloader).to receive(:download_and_attach).and_return('/rails/active_storage/blobs/xxx/test.jpg')
+
+      result = blog.rewrite_external_images!(html)
+      expect(result).to include('src="/rails/active_storage/blobs/xxx/test.jpg"')
+      expect(ImageDownloader).to have_received(:download_and_attach).once
+    end
+
+    it 'ImageDownloaderがnilを返した場合は元のURLを維持すること' do
+      html = '<p><img src="https://cdn-ak.f.st-hatena.com/images/test.jpg"></p>'
+      allow(ImageDownloader).to receive(:download_and_attach).and_return(nil)
+
+      result = blog.rewrite_external_images!(html)
+      expect(result).to include('src="https://cdn-ak.f.st-hatena.com/images/test.jpg"')
     end
   end
 end
