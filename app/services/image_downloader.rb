@@ -30,7 +30,7 @@ class ImageDownloader
     # ファイル内容からMIMEタイプを検証（外部サーバーのContent-Typeを信頼しない）
     filename = File.basename(uri.path)
     body_io = StringIO.new(response.body)
-    detected_content_type = Marcel::MimeType.for(body_io, name: filename)
+    detected_content_type = Marcel::MimeType.for(body_io)
     return nil unless ALLOWED_CONTENT_TYPES.include?(detected_content_type)
 
     body_io.rewind

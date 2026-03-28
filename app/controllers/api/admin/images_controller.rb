@@ -26,7 +26,7 @@ module Api
         end
 
         # ファイル内容からMIMEタイプを検証（クライアント申告値を信頼しない）
-        detected_mime = Marcel::MimeType.for(uploaded_file, name: uploaded_file.original_filename)
+        detected_mime = Marcel::MimeType.for(uploaded_file.tempfile)
         uploaded_file.rewind
 
         unless ALLOWED_CONTENT_TYPES.include?(detected_mime)

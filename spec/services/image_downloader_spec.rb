@@ -31,7 +31,8 @@ RSpec.describe ImageDownloader do
       let(:url) { 'https://cdn-ak.f.st-hatena.com/images/test.jpg' }
 
       it '画像をダウンロードしてActive Storageに保存しURLを返すこと' do
-        response = make_success_response(body: 'fake-image-data')
+        jpeg_data = File.binread(Rails.root.join('spec/fixtures/files/test_image.jpg'))
+        response = make_success_response(body: jpeg_data)
 
         http = instance_double(Net::HTTP)
         stub_http(http)
