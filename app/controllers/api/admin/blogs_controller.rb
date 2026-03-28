@@ -51,6 +51,7 @@ module Api
       # POST /api/admin/blogs
       def create
         @blog = Blog.new(blog_params)
+        @blog.content = sanitize_blog_content(@blog.content)
 
         if @blog.save
           render json: {
@@ -69,7 +70,11 @@ module Api
 
       # PUT/PATCH /api/admin/blogs/:id
       def update
-        if @blog.update(blog_params)
+        sanitized_params = blog_params.to_h
+        if sanitized_params.key?("content")
+          sanitized_params["content"] = sanitize_blog_content(sanitized_params["content"])
+        end
+        if @blog.update(sanitized_params)
           render json: {
             id: @blog.id,
             title: @blog.title,
@@ -152,6 +157,14 @@ module Api
 
       def blog_params
         params.require(:blog).permit(:title, :content, :category)
+      end
+
+      def sanitize_blog_content(html)
+        ActionController::Base.helpers.sanitize(
+          html.to_s,
+          tags: Blog::SAFE_TAGS,
+          attributes: Blog::SAFE_ATTRIBUTES
+        )
       end
     end
   end

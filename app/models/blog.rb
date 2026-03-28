@@ -5,8 +5,12 @@ require "cgi"
 
 class Blog < ApplicationRecord
   has_many :comments, dependent: :destroy
+  has_many_attached :images
   validates :title, :category, :content, presence: true
   enum :category, { uncategorized: 0, hobby: 1, tech: 2, other: 3 }, default: :uncategorized
+
+  SAFE_TAGS = %w[p br h1 h2 h3 h4 h5 h6 a img figure figcaption ul ol li blockquote pre code em strong].freeze
+  SAFE_ATTRIBUTES = %w[href src alt width height class target rel loading].freeze
 
   MAX_UPLOAD_SIZE = 5.megabytes
   ALLOWED_EXTENSIONS = %w[.txt]
@@ -112,26 +116,43 @@ class Blog < ApplicationRecord
       total_batches = (entries.size / 50.0).ceil
       Rails.logger.info "Processing batch #{batch_num + 1}/#{total_batches} (#{batch.size} entries)"
 
+      # Phase 1: トランザクション外で画像ダウンロード・属性準備
+      prepared_entries = []
+      batch.each_with_index do |entry, batch_index|
+        global_index = batch_num * 50 + batch_index
+
+        blog = Blog.new
+        begin
+          attributes = blog.prepare_mt_attributes(entry, global_index)
+          blog.assign_attributes(attributes)
+
+          # 外部画像をダウンロードしてActive Storageに保存、URLを書き換え（HTTP通信はトランザクション外）
+          blog.content = blog.rewrite_external_images!(blog.content)
+
+          prepared_entries << { blog: blog, index: global_index }
+        rescue StandardError => e
+          blog.images.blobs.each(&:purge_later) if blog.images.attached?
+          Rails.logger.warn "Entry #{global_index + 1}: Preparation failed (#{e.class.name})"
+          import_result[:errors] << "Entry #{global_index + 1}: Preparation failed"
+        end
+      end
+
+      # Phase 2: トランザクション内でDB保存のみ
       begin
-        Blog.transaction do  # バッチ全体を1つのトランザクションに
-          batch.each_with_index do |entry, batch_index|
-            global_index = batch_num * 50 + batch_index
-
+        Blog.transaction do
+          prepared_entries.each do |prepared|
             begin
-              blog = Blog.new
-              attributes = blog.prepare_mt_attributes(entry, global_index)
-              blog.assign_attributes(attributes)
-              blog.save!
-
+              prepared[:blog].save!
               import_result[:success] += 1
-              Rails.logger.debug "Entry #{global_index + 1}: Successfully imported"
-
+              Rails.logger.debug "Entry #{prepared[:index] + 1}: Successfully imported"
             rescue ActiveRecord::RecordInvalid => e
-              Rails.logger.warn "Entry #{global_index + 1}: Validation failed (#{e.record.errors.count} validation errors)"
-              import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
+              prepared[:blog].images.blobs.each(&:purge_later)
+              Rails.logger.warn "Entry #{prepared[:index] + 1}: Validation failed (#{e.record.errors.count} validation errors)"
+              import_result[:errors] << "Entry #{prepared[:index] + 1}: Validation failed"
             rescue StandardError => e
-              Rails.logger.warn "Entry #{global_index + 1}: Import failed (#{e.class.name})"
-              import_result[:errors] << "Entry #{global_index + 1}: Import failed"
+              prepared[:blog].images.blobs.each(&:purge_later)
+              Rails.logger.warn "Entry #{prepared[:index] + 1}: Import failed (#{e.class.name})"
+              import_result[:errors] << "Entry #{prepared[:index] + 1}: Import failed"
             end
           end
         end
@@ -216,8 +237,8 @@ class Blog < ApplicationRecord
 
   # MTエントリデータから個別レコードの属性を準備
   def prepare_mt_attributes(entry, index)
-    safe_title = sanitize_text(entry[:title])
-    safe_content = sanitize_text(entry[:content])
+    safe_title = sanitize_title(entry[:title])
+    safe_content = sanitize_content(entry[:content])
 
     # 空データチェック
     if safe_title.blank? || safe_content.blank?
@@ -244,12 +265,35 @@ class Blog < ApplicationRecord
     }
   end
 
+  # content内の外部画像をダウンロードしてActive Storageに保存し、URLを書き換える
+  def rewrite_external_images!(html)
+    return html if html.blank?
+
+    doc = Nokogiri::HTML.fragment(html)
+    doc.css("img").each do |img|
+      src = img["src"]
+      next if src.blank?
+
+      new_url = ImageDownloader.download_and_attach(src, self)
+      img["src"] = new_url if new_url
+    end
+
+    doc.to_html
+  end
+
   private
 
-  # HTMLエンティティをデコードするサニタイズ（インスタンスメソッド）
-  def sanitize_text(text)
+  # タイトル用サニタイズ（全タグ除去）
+  def sanitize_title(text)
     unescaped = CGI.unescapeHTML(text.to_s)
     ActionController::Base.helpers.sanitize(unescaped, tags: []).gsub('&nbsp;', ' ').strip
+  end
+
+  # コンテンツ用サニタイズ（安全なタグを残す）
+  def sanitize_content(text)
+    unescaped = CGI.unescapeHTML(text.to_s)
+    ActionController::Base.helpers.sanitize(unescaped, tags: SAFE_TAGS, attributes: SAFE_ATTRIBUTES)
+      .gsub('&nbsp;', ' ').strip
   end
 
   # 日付パース（複数フォーマット対応）（インスタンスメソッド）

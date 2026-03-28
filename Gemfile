@@ -34,6 +34,10 @@ gem 'jwt', '~> 2.7'
 # CORS対応
 gem 'rack-cors', '~> 2.0'
 
+# 画像ストレージ（Active Storage + S3）
+gem 'aws-sdk-s3', require: false
+gem 'image_processing', '~> 1.2'
+
 # Windows 専用
 gem 'tzinfo-data', platforms: %i[mingw mswin x64_mingw jruby]
 
