@@ -39,7 +39,7 @@ module Api
           content_type: detected_mime
         )
 
-        url = Rails.application.routes.url_helpers.rails_blob_path(blob, only_path: true)
+        url = Rails.application.routes.url_helpers.rails_blob_url(blob, host: request.base_url)
 
         render json: { url: url, filename: uploaded_file.original_filename }, status: :created
       end
