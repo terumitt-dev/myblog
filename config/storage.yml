@@ -10,7 +10,7 @@ local:
 amazon:
   service: S3
   region: ap-northeast-1
-  bucket: <%= ENV.fetch('S3_BLOG_IMAGES_BUCKET', '') %>
+  bucket: <%= ENV.fetch('S3_BLOG_IMAGES_BUCKET', 'not-configured') %>
 
 # Remember not to checkin your GCS keyfile to a repository
 # google:

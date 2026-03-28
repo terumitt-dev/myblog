@@ -75,6 +75,7 @@ class ImageDownloader
 
       new_uri = parse_url(redirect_url)
       return nil unless new_uri
+      return nil unless ALLOWED_HOSTS.include?(new_uri.host)
 
       fetch_with_redirects(new_uri, redirect_count + 1)
     else
