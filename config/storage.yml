@@ -10,7 +10,7 @@ local:
 amazon:
   service: S3
   region: ap-northeast-1
-  bucket: <%= ENV.fetch('S3_BLOG_IMAGES_BUCKET', 'not-configured') %>
+  bucket: <%= Rails.env.production? ? ENV.fetch('S3_BLOG_IMAGES_BUCKET') : 'unused' %>
 
 # Remember not to checkin your GCS keyfile to a repository
 # google:
