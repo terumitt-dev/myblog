@@ -121,8 +121,8 @@ class Blog < ApplicationRecord
       batch.each_with_index do |entry, batch_index|
         global_index = batch_num * 50 + batch_index
 
+        blog = Blog.new
         begin
-          blog = Blog.new
           attributes = blog.prepare_mt_attributes(entry, global_index)
           blog.assign_attributes(attributes)
 
@@ -131,6 +131,7 @@ class Blog < ApplicationRecord
 
           prepared_entries << { blog: blog, index: global_index }
         rescue StandardError => e
+          blog.images.blobs.each(&:purge_later) if blog.images.attached?
           Rails.logger.warn "Entry #{global_index + 1}: Preparation failed (#{e.class.name})"
           import_result[:errors] << "Entry #{global_index + 1}: Preparation failed"
         end

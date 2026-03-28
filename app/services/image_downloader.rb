@@ -39,7 +39,12 @@ class ImageDownloader
       filename: filename,
       content_type: detected_content_type
     )
-    blog.images.attach(blob)
+    begin
+      blog.images.attach(blob)
+    rescue StandardError
+      blob.purge_later
+      raise
+    end
 
     Rails.application.routes.url_helpers.rails_blob_path(blob, only_path: true)
   rescue StandardError => e
