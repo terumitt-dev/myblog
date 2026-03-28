@@ -145,9 +145,11 @@ class Blog < ApplicationRecord
               import_result[:success] += 1
               Rails.logger.debug "Entry #{prepared[:index] + 1}: Successfully imported"
             rescue ActiveRecord::RecordInvalid => e
+              prepared[:blog].images.blobs.each(&:purge_later)
               Rails.logger.warn "Entry #{prepared[:index] + 1}: Validation failed (#{e.record.errors.count} validation errors)"
               import_result[:errors] << "Entry #{prepared[:index] + 1}: Validation failed"
             rescue StandardError => e
+              prepared[:blog].images.blobs.each(&:purge_later)
               Rails.logger.warn "Entry #{prepared[:index] + 1}: Import failed (#{e.class.name})"
               import_result[:errors] << "Entry #{prepared[:index] + 1}: Import failed"
             end
