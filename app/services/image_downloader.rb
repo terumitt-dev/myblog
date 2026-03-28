@@ -29,7 +29,6 @@ class ImageDownloader
 
     content_type = response["Content-Type"]&.split(";")&.first&.strip
     return nil unless ALLOWED_CONTENT_TYPES.include?(content_type)
-    return nil if response.body.bytesize > MAX_IMAGE_SIZE
 
     filename = File.basename(uri.path)
     blob = ActiveStorage::Blob.create_and_upload!(
@@ -64,23 +63,31 @@ class ImageDownloader
     http.open_timeout = DOWNLOAD_TIMEOUT
     http.read_timeout = DOWNLOAD_TIMEOUT
 
-    response = http.get(uri.request_uri)
+    response = nil
 
-    case response
-    when Net::HTTPSuccess
-      response
-    when Net::HTTPRedirection
-      redirect_url = response["Location"]
-      return nil unless redirect_url
+    http.request_get(uri.request_uri) do |res|
+      case res
+      when Net::HTTPSuccess
+        body = +""
+        res.read_body do |chunk|
+          body << chunk
+          raise "Image too large (exceeded #{MAX_IMAGE_SIZE} bytes)" if body.bytesize > MAX_IMAGE_SIZE
+        end
+        res.instance_variable_set(:@body, body)
+        response = res
+      when Net::HTTPRedirection
+        redirect_url = res["Location"]
+        return nil unless redirect_url
 
-      new_uri = parse_url(redirect_url)
-      return nil unless new_uri
-      return nil unless ALLOWED_HOSTS.include?(new_uri.host)
+        new_uri = parse_url(redirect_url)
+        return nil unless new_uri
+        return nil unless ALLOWED_HOSTS.include?(new_uri.host)
 
-      fetch_with_redirects(new_uri, redirect_count + 1)
-    else
-      nil
+        response = fetch_with_redirects(new_uri, redirect_count + 1)
+      end
     end
+
+    response
   rescue StandardError => e
     Rails.logger.warn "ImageDownloader: HTTP error for #{uri}: #{e.message}"
     nil

@@ -70,7 +70,10 @@ module Api
 
       # PUT/PATCH /api/admin/blogs/:id
       def update
-        sanitized_params = blog_params.merge(content: sanitize_blog_content(blog_params[:content]))
+        sanitized_params = blog_params.to_h
+        if sanitized_params.key?("content")
+          sanitized_params["content"] = sanitize_blog_content(sanitized_params["content"])
+        end
         if @blog.update(sanitized_params)
           render json: {
             id: @blog.id,
