@@ -27,14 +27,17 @@ class ImageDownloader
     content_length = response["Content-Length"]&.to_i
     return nil if content_length && content_length > MAX_IMAGE_SIZE
 
-    content_type = response["Content-Type"]&.split(";")&.first&.strip
-    return nil unless ALLOWED_CONTENT_TYPES.include?(content_type)
-
+    # ファイル内容からMIMEタイプを検証（外部サーバーのContent-Typeを信頼しない）
     filename = File.basename(uri.path)
+    body_io = StringIO.new(response.body)
+    detected_content_type = Marcel::MimeType.for(body_io, name: filename)
+    return nil unless ALLOWED_CONTENT_TYPES.include?(detected_content_type)
+
+    body_io.rewind
     blob = ActiveStorage::Blob.create_and_upload!(
-      io: StringIO.new(response.body),
+      io: body_io,
       filename: filename,
-      content_type: content_type
+      content_type: detected_content_type
     )
     blog.images.attach(blob)
 
@@ -79,7 +82,7 @@ class ImageDownloader
         redirect_url = res["Location"]
         return nil unless redirect_url
 
-        new_uri = parse_url(redirect_url)
+        new_uri = parse_url(URI.join(uri.to_s, redirect_url).to_s)
         return nil unless new_uri
         return nil unless ALLOWED_HOSTS.include?(new_uri.host)
 
