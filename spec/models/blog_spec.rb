@@ -406,7 +406,7 @@ RSpec.describe Blog, type: :model do
       )
 
       # ログ出力の確認（個人情報を含まない形式）
-      expect(Rails.logger).to receive(:warn).with(/Entry \d+: Import failed \(RuntimeError\)/)
+      expect(Rails.logger).to receive(:warn).with(/Entry \d+: Preparation failed \(RuntimeError\)/)
 
       Blog.import_from_mt(uploaded_file)
     end

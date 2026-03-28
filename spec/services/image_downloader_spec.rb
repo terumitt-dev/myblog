@@ -10,9 +10,10 @@ RSpec.describe ImageDownloader do
       let(:url) { 'https://cdn-ak.f.st-hatena.com/images/test.jpg' }
 
       it '画像をダウンロードしてActive Storageに保存しURLを返すこと' do
-        stub_response = instance_double(Net::HTTPSuccess)
-        allow(stub_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
+        stub_response = Net::HTTPResponse::CODE_TO_OBJ['200'].new('1.1', '200', 'OK')
         allow(stub_response).to receive(:[]).with('Content-Type').and_return('image/jpeg')
+        allow(stub_response).to receive(:[]).with('Content-Length').and_return('100')
+        allow(stub_response).to receive(:[]).with('Location').and_return(nil)
         allow(stub_response).to receive(:body).and_return('fake-image-data')
 
         http = instance_double(Net::HTTP)
@@ -62,8 +63,10 @@ RSpec.describe ImageDownloader do
 
       it 'nilを返すこと' do
         stub_response = instance_double(Net::HTTPSuccess)
+        allow(stub_response).to receive(:is_a?).and_return(false)
         allow(stub_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
         allow(stub_response).to receive(:[]).with('Content-Type').and_return('text/html')
+        allow(stub_response).to receive(:[]).with('Content-Length').and_return('13')
         allow(stub_response).to receive(:body).and_return('<html></html>')
 
         http = instance_double(Net::HTTP)
@@ -85,8 +88,10 @@ RSpec.describe ImageDownloader do
         large_body = 'x' * (ImageDownloader::MAX_IMAGE_SIZE + 1)
 
         stub_response = instance_double(Net::HTTPSuccess)
+        allow(stub_response).to receive(:is_a?).and_return(false)
         allow(stub_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(true)
         allow(stub_response).to receive(:[]).with('Content-Type').and_return('image/jpeg')
+        allow(stub_response).to receive(:[]).with('Content-Length').and_return(large_body.bytesize.to_s)
         allow(stub_response).to receive(:body).and_return(large_body)
 
         http = instance_double(Net::HTTP)
@@ -106,7 +111,7 @@ RSpec.describe ImageDownloader do
 
       it 'nilを返すこと' do
         stub_response = instance_double(Net::HTTPNotFound)
-        allow(stub_response).to receive(:is_a?).with(Net::HTTPSuccess).and_return(false)
+        allow(stub_response).to receive(:is_a?).and_return(false)
 
         http = instance_double(Net::HTTP)
         allow(Net::HTTP).to receive(:new).and_return(http)

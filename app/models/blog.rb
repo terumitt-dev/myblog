@@ -116,30 +116,40 @@ class Blog < ApplicationRecord
       total_batches = (entries.size / 50.0).ceil
       Rails.logger.info "Processing batch #{batch_num + 1}/#{total_batches} (#{batch.size} entries)"
 
+      # Phase 1: トランザクション外で画像ダウンロード・属性準備
+      prepared_entries = []
+      batch.each_with_index do |entry, batch_index|
+        global_index = batch_num * 50 + batch_index
+
+        begin
+          blog = Blog.new
+          attributes = blog.prepare_mt_attributes(entry, global_index)
+          blog.assign_attributes(attributes)
+
+          # 外部画像をダウンロードしてActive Storageに保存、URLを書き換え（HTTP通信はトランザクション外）
+          blog.content = blog.rewrite_external_images!(blog.content)
+
+          prepared_entries << { blog: blog, index: global_index }
+        rescue StandardError => e
+          Rails.logger.warn "Entry #{global_index + 1}: Preparation failed (#{e.class.name})"
+          import_result[:errors] << "Entry #{global_index + 1}: Preparation failed"
+        end
+      end
+
+      # Phase 2: トランザクション内でDB保存のみ
       begin
-        Blog.transaction do  # バッチ全体を1つのトランザクションに
-          batch.each_with_index do |entry, batch_index|
-            global_index = batch_num * 50 + batch_index
-
+        Blog.transaction do
+          prepared_entries.each do |prepared|
             begin
-              blog = Blog.new
-              attributes = blog.prepare_mt_attributes(entry, global_index)
-              blog.assign_attributes(attributes)
-
-              # 外部画像をダウンロードしてActive Storageに保存、URLを書き換え
-              blog.content = blog.rewrite_external_images!(blog.content)
-
-              blog.save!
-
+              prepared[:blog].save!
               import_result[:success] += 1
-              Rails.logger.debug "Entry #{global_index + 1}: Successfully imported"
-
+              Rails.logger.debug "Entry #{prepared[:index] + 1}: Successfully imported"
             rescue ActiveRecord::RecordInvalid => e
-              Rails.logger.warn "Entry #{global_index + 1}: Validation failed (#{e.record.errors.count} validation errors)"
-              import_result[:errors] << "Entry #{global_index + 1}: Validation failed"
+              Rails.logger.warn "Entry #{prepared[:index] + 1}: Validation failed (#{e.record.errors.count} validation errors)"
+              import_result[:errors] << "Entry #{prepared[:index] + 1}: Validation failed"
             rescue StandardError => e
-              Rails.logger.warn "Entry #{global_index + 1}: Import failed (#{e.class.name})"
-              import_result[:errors] << "Entry #{global_index + 1}: Import failed"
+              Rails.logger.warn "Entry #{prepared[:index] + 1}: Import failed (#{e.class.name})"
+              import_result[:errors] << "Entry #{prepared[:index] + 1}: Import failed"
             end
           end
         end
