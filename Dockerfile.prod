@@ -46,8 +46,9 @@ WORKDIR /app
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY --from=build /app /app
 
-# tmp/logディレクトリの権限設定
-RUN mkdir -p tmp/pids tmp/cache log && \
+# エントリポイントと実行時ディレクトリの権限設定
+RUN chmod +x bin/docker-entrypoint && \
+    mkdir -p tmp/pids tmp/cache log && \
     chown -R rails:rails tmp log
 
 ENV RAILS_ENV=production \

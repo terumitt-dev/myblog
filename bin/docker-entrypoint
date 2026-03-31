@@ -1,7 +1,17 @@
 #!/bin/bash
 set -e
 
-# DB作成+マイグレーション（既に存在する場合はスキップ）
-bundle exec rails db:prepare
+# DB起動待ち + 作成 + マイグレーション
+for i in $(seq 1 30); do
+  if bundle exec rails db:prepare; then
+    break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "DB preparation failed after retries"
+    exit 1
+  fi
+  echo "DB is not ready yet, retrying... ($i/30)"
+  sleep 2
+done
 
 exec "$@"
