@@ -5,7 +5,7 @@ tmp/*
 storage/*
 spec/
 docker-compose.yml
-Dockerfile
+Dockerfile*
 node_modules
 .env*
 README.md
