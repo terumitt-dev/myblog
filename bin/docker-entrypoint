@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+
+# DB作成+マイグレーション（既に存在する場合はスキップ）
+bundle exec rails db:prepare
+
+exec "$@"
