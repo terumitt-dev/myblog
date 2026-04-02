@@ -47,17 +47,20 @@ steps:
           bundle exec puma -C config/puma.rb
 
         echo "   Waiting for container to start..."
-        sleep 10
+        for i in $(seq 1 30); do
+          if docker ps --filter name=backend-ci --format "{{.Status}}" | grep -q "Up"; then
+            break
+          fi
+          sleep 1
+          if [ "$i" -eq 30 ]; then
+            echo "❌ Container failed to start"
+            docker logs backend-ci 2>&1 | tail -30
+            exit 1
+          fi
+        done
 
         echo "   Container status:"
         docker ps --filter name=backend-ci --format "   {{.Status}}"
-
-        if ! docker ps --filter name=backend-ci --format "{{.Status}}" | grep -q "Up"; then
-          echo "❌ Container failed to start"
-          echo "   Container logs:"
-          docker logs backend-ci 2>&1 | tail -30
-          exit 1
-        fi
         echo "✅ Container is running"
 
       - echo ""
