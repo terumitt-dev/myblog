@@ -20,14 +20,7 @@ RUN bundle install --jobs 4
 
 COPY . .
 
-# アセットプリコンパイル（sprockets-rails用、ダミーSECRET_KEY_BASE）
-ENV RAILS_ENV=production \
-    SECRET_KEY_BASE=dummy_for_precompilation
-RUN DATABASE_HOST=dummy \
-    DATABASE_NAME=dummy \
-    DATABASE_USERNAME=dummy \
-    DATABASE_PASSWORD=dummy \
-    bundle exec rails assets:precompile
+ENV RAILS_ENV=production
 
 # ============================================
 # Stage 2: Runtime
