@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 Rails.application.routes.draw do
+  # K8s liveness/readiness probe用ヘルスチェック
+  get 'up' => 'rails/health#show', as: :rails_health_check
+
   devise_for :admins, skip: [:sessions, :registrations]
 
   namespace :api do
