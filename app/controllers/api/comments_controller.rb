@@ -3,6 +3,7 @@
 module Api
   class CommentsController < ApplicationController
     before_action :set_blog
+    before_action :set_cdn_cacheable, only: [:index]
 
     # GET /api/blogs/:blog_id/comments
     def index
@@ -53,6 +54,10 @@ module Api
 
     def comment_params
       params.require(:comment).permit(:user_name, :comment)
+    end
+
+    def set_cdn_cacheable
+      response.headers['Cache-Control'] = 'public, s-maxage=300, max-age=0'
     end
   end
 end

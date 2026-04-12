@@ -5,6 +5,7 @@ class ApplicationController < ActionController::API
   include Devise::Controllers::Helpers
 
   before_action :set_locale
+  before_action :set_default_cache_control
 
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
   rescue_from ActionController::ParameterMissing, with: :parameter_missing
@@ -13,6 +14,12 @@ class ApplicationController < ActionController::API
 
   def set_locale
     I18n.locale = :ja
+  end
+
+  # デフォルトはキャッシュ禁止（認証・変更系エンドポイント向け）
+  # パブリック GET はコントローラー側で上書きする
+  def set_default_cache_control
+    response.headers['Cache-Control'] = 'no-store'
   end
 
   def record_not_found(exception)
