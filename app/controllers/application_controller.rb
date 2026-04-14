@@ -17,9 +17,15 @@ class ApplicationController < ActionController::API
   end
 
   # デフォルトはキャッシュ禁止（認証・変更系エンドポイント向け）
-  # パブリック GET はコントローラー側で上書きする
+  # パブリック GET はコントローラー側で set_cdn_cacheable を呼んで上書きする
   def set_default_cache_control
     response.headers['Cache-Control'] = 'no-store'
+  end
+
+  # CDN（Cloudflare等）に5分キャッシュさせるが、ブラウザはキャッシュしない
+  # パブリック GET エンドポイントで before_action から呼び出す
+  def set_cdn_cacheable
+    response.headers['Cache-Control'] = 'public, s-maxage=300, max-age=0'
   end
 
   def record_not_found(exception)

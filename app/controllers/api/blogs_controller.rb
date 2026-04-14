@@ -72,11 +72,5 @@ module Api
     rescue ActiveRecord::RecordNotFound
       render json: { error: 'Blog not found' }, status: :not_found and return
     end
-
-    # s-maxage: CDNのキャッシュ期間（5分）
-    # max-age=0: ブラウザはキャッシュしない（常にCDNに問い合わせる）
-    def set_cdn_cacheable
-      response.headers['Cache-Control'] = 'public, s-maxage=300, max-age=0'
-    end
   end
 end
