@@ -3,6 +3,7 @@
 module Api
   class BlogsController < ApplicationController
     before_action :set_blog, only: [:show]
+    before_action :set_cdn_cacheable, only: [:index, :show]
 
     # GET /api/blogs
     def index

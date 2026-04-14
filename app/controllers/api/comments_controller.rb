@@ -3,6 +3,7 @@
 module Api
   class CommentsController < ApplicationController
     before_action :set_blog
+    before_action :set_cdn_cacheable, only: [:index]
 
     # GET /api/blogs/:blog_id/comments
     def index
