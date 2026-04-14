@@ -35,11 +35,14 @@ class ApplicationController < ActionController::API
   # - GET リクエスト
   # - レスポンスが 2xx または 304（404/422 等のエラーレスポンスをキャッシュさせない）
   # - 認証情報（Authorization / Cookie）がない（個人化レスポンスを共有キャッシュさせない）
+  # - レスポンスに Set-Cookie がない（個別状態を共有キャッシュに保存させない）
   def apply_pending_cache_control
     return unless request.env['cdn_cacheable']
     return unless request.get?
     return unless response.successful? || response.status == 304
-    return if request.authorization.present? || request.headers['Cookie'].present?
+    return if request.authorization.present? ||
+              request.headers['Cookie'].present? ||
+              response.headers['Set-Cookie'].present?
 
     response.headers['Cache-Control'] = 'public, s-maxage=300, max-age=0'
     # 既存の Vary を保持しつつ Authorization と Cookie を追加（他middlewareとの共存）
