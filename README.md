@@ -110,6 +110,26 @@ jwt_blacklists
   → JWT を jwt_blacklists テーブルに登録（以降無効化）
 ```
 
+## キャッシュ戦略
+
+全エンドポイントで `Cache-Control` ヘッダーを明示的に制御し、CDN（Cloudflare 等）の意図しないキャッシュ事故を防いでいます。
+
+### 戦略
+
+| エンドポイント | Cache-Control | 目的 |
+|---|---|---|
+| `GET /api/blogs` | `public, s-maxage=300, max-age=0` | CDN は5分キャッシュ、ブラウザは毎回確認 |
+| `GET /api/blogs/:id` | 同上 | 同上 |
+| `GET /api/blogs/:id/comments` | 同上 | 同上 |
+| 上記以外（認証・変更・管理系） | `no-store` | 一切キャッシュしない |
+
+### 設計の意図
+
+- **デフォルト `no-store`**: `ApplicationController#set_default_cache_control` で全エンドポイントに適用。新しい API 追加時の事故を防ぐ安全側設計。
+- **パブリック GET のみ明示的に上書き**: `set_cdn_cacheable` を `before_action` で指定する形で許可。
+- **`s-maxage=300 + max-age=0` の組み合わせ**: CDN には5分間キャッシュを許可しつつ、ブラウザにはキャッシュさせない。記事更新時、最大5分で全ユーザーに反映。
+- **CDN 非依存**: `Cache-Control` は HTTP 標準ヘッダーなので、Cloudflare / CloudFront / Fastly など CDN を切り替えても同じ戦略が機能する。
+
 ## セキュリティ
 
 | 対策 | 実装 |

@@ -3,7 +3,6 @@
 module Api
   class BlogsController < ApplicationController
     before_action :set_blog, only: [:show]
-    # CDN（Cloudflare等）に5分キャッシュさせるが、ブラウザはキャッシュしない
     before_action :set_cdn_cacheable, only: [:index, :show]
 
     # GET /api/blogs
