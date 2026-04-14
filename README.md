@@ -126,7 +126,9 @@ jwt_blacklists
 ### 設計の意図
 
 - **デフォルト `no-store`**: `ApplicationController#set_default_cache_control` で全エンドポイントに適用。新しい API 追加時の事故を防ぐ安全側設計。
-- **パブリック GET のみ明示的に上書き**: `set_cdn_cacheable` を `before_action` で指定する形で許可。
+- **パブリック GET のみ明示的に上書き**: `set_cdn_cacheable` を `before_action` で指定する形で許可フラグを立てる。
+- **`after_action` で実際のヘッダーを付与**: エラー応答（4xx/5xx）や認証付きリクエストをキャッシュ対象から除外。成功した匿名 GET のみ `public` として扱う。
+- **`Vary: Authorization, Cookie`**: 認証情報ごとに別キャッシュエントリとして扱われるため、個人化レスポンスの共有キャッシュ混入を防止。
 - **`s-maxage=300 + max-age=0` の組み合わせ**: CDN には5分間キャッシュを許可しつつ、ブラウザにはキャッシュさせない。記事更新時、最大5分で全ユーザーに反映。
 - **CDN 非依存**: `Cache-Control` は HTTP 標準ヘッダーなので、Cloudflare / CloudFront / Fastly など CDN を切り替えても同じ戦略が機能する。
 
