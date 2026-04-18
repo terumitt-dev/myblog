@@ -12,6 +12,9 @@ Rails.application.routes.draw do
       post 'sign_in', to: 'sessions#create'
       delete 'sign_out', to: 'sessions#destroy'
       get 'current_user', to: 'current_users#show'
+      # パスワードリセット（SECRET保護）
+      post 'password', to: 'passwords#create'
+      put 'password', to: 'passwords#update'
     end
 
     resources :blogs, only: %i[index show] do
