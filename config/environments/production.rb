@@ -66,15 +66,17 @@ Rails.application.configure do
 
   # Gmail SMTP（パスワードリセットメール送信用）
   # SMTP_USERNAME / SMTP_PASSWORD は K8s Secret 経由で注入される
+  # ENV.fetch で起動時に必須環境変数の欠落を検出
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.perform_deliveries = true
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.smtp_settings = {
     address: 'smtp.gmail.com',
     port: 587,
-    domain: 'smtp.gmail.com',
-    user_name: ENV['SMTP_USERNAME'],
-    password: ENV['SMTP_PASSWORD'],
+    # HELO/EHLO 用の自ドメイン（スパム判定を避けるため smtp.gmail.com ではなく自ドメインを指定）
+    domain: ENV.fetch('APP_HOST', 'go-lilaregard.com'),
+    user_name: ENV.fetch('SMTP_USERNAME'),
+    password: ENV.fetch('SMTP_PASSWORD'),
     authentication: :login,
     enable_starttls_auto: true
   }

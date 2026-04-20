@@ -14,7 +14,7 @@ Rails.application.routes.draw do
       get 'current_user', to: 'current_users#show'
       # パスワードリセット（SECRET保護）
       post 'password', to: 'passwords#create'
-      put 'password', to: 'passwords#update'
+      patch 'password', to: 'passwords#update'
     end
 
     resources :blogs, only: %i[index show] do

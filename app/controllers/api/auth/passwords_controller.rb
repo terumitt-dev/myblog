@@ -23,8 +23,14 @@ module Api
           return
         end
 
-        admin.send_reset_password_instructions
-        render json: { message: 'Password reset email sent' }, status: :ok
+        begin
+          admin.send_reset_password_instructions
+          render json: { message: 'Password reset email sent' }, status: :ok
+        rescue StandardError => e
+          # SMTP 認証失敗・タイムアウト等でメール送信に失敗した場合
+          Rails.logger.error("Failed to send password reset email: #{e.class}: #{e.message}")
+          render json: { error: 'Failed to send email' }, status: :internal_server_error
+        end
       end
 
       # リセットトークンで新しいパスワードを設定
