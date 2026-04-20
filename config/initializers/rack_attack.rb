@@ -17,6 +17,13 @@ class Rack::Attack
     client_ip(req) if req.path == '/api/auth/password' && req.post?
   end
 
+  # パスワードリセット要求（全体）: 1時間に20回まで
+  # - 分散IP攻撃による admin へのメール爆撃を防止
+  # - 正規ユーザー（admin 1人）に対する影響はゼロに等しい
+  throttle('password_reset/global', limit: 20, period: 1.hour) do |req|
+    'password_reset' if req.path == '/api/auth/password' && req.post?
+  end
+
   # パスワードリセット実行（トークン検証）: 同一IPから1時間に10回まで
   # Devise のトークンは十分長いが多層防御として追加
   throttle('password_reset_update/ip', limit: 10, period: 1.hour) do |req|
