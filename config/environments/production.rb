@@ -59,8 +59,10 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
+  # APP_HOST はパスワードリセットリンクに使われるため、
+  # 設定漏れ時に別環境のリンクが送られるリスクを避けるためフォールバックなしで必須化
   config.action_mailer.default_url_options = {
-    host: ENV.fetch('APP_HOST', 'go-lilaregard.com'),
+    host: ENV.fetch('APP_HOST'),
     protocol: 'https'
   }
 
@@ -74,7 +76,7 @@ Rails.application.configure do
     address: 'smtp.gmail.com',
     port: 587,
     # HELO/EHLO 用の自ドメイン（スパム判定を避けるため smtp.gmail.com ではなく自ドメインを指定）
-    domain: ENV.fetch('APP_HOST', 'go-lilaregard.com'),
+    domain: ENV.fetch('APP_HOST'),
     user_name: ENV.fetch('SMTP_USERNAME'),
     password: ENV.fetch('SMTP_PASSWORD'),
     authentication: :login,

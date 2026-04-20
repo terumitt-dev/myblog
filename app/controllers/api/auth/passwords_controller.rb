@@ -17,11 +17,21 @@ module Api
           return
         end
 
-        admin = Admin.first
-        unless admin
+        # singleton 前提が崩れている場合（0件 or 複数件）は誤送信を避けるため明示的にエラー
+        # Admin モデルは only_one_admin_allowed でバリデーションしているが、
+        # データ不整合に備えて二重チェック
+        admins = Admin.limit(2).to_a
+        if admins.empty?
           render json: { error: 'Admin not found' }, status: :not_found
           return
         end
+        if admins.size > 1
+          Rails.logger.error('Unexpected multiple admins found for password reset')
+          render json: { error: 'Admin configuration error' }, status: :internal_server_error
+          return
+        end
+
+        admin = admins.first
 
         begin
           admin.send_reset_password_instructions
@@ -34,7 +44,7 @@ module Api
       end
 
       # リセットトークンで新しいパスワードを設定
-      # PUT /api/auth/password
+      # PATCH /api/auth/password
       # Body: { "reset_password_token": "...", "password": "...", "password_confirmation": "..." }
       def update
         admin = Admin.reset_password_by_token(reset_params)
