@@ -11,36 +11,29 @@ module Api
       # SECRET を検証して OK ならリセットメールを送信
       # POST /api/auth/password
       # Body: { "secret": "..." }
+      #
+      # セキュリティ方針: SECRET の正誤・Admin 不存在・SMTP 失敗のいずれも
+      # 同じレスポンス（202 Accepted）を返す。これにより攻撃者が応答の差分から
+      # SECRET やシステム状態を推測する「オラクル攻撃」を防ぐ。
+      # 内部エラーはログのみに残す。
       def create
-        unless valid_secret?(params[:secret])
-          render json: { error: 'Invalid secret' }, status: :unauthorized
-          return
+        if valid_secret?(params[:secret])
+          # singleton 前提が崩れている場合はログのみで握り潰し、レスポンスは統一
+          admins = Admin.limit(2).to_a
+          if admins.one?
+            begin
+              admins.first.send_reset_password_instructions
+            rescue StandardError => e
+              # SMTP 失敗等もレスポンスには反映させずログのみ
+              Rails.logger.error("Failed to send password reset email: #{e.class}: #{e.message}")
+            end
+          else
+            Rails.logger.error("Unexpected admin count for password reset: #{admins.size}")
+          end
         end
 
-        # singleton 前提が崩れている場合（0件 or 複数件）は誤送信を避けるため明示的にエラー
-        # Admin モデルは only_one_admin_allowed でバリデーションしているが、
-        # データ不整合に備えて二重チェック
-        admins = Admin.limit(2).to_a
-        if admins.empty?
-          render json: { error: 'Admin not found' }, status: :not_found
-          return
-        end
-        if admins.size > 1
-          Rails.logger.error('Unexpected multiple admins found for password reset')
-          render json: { error: 'Admin configuration error' }, status: :internal_server_error
-          return
-        end
-
-        admin = admins.first
-
-        begin
-          admin.send_reset_password_instructions
-          render json: { message: 'Password reset email sent' }, status: :ok
-        rescue StandardError => e
-          # SMTP 認証失敗・タイムアウト等でメール送信に失敗した場合
-          Rails.logger.error("Failed to send password reset email: #{e.class}: #{e.message}")
-          render json: { error: 'Failed to send email' }, status: :internal_server_error
-        end
+        render json: { message: 'If the request was accepted, a password reset email will be sent' },
+               status: :accepted
       end
 
       # リセットトークンで新しいパスワードを設定
