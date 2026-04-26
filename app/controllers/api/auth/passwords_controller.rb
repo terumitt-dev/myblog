@@ -28,15 +28,21 @@ module Api
         # クエリ文字列経由で secret を渡されると URL / アクセスログ / Referer 経由で
         # 漏えいする経路が残る。リクエストボディ (JSON / form) からのみ受け付ける。
         secret = request.request_parameters['secret']
+
+        # secret の正誤に関わらず Admin の取得まで常に実行することで、DB アクセスの有無による
+        # 応答時間差を排除する（valid_secret? が false の場合も同等の処理量を走らせる）。
+        # メール送信自体は valid な場合のみだが、deliver_later 化済みのためそのコストは
+        # ほぼゼロに揃う。
+        admins = Admin.limit(2).to_a
+
         if valid_secret?(secret)
           # singleton 前提が崩れている場合はログのみで握り潰し、レスポンスは統一
-          admins = Admin.limit(2).to_a
           if admins.one?
             begin
               admins.first.send_reset_password_instructions
             rescue StandardError => e
-              # SMTP 失敗等もレスポンスには反映させずログのみ
-              Rails.logger.error("Failed to send password reset email: #{e.class}: #{e.message}")
+              # ジョブ投入失敗等もレスポンスには反映させずログのみ
+              Rails.logger.error("Failed to enqueue password reset email: #{e.class}: #{e.message}")
             end
           else
             Rails.logger.error("Unexpected admin count for password reset: #{admins.size}")
