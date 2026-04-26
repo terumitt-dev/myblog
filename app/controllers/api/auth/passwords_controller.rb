@@ -17,7 +17,10 @@ module Api
       # SECRET やシステム状態を推測する「オラクル攻撃」を防ぐ。
       # 内部エラーはログのみに残す。
       def create
-        if valid_secret?(params[:secret])
+        # クエリ文字列経由で secret を渡されると URL / アクセスログ / Referer 経由で
+        # 漏えいする経路が残る。リクエストボディ (JSON / form) からのみ受け付ける。
+        secret = request.request_parameters['secret']
+        if valid_secret?(secret)
           # singleton 前提が崩れている場合はログのみで握り潰し、レスポンスは統一
           admins = Admin.limit(2).to_a
           if admins.one?
