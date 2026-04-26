@@ -62,7 +62,15 @@ module Api
       end
 
       def reset_params
-        params.permit(:reset_password_token, :password, :password_confirmation)
+        # secret 同様、reset_password_token もクエリ文字列経由で渡されると
+        # URL / アクセスログ / Referer 経由で漏えいする経路が残るため、
+        # リクエストボディ (JSON / form) からのみ受け付ける。
+        body = request.request_parameters.slice(
+          'reset_password_token', 'password', 'password_confirmation'
+        )
+        ActionController::Parameters.new(body).permit(
+          :reset_password_token, :password, :password_confirmation
+        )
       end
     end
   end
