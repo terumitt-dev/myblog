@@ -58,7 +58,14 @@ module Api
         expected = ENV['PASSWORD_RESET_SECRET']
         return false if expected.blank? || input.blank?
 
-        ActiveSupport::SecurityUtils.secure_compare(input.to_s, expected)
+        # 入力と期待値を SHA-256 でハッシュ化してから比較することで、
+        # 常に固定長 (64文字) 同士の比較となる。
+        # secure_compare は長さ不一致時に早期 return するため、理論上
+        # 「入力長 != 期待長」がタイミングから漏れる余地がある。
+        # ハッシュ化により秘密長そのものを露出しないことを担保する。
+        expected_digest = OpenSSL::Digest::SHA256.hexdigest(expected.to_s)
+        input_digest    = OpenSSL::Digest::SHA256.hexdigest(input.to_s)
+        ActiveSupport::SecurityUtils.secure_compare(input_digest, expected_digest)
       end
 
       def reset_params
