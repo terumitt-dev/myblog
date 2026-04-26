@@ -29,24 +29,27 @@ module Api
         # 漏えいする経路が残る。リクエストボディ (JSON / form) からのみ受け付ける。
         secret = request.request_parameters['secret']
 
-        # secret の正誤に関わらず Admin の取得まで常に実行することで、DB アクセスの有無による
-        # 応答時間差を排除する（valid_secret? が false の場合も同等の処理量を走らせる）。
-        # メール送信自体は valid な場合のみだが、deliver_later 化済みのためそのコストは
-        # ほぼゼロに揃う。
-        admins = Admin.limit(2).to_a
+        # 全処理を rescue で包んで「常に 202 を返す」を保証する。
+        # DB 障害・ジョブ投入失敗・予期せぬ例外のいずれも 500 にならず、
+        # 攻撃者が応答コードの差分から内部状態を推測できないようにする。
+        begin
+          # secret の正誤に関わらず Admin の取得まで常に実行することで、
+          # DB アクセスの有無による応答時間差を排除する。
+          # メール送信自体は valid な場合のみだが、deliver_later 化済みのためそのコストは
+          # ほぼゼロに揃う。
+          admins = Admin.limit(2).to_a
 
-        if valid_secret?(secret)
-          # singleton 前提が崩れている場合はログのみで握り潰し、レスポンスは統一
-          if admins.one?
-            begin
+          if valid_secret?(secret)
+            # singleton 前提が崩れている場合はログのみで握り潰し、レスポンスは統一
+            if admins.one?
               admins.first.send_reset_password_instructions
-            rescue StandardError => e
-              # ジョブ投入失敗等もレスポンスには反映させずログのみ
-              Rails.logger.error("Failed to enqueue password reset email: #{e.class}: #{e.message}")
+            else
+              Rails.logger.error("Unexpected admin count for password reset: #{admins.size}")
             end
-          else
-            Rails.logger.error("Unexpected admin count for password reset: #{admins.size}")
           end
+        rescue StandardError => e
+          # DB 障害・ジョブ投入失敗・SMTP 障害等すべてここで握り潰してログのみ
+          Rails.logger.error("Password reset request handling failed: #{e.class}: #{e.message}")
         end
 
         render json: { message: 'If the request was accepted, a password reset email will be sent' },

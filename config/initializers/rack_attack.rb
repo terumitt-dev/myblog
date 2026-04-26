@@ -7,12 +7,13 @@ class Rack::Attack
   # ActionDispatch::Request#remote_ip は Rails の trusted_proxies 設定を
   # 考慮して安全にクライアントIPを返すため、XFFの偽装攻撃にも対応できる。
   # 不正な X-Forwarded-For ヘッダで例外化するケースがあるため、
-  # その場合は req.ip にフォールバックしてレートリミット処理は継続させる
-  # （例外を上に伝えると 500 になり DoS の踏み台になる）。
+  # その場合は REMOTE_ADDR (実コネクションIP) にフォールバックする。
+  # req.ip だと XFF 由来の偽装値を再利用する余地があるため避ける。
+  # 例外を上に伝えると 500 になり DoS の踏み台になるためフォールバックは必須。
   def self.client_ip(req)
     ActionDispatch::Request.new(req.env).remote_ip.to_s
   rescue StandardError
-    req.ip.to_s
+    req.get_header('REMOTE_ADDR').to_s
   end
 
   # パスワードリセット要求（SECRET 検証）: 同一IPから1時間に5回まで
