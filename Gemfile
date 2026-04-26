@@ -37,6 +37,10 @@ gem 'rack-cors', '~> 2.0'
 # レートリミット（パスワードリセット等の総当たり攻撃対策）
 gem 'rack-attack', '~> 6.7'
 
+# 永続的な ActiveJob キュー（パスワードリセットメール等の deliver_later に使用）
+# Postgres ベースで Redis 不要、Puma plugin で in-process 実行可能（worker 別 Pod 不要）
+gem 'solid_queue', '~> 1.0'
+
 # 画像ストレージ（Active Storage + S3）
 gem 'aws-sdk-s3', require: false
 gem 'image_processing', '~> 1.2'

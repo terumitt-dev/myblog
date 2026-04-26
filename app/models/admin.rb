@@ -15,6 +15,13 @@ class Admin < ApplicationRecord
   # 202 統一レスポンスでもタイミング差から内部状態を推測される余地が残る。
   # deliver_later にすることでコントローラのレイテンシを平準化する。
   def send_devise_notification(notification, *args)
+    # 本番で :async (in-process / 非永続) のままだと Pod 再起動でジョブ消失するため、
+    # SolidQueue 等の永続キューが設定されていることを fail-fast で保証する。
+    # ジョブ取りこぼしによる「リセット申請したのにメール届かない」事故を防ぐ。
+    if Rails.env.production? && Rails.application.config.active_job.queue_adapter == :async
+      raise 'Configure a durable Active Job adapter (e.g. SolidQueue) before using async Devise notifications in production'
+    end
+
     devise_mailer.send(notification, self, *args).deliver_later
   end
 
