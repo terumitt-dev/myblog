@@ -12,8 +12,12 @@ module Api
       # デプロイ時の設定漏れを起動時に fail-fast で検知する
       # （未設定のままだと create が常に 202 を返して silent fail し、
       #  運用上気付けないため）。
+      # ENV.fetch は未設定だけ弾くので、空文字 ("PASSWORD_RESET_SECRET=") も
+      # 別途 blank? で拒否する。
       # SHA-256 ダイジェストも事前計算してメモ化（リクエスト毎の計算を避ける）。
-      PASSWORD_RESET_SECRET = ENV.fetch('PASSWORD_RESET_SECRET').freeze
+      PASSWORD_RESET_SECRET = ENV.fetch('PASSWORD_RESET_SECRET').tap do |value|
+        raise 'PASSWORD_RESET_SECRET must not be blank' if value.blank?
+      end.freeze
       EXPECTED_SECRET_DIGEST = OpenSSL::Digest::SHA256.hexdigest(PASSWORD_RESET_SECRET).freeze
 
       # SECRET を検証して OK ならリセットメールを送信
