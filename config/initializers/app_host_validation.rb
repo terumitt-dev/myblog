@@ -13,9 +13,11 @@ if Rails.env.production?
   app_host = ENV.fetch('APP_HOST', nil)
   if app_host.blank?
     raise 'APP_HOST is required in production'
-  elsif app_host.match?(%r{\Ahttps?://}i) || app_host.include?('/')
+  elsif app_host.match?(%r{\Ahttps?://}i) || app_host.include?('/') || app_host.include?(':')
+    # ポート付き ("example.com:443" 等) も拒否する。SMTP の HELO/EHLO ドメインに
+    # ポートが含まれると Gmail に拒否されてメール送信自体が壊れるため。
     raise <<~MSG
-      APP_HOST must be hostname only (no scheme or path).
+      APP_HOST must be hostname only (no scheme, port, or path).
       Got: #{app_host.inspect}
       Expected example: "go-lilaregard.com"
     MSG
