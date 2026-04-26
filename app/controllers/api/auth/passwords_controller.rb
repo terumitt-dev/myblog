@@ -8,6 +8,14 @@ module Api
     # - ただし誰でもメール送信をトリガーできると爆撃されるため、
     #   PASSWORD_RESET_SECRET 環境変数で保護する
     class PasswordsController < ApplicationController
+      # PASSWORD_RESET_SECRET をクラス読み込み時に必須化することで、
+      # デプロイ時の設定漏れを起動時に fail-fast で検知する
+      # （未設定のままだと create が常に 202 を返して silent fail し、
+      #  運用上気付けないため）。
+      # SHA-256 ダイジェストも事前計算してメモ化（リクエスト毎の計算を避ける）。
+      PASSWORD_RESET_SECRET = ENV.fetch('PASSWORD_RESET_SECRET').freeze
+      EXPECTED_SECRET_DIGEST = OpenSSL::Digest::SHA256.hexdigest(PASSWORD_RESET_SECRET).freeze
+
       # SECRET を検証して OK ならリセットメールを送信
       # POST /api/auth/password
       # Body: { "secret": "..." }
@@ -42,12 +50,24 @@ module Api
       # リセットトークンで新しいパスワードを設定
       # PATCH /api/auth/password
       # Body: { "reset_password_token": "...", "password": "...", "password_confirmation": "..." }
+      #
+      # ステータスコードでエラー種別を区別する（フロントエンドの分岐を簡潔にするため）:
+      # - 200 OK                       … 更新成功
+      # - 401 Unauthorized             … トークン不正・期限切れ・欠落（再リセット要求が必要）
+      # - 422 Unprocessable Entity     … パスワードバリデーション失敗（同じトークンで再入力可能）
       def update
         admin = Admin.reset_password_by_token(reset_params)
 
         if admin.errors.empty?
           render json: { message: 'Password updated successfully' }, status: :ok
+        elsif admin.errors[:reset_password_token].present?
+          # Devise が token 不正/欠落/期限切れを reset_password_token 属性のエラーとして返す。
+          # これらはトークン自体が使えない状態なので、フロントエンド側で sessionStorage を
+          # クリアして「再リセット要求」画面に誘導すべきケース。
+          render json: { errors: admin.errors.full_messages }, status: :unauthorized
         else
+          # password 属性のバリデーションエラー（短い・確認不一致など）。
+          # トークンは有効なので、フロントエンド側ではエラー表示後に同じトークンで再送可能。
           render json: { errors: admin.errors.full_messages }, status: :unprocessable_entity
         end
       end
@@ -55,17 +75,15 @@ module Api
       private
 
       def valid_secret?(input)
-        expected = ENV['PASSWORD_RESET_SECRET']
-        return false if expected.blank? || input.blank?
+        return false if input.blank?
 
-        # 入力と期待値を SHA-256 でハッシュ化してから比較することで、
-        # 常に固定長 (64文字) 同士の比較となる。
-        # secure_compare は長さ不一致時に早期 return するため、理論上
+        # 入力を SHA-256 でハッシュ化してから比較することで、常に固定長 (64文字) 同士の
+        # 比較となる。secure_compare は長さ不一致時に早期 return するため、理論上
         # 「入力長 != 期待長」がタイミングから漏れる余地がある。
         # ハッシュ化により秘密長そのものを露出しないことを担保する。
-        expected_digest = OpenSSL::Digest::SHA256.hexdigest(expected.to_s)
-        input_digest    = OpenSSL::Digest::SHA256.hexdigest(input.to_s)
-        ActiveSupport::SecurityUtils.secure_compare(input_digest, expected_digest)
+        # 期待値側のダイジェストはクラス定数で事前計算済み。
+        input_digest = OpenSSL::Digest::SHA256.hexdigest(input.to_s)
+        ActiveSupport::SecurityUtils.secure_compare(input_digest, EXPECTED_SECRET_DIGEST)
       end
 
       def reset_params
