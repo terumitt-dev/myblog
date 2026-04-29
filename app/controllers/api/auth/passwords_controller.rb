@@ -29,14 +29,19 @@ module Api
       # SECRET やシステム状態を推測する「オラクル攻撃」を防ぐ。
       # 内部エラーはログのみに残す。
       def create
-        # クエリ文字列経由で secret を渡されると URL / アクセスログ / Referer 経由で
-        # 漏えいする経路が残る。リクエストボディ (JSON / form) からのみ受け付ける。
-        secret = request.request_parameters['secret']
-
         # 全処理を rescue で包んで「常に 202 を返す」を保証する。
         # DB 障害・ジョブ投入失敗・予期せぬ例外のいずれも 500 にならず、
         # 攻撃者が応答コードの差分から内部状態を推測できないようにする。
+        #
+        # secret の取り出し (request.request_parameters) も rescue 内に入れる。
+        # 不正な JSON ボディが POST されると parse error が投げられるため、
+        # rescue の外に出していると「不正 JSON で 500、正常 JSON で 202」の差分が
+        # 観測されてオラクルになる。
         begin
+          # クエリ文字列経由で secret を渡されると URL / アクセスログ / Referer 経由で
+          # 漏えいする経路が残る。リクエストボディ (JSON / form) からのみ受け付ける。
+          secret = request.request_parameters['secret']
+
           # secret の正誤に関わらず Admin の取得まで常に実行することで、
           # DB アクセスの有無による応答時間差を排除する。
           # メール送信自体は valid な場合のみだが、deliver_later 化済みのためそのコストは
@@ -52,7 +57,7 @@ module Api
             end
           end
         rescue StandardError => e
-          # DB 障害・ジョブ投入失敗・SMTP 障害等すべてここで握り潰してログのみ
+          # DB 障害・ジョブ投入失敗・SMTP 障害・JSON parse 失敗等すべて握り潰してログのみ
           Rails.logger.error("Password reset request handling failed: #{e.class}: #{e.message}")
         end
 
