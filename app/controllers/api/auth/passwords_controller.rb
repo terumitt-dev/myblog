@@ -114,12 +114,18 @@ module Api
         # secret 同様、reset_password_token もクエリ文字列経由で渡されると
         # URL / アクセスログ / Referer 経由で漏えいする経路が残るため、
         # リクエストボディ (JSON / form) からのみ受け付ける。
-        body = request.request_parameters.slice(
-          'reset_password_token', 'password', 'password_confirmation'
-        )
-        ActionController::Parameters.new(body).permit(
-          :reset_password_token, :password, :password_confirmation
-        )
+        # 不正な JSON ボディが POST されると request.request_parameters が
+        # parse error を投げるため、空ハッシュにフォールバックして update が
+        # 必ず JSON で 401/422 を返せるようにする (フレームワーク既定の 400/500 にしない)。
+        body =
+          begin
+            request.request_parameters
+          rescue StandardError
+            {}
+          end
+        ActionController::Parameters.new(
+          body.slice('reset_password_token', 'password', 'password_confirmation')
+        ).permit(:reset_password_token, :password, :password_confirmation)
       end
     end
   end
