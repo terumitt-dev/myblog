@@ -16,24 +16,33 @@ class Rack::Attack
     req.get_header('REMOTE_ADDR').to_s
   end
 
+  # /api/auth/password と /api/auth/password.json などのフォーマット付き URL を
+  # 同一エンドポイントとして判定する。req.path の完全一致だと、Rails のルーティングが
+  # 暗黙に許す .json 等のフォーマット拡張で rate limit を回避されうるため。
+  PASSWORD_ENDPOINT = %r{\A/api/auth/password(?:\.[^/]+)?/?\z}.freeze
+
+  def self.password_endpoint?(req)
+    req.path.match?(PASSWORD_ENDPOINT)
+  end
+
   # パスワードリセット要求（SECRET 検証）: 同一IPから1時間に5回まで
   # - SECRET のブルートフォースを抑制
   # - メール爆撃の二重防御
   throttle('password_reset/ip', limit: 5, period: 1.hour) do |req|
-    client_ip(req) if req.path == '/api/auth/password' && req.post?
+    client_ip(req) if password_endpoint?(req) && req.post?
   end
 
   # パスワードリセット要求（全体）: 1時間に20回まで
   # - 分散IP攻撃による admin へのメール爆撃を防止
   # - 正規ユーザー（admin 1人）に対する影響はゼロに等しい
   throttle('password_reset/global', limit: 20, period: 1.hour) do |req|
-    'password_reset' if req.path == '/api/auth/password' && req.post?
+    'password_reset' if password_endpoint?(req) && req.post?
   end
 
   # パスワードリセット実行（トークン検証）: 同一IPから1時間に10回まで
   # Devise のトークンは十分長いが多層防御として追加
   throttle('password_reset_update/ip', limit: 10, period: 1.hour) do |req|
-    client_ip(req) if req.path == '/api/auth/password' && req.patch?
+    client_ip(req) if password_endpoint?(req) && req.patch?
   end
 
   # レートリミット超過時のレスポンス
