@@ -57,8 +57,14 @@ module Api
             end
           end
         rescue StandardError => e
-          # DB 障害・ジョブ投入失敗・SMTP 障害・JSON parse 失敗等すべて握り潰してログのみ
-          Rails.logger.error("Password reset request handling failed: #{e.class}: #{e.message}")
+          # DB 障害・ジョブ投入失敗・SMTP 障害・JSON parse 失敗等すべて握り潰してログのみ。
+          # e.message は JSON parse 失敗時にリクエストボディの断片を含み得るため
+          # (例: "unexpected token at '{\"secret\":\"...\"'") secret 漏えいの危険がある。
+          # filter_parameters は自前ログ行には効かないので、メッセージは出さず
+          # 例外クラスと request_id だけで原因追跡できるようにする。
+          Rails.logger.error(
+            "Password reset request handling failed: #{e.class} request_id=#{request.request_id}"
+          )
         end
 
         render json: { message: 'If the request was accepted, a password reset email will be sent' },
