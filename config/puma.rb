@@ -39,11 +39,13 @@ plugin :tmp_restart
 # 個人ブログ規模では別 worker Pod は不要、Puma plugin で十分。
 # 本番では常に有効化、それ以外では SOLID_QUEUE_IN_PUMA を立てたときのみ。
 #
-# 環境判定は RAILS_ENV / RACK_ENV の両方を見る。RAILS_ENV だけだと
-# RACK_ENV=production のみ渡る構成 (Rack ベースの一部 PaaS 等) で
-# plugin が無効化され、deliver_later のジョブが永遠に処理されない事故になる。
-app_env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
-plugin :solid_queue if app_env == 'production' || ENV['SOLID_QUEUE_IN_PUMA']
+# 環境判定は RAILS_ENV / RACK_ENV のいずれかが production なら有効化する。
+# - RAILS_ENV / RACK_ENV のどちらかしか渡らない構成への対応
+# - 両方セットされていて値が食い違う場合 (RAILS_ENV=development かつ
+#   RACK_ENV=production 等) でも片方が production なら solid_queue を起動する
+#   ことで、ジョブが永遠に処理されない事故を防ぐ
+production_envs = [ENV['RAILS_ENV'], ENV['RACK_ENV']].compact
+plugin :solid_queue if production_envs.include?('production') || ENV['SOLID_QUEUE_IN_PUMA']
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
