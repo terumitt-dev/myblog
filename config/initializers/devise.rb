@@ -26,10 +26,13 @@ Devise.setup do |config|
   # with default "from" parameter.
   # 本番では MAILER_SENDER を必須化する。フォールバックを残すと未検証の送信元アドレスで
   # 起動でき、Gmail/DMARC に静かに拒否されても create が常に 202 を返すため運用上気付けない。
+  # ENV.fetch は未設定だけ弾くので空文字 ("MAILER_SENDER=") も .tap で拒否する。
   # test/dev はダミー値で起動できるようフォールバックを保つ。
   config.mailer_sender =
     if Rails.env.production?
-      ENV.fetch('MAILER_SENDER')
+      ENV.fetch('MAILER_SENDER').tap do |value|
+        raise 'MAILER_SENDER must not be blank' if value.blank?
+      end
     else
       ENV.fetch('MAILER_SENDER', 'noreply@go-lilaregard.com')
     end

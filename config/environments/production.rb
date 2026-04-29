@@ -74,13 +74,15 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.perform_deliveries = true
   config.action_mailer.raise_delivery_errors = true
+  # ENV.fetch は未設定だけ弾くので、空文字 ("SMTP_USERNAME=" 等) も別途 .tap で拒否する。
+  # 空のまま起動するとメール送信だけ silent failure する（Gmail 認証エラー）ため fail-fast。
   config.action_mailer.smtp_settings = {
     address: 'smtp.gmail.com',
     port: 587,
     # HELO/EHLO 用の自ドメイン（スパム判定を避けるため smtp.gmail.com ではなく自ドメインを指定）
-    domain: ENV.fetch('APP_HOST'),
-    user_name: ENV.fetch('SMTP_USERNAME'),
-    password: ENV.fetch('SMTP_PASSWORD'),
+    domain: ENV.fetch('APP_HOST').tap { |v| raise 'APP_HOST must not be blank' if v.blank? },
+    user_name: ENV.fetch('SMTP_USERNAME').tap { |v| raise 'SMTP_USERNAME must not be blank' if v.blank? },
+    password: ENV.fetch('SMTP_PASSWORD').tap { |v| raise 'SMTP_PASSWORD must not be blank' if v.blank? },
     authentication: :login,
     enable_starttls_auto: true
   }
