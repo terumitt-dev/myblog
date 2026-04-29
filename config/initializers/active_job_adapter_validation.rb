@@ -9,8 +9,15 @@
 # 「ログだけ残して 202 を返す」silent fail になるため initializer で boot 時に止める。
 if Rails.env.production?
   Rails.application.config.after_initialize do
-    if Rails.application.config.active_job.queue_adapter.to_sym == :async
-      raise 'Configure a durable Active Job adapter (e.g. SolidQueue) before deploying to production'
+    # 非永続/同期実行のアダプタを deny list で拒否する。
+    # - :async  → in-process / 非永続 (Pod 再起動で消失)
+    # - :inline → 同期実行 (deliver_later の意味が消えて応答時間差オラクルに戻る)
+    # 他のアダプタ (:solid_queue, :sidekiq, :resque 等) は永続キュー前提なので許可。
+    adapter = Rails.application.config.active_job.queue_adapter.to_sym
+    forbidden = %i[async inline]
+
+    if forbidden.include?(adapter)
+      raise "Configure a durable async Active Job adapter (e.g. SolidQueue) before deploying to production. Got: #{adapter.inspect}"
     end
   end
 end

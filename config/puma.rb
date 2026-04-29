@@ -38,7 +38,12 @@ plugin :tmp_restart
 # SolidQueue worker を Puma 同一プロセスで実行する (in-process supervisor)。
 # 個人ブログ規模では別 worker Pod は不要、Puma plugin で十分。
 # 本番では常に有効化、それ以外では SOLID_QUEUE_IN_PUMA を立てたときのみ。
-plugin :solid_queue if ENV['RAILS_ENV'] == 'production' || ENV['SOLID_QUEUE_IN_PUMA']
+#
+# 環境判定は RAILS_ENV / RACK_ENV の両方を見る。RAILS_ENV だけだと
+# RACK_ENV=production のみ渡る構成 (Rack ベースの一部 PaaS 等) で
+# plugin が無効化され、deliver_later のジョブが永遠に処理されない事故になる。
+app_env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
+plugin :solid_queue if app_env == 'production' || ENV['SOLID_QUEUE_IN_PUMA']
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
