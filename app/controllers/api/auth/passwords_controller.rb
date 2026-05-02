@@ -111,13 +111,16 @@ module Api
       private
 
       def valid_secret?(input)
-        return false if input.blank?
-
         # 入力を SHA-256 でハッシュ化してから比較することで、常に固定長 (64文字) 同士の
         # 比較となる。secure_compare は長さ不一致時に早期 return するため、理論上
         # 「入力長 != 期待長」がタイミングから漏れる余地がある。
         # ハッシュ化により秘密長そのものを露出しないことを担保する。
         # 期待値側のダイジェストはクラス定数で事前計算済み。
+        #
+        # blank? による早期 return は意図的に置かない。早期 return すると blank/non-blank
+        # で SHA256 + secure_compare の実行有無が分かれて応答時間差が生じうるため、
+        # nil/空文字でも常に同じパス (input.to_s -> SHA256 -> secure_compare) を通す。
+        # input.to_s で nil は "" に、空文字はそのまま SHA256 にかかるので副作用なし。
         input_digest = OpenSSL::Digest::SHA256.hexdigest(input.to_s)
         ActiveSupport::SecurityUtils.secure_compare(input_digest, EXPECTED_SECRET_DIGEST)
       end
