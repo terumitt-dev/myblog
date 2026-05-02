@@ -41,6 +41,12 @@ gem 'rack-attack', '~> 6.7'
 # Postgres ベースで Redis 不要、Puma plugin で in-process 実行可能（worker 別 Pod 不要）
 gem 'solid_queue', '~> 1.0'
 
+# 永続的な Rails.cache 実装（Rack::Attack のレート制限カウンタ共有用）
+# Postgres ベースで Redis 不要。複数 Puma worker / 複数 Pod 構成でも
+# カウンタを共有することで、password_reset/global などの全体スロットリングが
+# プロセスをまたいで正しく機能する。
+gem 'solid_cache', '~> 1.0'
+
 # 画像ストレージ（Active Storage + S3）
 gem 'aws-sdk-s3', require: false
 gem 'image_processing', '~> 1.2'

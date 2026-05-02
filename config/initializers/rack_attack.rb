@@ -2,6 +2,19 @@
 
 # Rack::Attack レートリミット設定
 # パスワードリセット等のセンシティブエンドポイントへの総当たり攻撃を防止
+#
+# カウンタは Rails.cache (本番では SolidCache) に保存することで、
+# 複数 Puma worker / 複数 Pod 構成でもプロセスをまたいで共有される。
+# プロセスローカルな MemoryStore のままだと password_reset/global などの
+# 全体スロットリングがプロセスごとに分断され、実質的に Pod 数 × worker 数倍の
+# 回数を通せてしまう。本番ではこの設定漏れを起動時に fail-fast で検知する。
+if Rails.env.production? && Rails.cache.is_a?(ActiveSupport::Cache::MemoryStore)
+  raise 'Rack::Attack requires a shared cache store in production ' \
+        '(set config.cache_store to :solid_cache_store or another shared backend)'
+end
+
+Rack::Attack.cache.store = Rails.cache
+
 class Rack::Attack
   # 実クライアントIPを取得
   # ActionDispatch::Request#remote_ip は Rails の trusted_proxies 設定を

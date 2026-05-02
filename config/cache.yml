@@ -1,0 +1,20 @@
+# SolidCache の設定。`database:` を指定しないことで main DB の
+# ActiveRecord 接続を流用する（SolidQueue と同じ統合方針）。
+# 個人ブログ規模では cache 専用 DB を別建てする運用コストに見合わない。
+#
+# max_size: solid_cache_entries テーブルの上限サイズ。超過時は古いエントリから順に
+# トリミングされる。256MB は Rack::Attack の rate limit カウンタ程度なら十分すぎる。
+default: &default
+  store_options:
+    max_size: <%= 256.megabytes %>
+    # Rails.env ごとに namespace を分離し、別環境のキャッシュエントリと混ざらないようにする
+    namespace: <%= Rails.env %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default

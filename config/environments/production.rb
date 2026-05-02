@@ -48,8 +48,12 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Replace the default in-process memory cache store with a durable alternative.
-  # config.cache_store = :mem_cache_store
+  # Rails.cache の永続化バックエンド（SolidCache）。
+  # cache 専用 DB は分けず、main DB の同一接続で solid_cache_entries テーブルを管理する
+  # （migration で作成済み）。
+  # Rack::Attack のレート制限カウンタもこの cache を共有して、複数 Puma worker /
+  # 複数 Pod 構成でも全体スロットリングが正しく機能する。
+  config.cache_store = :solid_cache_store
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   # queue 用の独立 DB は分けず、main DB の同一接続で solid_queue_* テーブルを管理する
