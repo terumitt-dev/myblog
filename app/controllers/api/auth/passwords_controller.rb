@@ -94,6 +94,18 @@ module Api
           # トークンは有効なので、フロントエンド側ではエラー表示後に同じトークンで再送可能。
           render json: { errors: admin.errors.full_messages }, status: :unprocessable_entity
         end
+      rescue StandardError => e
+        # DB 障害等の想定外例外で Rails の既定 500 (HTML or 空) に落ちると、
+        # フロントエンドが JSON parse 失敗してエラー画面が表示できなくなる。
+        # 必ず JSON で返すことで、API クライアント側の表示・分岐ロジックを維持する。
+        # e.message には reset_password_token の値が含まれる可能性があるため
+        # (例: SQL インジェクション攻撃ペイロードがそのまま例外メッセージに混入する等)、
+        # ログには例外クラスと request_id のみ記録する (create と同じ防御パターン)。
+        Rails.logger.error(
+          "Password reset update failed: #{e.class} request_id=#{request.request_id}"
+        )
+        render json: { errors: ['Password reset could not be completed'] },
+               status: :internal_server_error
       end
 
       private

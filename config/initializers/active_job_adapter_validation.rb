@@ -13,7 +13,13 @@ if Rails.env.production?
     # - :async  → in-process / 非永続 (Pod 再起動で消失)
     # - :inline → 同期実行 (deliver_later の意味が消えて応答時間差オラクルに戻る)
     # 他のアダプタ (:solid_queue, :sidekiq, :resque 等) は永続キュー前提なので許可。
-    adapter = Rails.application.config.active_job.queue_adapter.to_sym
+    #
+    # `Rails.application.config.active_job.queue_adapter` の戻り値はシンボル指定なら
+    # シンボル、文字列指定なら文字列、インスタンス/クラス指定ならそのオブジェクトを
+    # 返すため、`.to_sym` がインスタンス/クラスで NoMethodError を起こす経路がある。
+    # `ActiveJob::Base.queue_adapter_name` は Rails が resolve 後の正規化済みアダプタ名
+    # (常に String) を返す canonical API なので、設定方法に依らず安定して判定できる。
+    adapter = ActiveJob::Base.queue_adapter_name.to_sym
     forbidden = %i[async inline]
 
     if forbidden.include?(adapter)
