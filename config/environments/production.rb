@@ -54,11 +54,21 @@ Rails.application.configure do
   # Rack::Attack のレート制限カウンタもこの cache を共有して、複数 Puma worker /
   # 複数 Pod 構成でも全体スロットリングが正しく機能する。
   config.cache_store = :solid_cache_store
+  # 接続先 DB を明示的に primary に固定する。cache.yml で `database:` を指定して
+  # いない (= main DB を流用する設計) ため、デフォルト動作でも primary を使うが、
+  # SolidCache のバージョンや内部仕様変更で「:cache 接続を探しに行く」挙動に
+  # 変わるリスクを排除する。connects_to と cache.yml の `database:` は同時指定すると
+  # SolidCache::Configuration が raise するため、cache.yml 側は database 未指定を維持する。
+  config.solid_cache.connects_to = { database: { writing: :primary } }
 
   # Replace the default in-process and non-durable queuing backend for Active Job.
   # queue 用の独立 DB は分けず、main DB の同一接続で solid_queue_* テーブルを管理する
   # （migration で作成済み）。Puma plugin により worker は same Pod の Puma プロセスで実行。
   config.active_job.queue_adapter = :solid_queue
+  # SolidQueue も同様に primary 接続を明示固定する。SolidQueue 公式 install
+  # generator は `connects_to = { database: { writing: :queue } }` を出力するが、
+  # 本リポジトリは単一 DB 構成のため :primary に置き換えてある。
+  config.solid_queue.connects_to = { database: { writing: :primary } }
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
