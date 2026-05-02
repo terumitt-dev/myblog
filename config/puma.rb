@@ -45,7 +45,15 @@ plugin :tmp_restart
 #   RACK_ENV=production 等) でも片方が production なら solid_queue を起動する
 #   ことで、ジョブが永遠に処理されない事故を防ぐ
 production_envs = [ENV['RAILS_ENV'], ENV['RACK_ENV']].compact
-plugin :solid_queue if production_envs.include?('production') || ENV['SOLID_QUEUE_IN_PUMA']
+
+# SOLID_QUEUE_IN_PUMA は env 文字列として渡るため、Ruby の truthy 判定をそのまま
+# 使うと "false" や "0" でも有効化されてしまう (Ruby では nil/false 以外は全て truthy)。
+# 明示的に「真とみなす値」のみ受け付けることで、env 設定ミスで意図せず in-process
+# worker が起動して二重実行や DB 負荷増を招くのを防ぐ。
+solid_queue_in_puma_enabled =
+  %w[1 true yes on].include?(ENV['SOLID_QUEUE_IN_PUMA'].to_s.downcase)
+
+plugin :solid_queue if production_envs.include?('production') || solid_queue_in_puma_enabled
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.

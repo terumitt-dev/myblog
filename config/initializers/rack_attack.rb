@@ -5,12 +5,22 @@
 #
 # カウンタは Rails.cache (本番では SolidCache) に保存することで、
 # 複数 Puma worker / 複数 Pod 構成でもプロセスをまたいで共有される。
-# プロセスローカルな MemoryStore のままだと password_reset/global などの
+# プロセスローカルなストアのままだと password_reset/global などの
 # 全体スロットリングがプロセスごとに分断され、実質的に Pod 数 × worker 数倍の
-# 回数を通せてしまう。本番ではこの設定漏れを起動時に fail-fast で検知する。
-if Rails.env.production? && Rails.cache.is_a?(ActiveSupport::Cache::MemoryStore)
-  raise 'Rack::Attack requires a shared cache store in production ' \
-        '(set config.cache_store to :solid_cache_store or another shared backend)'
+# 回数を通せてしまう。
+#
+# 本番では「共有可能と分かっているストアだけを allow-list で許可」する方針。
+# MemoryStore だけ deny-list で弾く方式だと、null_store / file_store など
+# 他のプロセスローカルストアが設定された場合にすり抜ける余地が残るため。
+SHARED_CACHE_STORES = %i[solid_cache_store redis_cache_store mem_cache_store].freeze
+
+if Rails.env.production?
+  configured_store = Array(Rails.application.config.cache_store).first&.to_sym
+  unless SHARED_CACHE_STORES.include?(configured_store)
+    raise 'Rack::Attack requires a shared cache store in production ' \
+          "(got #{configured_store.inspect}; " \
+          "use one of #{SHARED_CACHE_STORES.inspect})"
+  end
 end
 
 Rack::Attack.cache.store = Rails.cache
