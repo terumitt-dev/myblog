@@ -94,7 +94,11 @@ module Api
         # 元々ないが、create 側の admins.one? ガードと挙動を一貫させ、異常系では token
         # を消費させない (= 認証不可エラーに統一する) ことで運用での原因切り分けを容易にする。
         # `::Admin` 明示の理由は create と同じ (`Api::Admin` namespace 衝突回避)。
-        admin_count = ::Admin.limit(2).count
+        # `.limit(2).to_a.size` を使うのは `.limit(2).count` だと SQL 上 LIMIT が
+        # COUNT(*) に効かず実質 `Admin.count` 相当で全件 SCAN される (admin が増えた
+        # 場合の性能劣化) のと、`create` 側 (`limit(2).to_a` を使う) と取得方法を
+        # 揃えるため。
+        admin_count = ::Admin.limit(2).to_a.size
         unless admin_count == 1
           Rails.logger.error("Unexpected admin count for password reset update: #{admin_count}")
           render json: { errors: ['Password reset could not be completed'] },

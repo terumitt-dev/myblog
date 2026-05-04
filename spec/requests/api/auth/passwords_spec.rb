@@ -11,12 +11,23 @@ RSpec.describe 'Api::Auth::Passwords', type: :request do
   let(:valid_secret) { ENV.fetch('PASSWORD_RESET_SECRET') }
   let(:json_headers) { { 'Content-Type' => 'application/json' } }
 
-  before(:each) do
-    JwtBlacklist.delete_all
-    ::Admin.delete_all
+  # queue_adapter の差し替えはクラスレベルのグローバル状態変更のため、テスト終了時に
+  # 元のアダプタに戻さないと後続のスペックに副作用が漏れる可能性がある。around で
+  # ensure ブロック相当のリセットを行うことで、このスペックの実行順序に依存せず
+  # 他スペックへ影響しないようにする。
+  around(:each) do |example|
+    original_adapter = ActiveJob::Base.queue_adapter
     ActiveJob::Base.queue_adapter = :test
     ActiveJob::Base.queue_adapter.enqueued_jobs.clear
     ActiveJob::Base.queue_adapter.performed_jobs.clear
+    example.run
+  ensure
+    ActiveJob::Base.queue_adapter = original_adapter
+  end
+
+  before(:each) do
+    JwtBlacklist.delete_all
+    ::Admin.delete_all
   end
 
   describe 'POST /api/auth/password' do
