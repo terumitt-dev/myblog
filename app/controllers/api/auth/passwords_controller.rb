@@ -44,22 +44,27 @@ module Api
 
           # secret の正誤に関わらず Admin の取得まで常に実行することで、
           # DB アクセスの有無による応答時間差を排除する。
-          # メール送信自体は valid な場合のみだが、deliver_later 化済みのためそのコストは
-          # ほぼゼロに揃う。
           # トップレベル `::Admin` 明示は必須。`Admin` 単体だと
           # `Api::Auth::PasswordsController` から見て `Api::Admin` (controllers/api/admin/
           # 配下が作るモジュール定数) に先に解決され、`undefined method 'limit' for
           # Api::Admin:Module` の NoMethodError になる。
           admins = ::Admin.limit(2).to_a
 
-          if valid_secret?(secret)
-            # singleton 前提が崩れている場合はログのみで握り潰し、レスポンスは統一
-            if admins.one?
-              admins.first.send_reset_password_instructions
-            else
-              Rails.logger.error("Unexpected admin count for password reset: #{admins.size}")
-            end
+          # 応答時間差を完全に揃えるため、valid/invalid いずれの secret でも同じ work
+          # (= PasswordResetRequestJob を 1 件 enqueue) を実行する。
+          # トークン発行 + メール送信を行うかどうかは send_reset フラグでジョブ側が判断。
+          # 以前は valid 時のみ send_reset_password_instructions を controller 同期実行
+          # していたため、DB UPDATE (set_reset_password_token) のぶん応答時間差が残っていた。
+          secret_valid = valid_secret?(secret)
+          if secret_valid && !admins.one?
+            # singleton 前提が崩れた状態でも attacker から見える挙動は変えない (ログのみ)
+            Rails.logger.error("Unexpected admin count for password reset: #{admins.size}")
           end
+
+          PasswordResetRequestJob.perform_later(
+            admin_id: admins.one? ? admins.first.id : nil,
+            send_reset: secret_valid && admins.one?
+          )
         rescue StandardError => e
           # DB 障害・ジョブ投入失敗・SMTP 障害・JSON parse 失敗等すべて握り潰してログのみ。
           # e.message は JSON parse 失敗時にリクエストボディの断片を含み得るため
@@ -84,7 +89,19 @@ module Api
       # - 401 Unauthorized             … トークン不正・期限切れ・欠落（再リセット要求が必要）
       # - 422 Unprocessable Entity     … パスワードバリデーション失敗（同じトークンで再入力可能）
       def update
+        # singleton 前提が崩れた状態 (Admin が 0 件 or 2 件以上) では更新を拒否する。
+        # reset_password_by_token はトークンに紐づく 1 件しか更新しないため漏洩リスクは
+        # 元々ないが、create 側の admins.one? ガードと挙動を一貫させ、異常系では token
+        # を消費させない (= 認証不可エラーに統一する) ことで運用での原因切り分けを容易にする。
         # `::Admin` 明示の理由は create と同じ (`Api::Admin` namespace 衝突回避)。
+        admin_count = ::Admin.limit(2).count
+        unless admin_count == 1
+          Rails.logger.error("Unexpected admin count for password reset update: #{admin_count}")
+          render json: { errors: ['Password reset could not be completed'] },
+                 status: :unauthorized
+          return
+        end
+
         admin = ::Admin.reset_password_by_token(reset_params)
 
         if admin.errors.empty?
