@@ -46,7 +46,11 @@ module Api
           # DB アクセスの有無による応答時間差を排除する。
           # メール送信自体は valid な場合のみだが、deliver_later 化済みのためそのコストは
           # ほぼゼロに揃う。
-          admins = Admin.limit(2).to_a
+          # トップレベル `::Admin` 明示は必須。`Admin` 単体だと
+          # `Api::Auth::PasswordsController` から見て `Api::Admin` (controllers/api/admin/
+          # 配下が作るモジュール定数) に先に解決され、`undefined method 'limit' for
+          # Api::Admin:Module` の NoMethodError になる。
+          admins = ::Admin.limit(2).to_a
 
           if valid_secret?(secret)
             # singleton 前提が崩れている場合はログのみで握り潰し、レスポンスは統一
@@ -80,7 +84,8 @@ module Api
       # - 401 Unauthorized             … トークン不正・期限切れ・欠落（再リセット要求が必要）
       # - 422 Unprocessable Entity     … パスワードバリデーション失敗（同じトークンで再入力可能）
       def update
-        admin = Admin.reset_password_by_token(reset_params)
+        # `::Admin` 明示の理由は create と同じ (`Api::Admin` namespace 衝突回避)。
+        admin = ::Admin.reset_password_by_token(reset_params)
 
         if admin.errors.empty?
           render json: { message: 'Password updated successfully' }, status: :ok
