@@ -22,7 +22,16 @@ class PasswordResetRequestJob < ApplicationJob
     # (Api::Admin namespace 衝突回避)。ジョブクラスは namespace 衝突しないが、
     # 一貫性と将来の移動耐性のため明示する。
     admin = ::Admin.find_by(id: admin_id)
-    return unless admin
+
+    # admin_id 付きでこの分岐に到達するのは「controller で admins.one? を確認した
+    # 直後にもかかわらず、ジョブ実行時点で admin が消えている」異常状態。
+    # singleton 設計上ほぼ起き得ないが、起きた場合に「ジョブが何もせず終わった」を
+    # 後から追跡できないと運用で詰まるためログを残す。
+    # passwords_controller.rb の "Unexpected admin count" ログと同じ防御パターン。
+    unless admin
+      Rails.logger.error("PasswordResetRequestJob: admin not found (id=#{admin_id})")
+      return
+    end
 
     # send_reset_password_instructions は内部で:
     # 1. set_reset_password_token (DB UPDATE で token + sent_at を保存)
