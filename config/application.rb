@@ -16,6 +16,9 @@ module Myblog
     # API モードを有効化
     config.api_only = true
 
+    # Rack::Attack をミドルウェアに追加（レートリミット）
+    config.middleware.use Rack::Attack
+
     # 日本語をデフォルトのlocaleに設定
     config.i18n.default_locale = :ja
 

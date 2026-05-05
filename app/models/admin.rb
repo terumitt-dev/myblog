@@ -9,6 +9,20 @@ class Admin < ApplicationRecord
 
   validate :only_one_admin_allowed, on: :create
 
+  # Devise の通知メール（パスワードリセット等）を ActiveJob 経由で非同期送信する。
+  # デフォルトは deliver_now で SMTP 完了まで同期で待つため、
+  # /api/auth/password の応答時間が SECRET の正誤に依存する形で変動し、
+  # 202 統一レスポンスでもタイミング差から内部状態を推測される余地が残る。
+  # deliver_later にすることでコントローラのレイテンシを平準化する。
+  #
+  # queue_adapter が永続化 (SolidQueue 等) であることの保証は
+  # config/initializers/active_job_adapter_validation.rb で boot 時に行う。
+  # ここにチェックを置くと PasswordsController#create の rescue StandardError に
+  # 飲まれて silent fail になるため設置しない。
+  def send_devise_notification(notification, *args)
+    devise_mailer.send(notification, self, *args).deliver_later
+  end
+
   private
 
   def only_one_admin_allowed

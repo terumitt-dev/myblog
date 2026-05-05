@@ -35,8 +35,25 @@ port ENV.fetch('PORT', 3000)
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
 
-# Run the Solid Queue supervisor inside of Puma for single-server deployments
-plugin :solid_queue if ENV['SOLID_QUEUE_IN_PUMA']
+# SolidQueue worker を Puma 同一プロセスで実行する (in-process supervisor)。
+# 個人ブログ規模では別 worker Pod は不要、Puma plugin で十分。
+# 本番では常に有効化、それ以外では SOLID_QUEUE_IN_PUMA を立てたときのみ。
+#
+# 環境判定は RAILS_ENV / RACK_ENV のいずれかが production なら有効化する。
+# - RAILS_ENV / RACK_ENV のどちらかしか渡らない構成への対応
+# - 両方セットされていて値が食い違う場合 (RAILS_ENV=development かつ
+#   RACK_ENV=production 等) でも片方が production なら solid_queue を起動する
+#   ことで、ジョブが永遠に処理されない事故を防ぐ
+production_envs = [ENV['RAILS_ENV'], ENV['RACK_ENV']].compact
+
+# SOLID_QUEUE_IN_PUMA は env 文字列として渡るため、Ruby の truthy 判定をそのまま
+# 使うと "false" や "0" でも有効化されてしまう (Ruby では nil/false 以外は全て truthy)。
+# 明示的に「真とみなす値」のみ受け付けることで、env 設定ミスで意図せず in-process
+# worker が起動して二重実行や DB 負荷増を招くのを防ぐ。
+solid_queue_in_puma_enabled =
+  %w[1 true yes on].include?(ENV['SOLID_QUEUE_IN_PUMA'].to_s.downcase)
+
+plugin :solid_queue if production_envs.include?('production') || solid_queue_in_puma_enabled
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
