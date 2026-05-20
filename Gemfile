@@ -29,7 +29,7 @@ gem 'jbuilder', '~> 2.14' # 最新安定版
 gem 'devise', '~> 5.0' # 最新安定版 4.9.4
 gem 'devise-i18n', '~> 1.11'
 gem 'devise-jwt', '~> 0.11'
-gem 'jwt', '~> 2.7'
+gem 'jwt', '~> 3.2'
 
 # CORS対応
 gem 'rack-cors', '~> 2.0'
