@@ -36,6 +36,20 @@ RSpec.describe TurnstileService do
       end
     end
 
+    context 'ALLOWED_HOSTNAMES が空 (未設定) で本番環境の場合' do
+      before { allow(Rails.env).to receive(:production?).and_return(true) }
+
+      it 'success: true でも false を返すこと (fail-closed)' do
+        stub_const('TurnstileService::ALLOWED_HOSTNAMES', [].freeze)
+
+        http = instance_double(Net::HTTP)
+        stub_http(http)
+        stub_request_returning(http, make_response('200', body: { success: true, hostname: 'go-lilaregard.com' }.to_json))
+
+        expect(described_class.verify(token, remote_ip: remote_ip)).to be false
+      end
+    end
+
     context 'ALLOWED_HOSTNAMES が設定されている場合' do
       it 'hostname が allow list に含まれていれば true を返すこと' do
         stub_const('TurnstileService::ALLOWED_HOSTNAMES', %w[go-lilaregard.com www.go-lilaregard.com])
@@ -89,6 +103,32 @@ RSpec.describe TurnstileService do
       it 'HTTP を叩かずに false を返すこと' do
         expect(Net::HTTP).not_to receive(:new)
         expect(described_class.verify(nil, remote_ip: remote_ip)).to be false
+      end
+    end
+
+    context 'token が String 以外の場合 (Hash, Array, Integer 等)' do
+      it 'HTTP を叩かずに false を返すこと (型攻撃の防御)' do
+        expect(Net::HTTP).not_to receive(:new)
+        expect(described_class.verify({ nested: 'value' }, remote_ip: remote_ip)).to be false
+        expect(described_class.verify(['x'], remote_ip: remote_ip)).to be false
+        expect(described_class.verify(123, remote_ip: remote_ip)).to be false
+      end
+    end
+
+    context 'token が MAX_TOKEN_BYTESIZE を超える場合' do
+      it 'HTTP を叩かずに false を返すこと (増幅攻撃の防御)' do
+        oversized = 'a' * (TurnstileService::MAX_TOKEN_BYTESIZE + 1)
+        expect(Net::HTTP).not_to receive(:new)
+        expect(described_class.verify(oversized, remote_ip: remote_ip)).to be false
+      end
+
+      it 'ちょうど MAX_TOKEN_BYTESIZE バイトなら HTTP を叩くこと (境界値)' do
+        exact = 'a' * TurnstileService::MAX_TOKEN_BYTESIZE
+        http = instance_double(Net::HTTP)
+        stub_http(http)
+        stub_request_returning(http, make_response('200', body: { success: true }.to_json))
+
+        expect(described_class.verify(exact, remote_ip: remote_ip)).to be true
       end
     end
 

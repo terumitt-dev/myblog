@@ -23,6 +23,11 @@ class TurnstileService
   SITEVERIFY_URL = URI('https://challenges.cloudflare.com/turnstile/v0/siteverify').freeze
   TIMEOUT = 5
 
+  # Cloudflare Turnstile token のサイズ上限 (公式仕様 ~2048 chars)。
+  # 公開エンドポイント経由で過大な値を Cloudflare へ転送する増幅攻撃を防ぐため、
+  # 型と byte size を事前検証する。
+  MAX_TOKEN_BYTESIZE = 2048
+
   # ENV.fetch は未設定だけ弾くので blank? でガードしてからフリーズ
   # (空文字 "TURNSTILE_SECRET_KEY=" で渡された場合に boot 時に気付くため)。
   SECRET_KEY = ENV.fetch('TURNSTILE_SECRET_KEY').tap do |value|
@@ -40,14 +45,19 @@ class TurnstileService
   # @param remote_ip [String, nil] 検証対象のクライアント IP (任意・推奨)
   # @return [Boolean]
   def self.verify(token, remote_ip: nil)
-    return false if token.blank?
+    return false unless token.is_a?(String)
+    return false if token.blank? || token.bytesize > MAX_TOKEN_BYTESIZE
 
     response = post_siteverify(token, remote_ip)
     return false unless response.is_a?(Net::HTTPSuccess)
 
     result = JSON.parse(response.body)
     return false unless result['success'] == true
-    return true if ALLOWED_HOSTNAMES.empty?
+    # ALLOWED_HOSTNAMES 未設定の扱い:
+    # - dev / test: スキップ (true) して動かす
+    # - production: fail-closed (false) にして設定ミスを検知させる
+    #   (silent に hostname 検証が無効化される事故を防ぐため)
+    return !Rails.env.production? if ALLOWED_HOSTNAMES.empty?
 
     ALLOWED_HOSTNAMES.include?(result['hostname'])
   rescue StandardError => e
