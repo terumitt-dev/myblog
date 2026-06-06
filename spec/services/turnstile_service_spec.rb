@@ -27,12 +27,44 @@ RSpec.describe TurnstileService do
     end
 
     context 'siteverify が success: true を返した場合' do
-      it 'true を返すこと' do
+      it 'ALLOWED_HOSTNAMES が空なら hostname を見ずに true を返すこと' do
         http = instance_double(Net::HTTP)
         stub_http(http)
         stub_request_returning(http, make_response('200', body: { success: true }.to_json))
 
         expect(described_class.verify(token, remote_ip: remote_ip)).to be true
+      end
+    end
+
+    context 'ALLOWED_HOSTNAMES が設定されている場合' do
+      it 'hostname が allow list に含まれていれば true を返すこと' do
+        stub_const('TurnstileService::ALLOWED_HOSTNAMES', %w[go-lilaregard.com www.go-lilaregard.com])
+
+        http = instance_double(Net::HTTP)
+        stub_http(http)
+        stub_request_returning(http, make_response('200', body: { success: true, hostname: 'go-lilaregard.com' }.to_json))
+
+        expect(described_class.verify(token, remote_ip: remote_ip)).to be true
+      end
+
+      it 'hostname が allow list に含まれていなければ false を返すこと (fail-closed)' do
+        stub_const('TurnstileService::ALLOWED_HOSTNAMES', %w[go-lilaregard.com])
+
+        http = instance_double(Net::HTTP)
+        stub_http(http)
+        stub_request_returning(http, make_response('200', body: { success: true, hostname: 'evil.example.com' }.to_json))
+
+        expect(described_class.verify(token, remote_ip: remote_ip)).to be false
+      end
+
+      it 'hostname がレスポンスに含まれていなければ false を返すこと (fail-closed)' do
+        stub_const('TurnstileService::ALLOWED_HOSTNAMES', %w[go-lilaregard.com])
+
+        http = instance_double(Net::HTTP)
+        stub_http(http)
+        stub_request_returning(http, make_response('200', body: { success: true }.to_json))
+
+        expect(described_class.verify(token, remote_ip: remote_ip)).to be false
       end
     end
 

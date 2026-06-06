@@ -83,6 +83,30 @@ RSpec.describe 'Api::Blogs::Comments', type: :request do
       end
     end
 
+    # request.remote_ip は XFF 偽装などで raise しうる (IpSpoofAttackError)。
+    # safe_remote_ip ヘルパーが nil フォールバックする挙動を、コントローラ単体で検証する。
+    # request spec で and_raise すると Rails::Rack::Logger も remote_ip を呼ぶため
+    # middleware 段階で 500 になってしまい、コントローラ層の挙動を分離できない。
+    describe '#safe_remote_ip (private)' do
+      it 'request.remote_ip が StandardError を raise したら nil を返すこと' do
+        controller = Api::CommentsController.new
+        fake_request = instance_double(ActionDispatch::Request)
+        allow(fake_request).to receive(:remote_ip)
+          .and_raise(ActionDispatch::RemoteIp::IpSpoofAttackError, 'spoofed')
+        allow(controller).to receive(:request).and_return(fake_request)
+
+        expect(controller.send(:safe_remote_ip)).to be_nil
+      end
+
+      it '通常時は request.remote_ip の値を返すこと' do
+        controller = Api::CommentsController.new
+        fake_request = instance_double(ActionDispatch::Request, remote_ip: '203.0.113.10')
+        allow(controller).to receive(:request).and_return(fake_request)
+
+        expect(controller.send(:safe_remote_ip)).to eq('203.0.113.10')
+      end
+    end
+
     context 'Blog が存在しない場合' do
       before { allow(TurnstileService).to receive(:verify).and_return(true) }
 

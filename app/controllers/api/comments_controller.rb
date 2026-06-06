@@ -63,9 +63,18 @@ module Api
     # 不正・失効・未送信のいずれも 422 で同じレスポンスを返す
     # (個別のエラー差分から検証ロジックを推測されないようにする)。
     def verify_turnstile!
-      return if TurnstileService.verify(params[:turnstile_token], remote_ip: request.remote_ip)
+      return if TurnstileService.verify(params[:turnstile_token], remote_ip: safe_remote_ip)
 
       render json: { errors: ['認証に失敗しました。再度お試しください。'] }, status: :unprocessable_entity
+    end
+
+    # request.remote_ip は X-Forwarded-For の異常 (IpSpoofAttackError) で raise しうる。
+    # remote_ip は Turnstile では optional フィールドなので、取得失敗時は nil で続行し、
+    # 攻撃者の XFF 偽装による 500 量産を防ぐ (rack_attack.rb の client_ip と同じパターン)。
+    def safe_remote_ip
+      request.remote_ip
+    rescue StandardError
+      nil
     end
   end
 end

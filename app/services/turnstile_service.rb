@@ -29,6 +29,13 @@ class TurnstileService
     raise 'TURNSTILE_SECRET_KEY must not be blank' if value.blank?
   end.freeze
 
+  # siteverify 応答の `hostname` を照合する allow-list (カンマ区切り)。
+  # Cloudflare 側で site key は domain に紐付くため一次防御は済んでいるが、
+  # site key 漏洩 + 別ホストへの差し替えなどの edge case に備えた多層防御。
+  # 未設定 (空 list) の場合はチェックをスキップする (dev / test 用途)。
+  ALLOWED_HOSTNAMES = ENV.fetch('TURNSTILE_ALLOWED_HOSTNAMES', '')
+                        .split(',').map(&:strip).reject(&:blank?).freeze
+
   # @param token [String, nil] フォームから submit された Turnstile token
   # @param remote_ip [String, nil] 検証対象のクライアント IP (任意・推奨)
   # @return [Boolean]
@@ -38,7 +45,11 @@ class TurnstileService
     response = post_siteverify(token, remote_ip)
     return false unless response.is_a?(Net::HTTPSuccess)
 
-    JSON.parse(response.body)['success'] == true
+    result = JSON.parse(response.body)
+    return false unless result['success'] == true
+    return true if ALLOWED_HOSTNAMES.empty?
+
+    ALLOWED_HOSTNAMES.include?(result['hostname'])
   rescue StandardError => e
     Rails.logger.warn "TurnstileService: verify failed: #{e.message}"
     false
