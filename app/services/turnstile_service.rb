@@ -9,11 +9,16 @@ require 'uri'
 # bot / spam を k8s 到達前にフィルタする目的。
 #
 # 設計方針:
-# - SECRET_KEY をクラス読み込み時に必須化することで、デプロイ時の設定漏れを
-#   起動時に fail-fast で検知する (silent failure を防ぐため)。
+# - SECRET_KEY をクラス読み込み時に ENV.fetch で必須化することで、
+#   デプロイ時の設定漏れを起動時に fail-fast で検知する (silent failure を防ぐため)。
+#   この仕様は全環境共通で、未設定なら起動失敗 (環境分岐は意図的に持たせない)。
 # - 例外時は false を返して fail-closed (検証できない以上は弾く)。
-# - dev / test 環境では Cloudflare 公開のテストキーを利用する
-#   (always pass: 1x0000000000000000000000000000000AA)。
+#
+# 環境別の TURNSTILE_SECRET_KEY 注入経路 (コード外で別途設定):
+# - production: app-secrets Secret (Drone CI が SSM 経由で kubectl apply)
+# - development: docker-compose.yml で Cloudflare 公開テストキーを env として注入
+#                (1x0000000000000000000000000000000AA, always pass)
+# - test: spec/rails_helper.rb で `ENV[...] ||= 'test-turnstile-secret'`
 class TurnstileService
   SITEVERIFY_URL = URI('https://challenges.cloudflare.com/turnstile/v0/siteverify').freeze
   TIMEOUT = 5
