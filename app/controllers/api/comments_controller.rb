@@ -3,6 +3,7 @@
 module Api
   class CommentsController < ApplicationController
     before_action :set_blog
+    before_action :verify_turnstile!, only: [:create]
     before_action :set_cdn_cacheable, only: [:index]
 
     # GET /api/blogs/:blog_id/comments
@@ -54,6 +55,17 @@ module Api
 
     def comment_params
       params.require(:comment).permit(:user_name, :comment)
+    end
+
+    # Cloudflare Turnstile token を検証して bot / spam を弾く。
+    # token は body の top-level に `turnstile_token` として渡される想定:
+    #   { "comment": { "user_name": "...", "comment": "..." }, "turnstile_token": "..." }
+    # 不正・失効・未送信のいずれも 422 で同じレスポンスを返す
+    # (個別のエラー差分から検証ロジックを推測されないようにする)。
+    def verify_turnstile!
+      return if TurnstileService.verify(params[:turnstile_token], remote_ip: request.remote_ip)
+
+      render json: { errors: ['認証に失敗しました。再度お試しください。'] }, status: :unprocessable_entity
     end
   end
 end
