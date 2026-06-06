@@ -13,6 +13,7 @@ RSpec.describe TurnstileService do
       allow(http_double).to receive(:use_ssl=)
       allow(http_double).to receive(:open_timeout=)
       allow(http_double).to receive(:read_timeout=)
+      allow(http_double).to receive(:write_timeout=)
     end
 
     def stub_request_returning(http, response)
@@ -70,10 +71,21 @@ RSpec.describe TurnstileService do
     end
 
     context 'siteverify が timeout した場合' do
-      it 'false を返すこと (fail-closed)' do
+      it 'Net::OpenTimeout でも false を返すこと (fail-closed)' do
         http = instance_double(Net::HTTP)
         stub_http(http)
         allow(http).to receive(:request).and_raise(Net::OpenTimeout)
+
+        expect(described_class.verify(token, remote_ip: remote_ip)).to be false
+      end
+
+      # Net::ReadTimeout は Ruby 3.2+ では Timeout::Error < RuntimeError < StandardError なので
+      # rescue StandardError で捕捉される。古い Ruby (< 3.1) では別系統だったため、
+      # Ruby アップグレードでの回帰を防ぐ目的で明示的にテストする。
+      it 'Net::ReadTimeout でも false を返すこと (fail-closed)' do
+        http = instance_double(Net::HTTP)
+        stub_http(http)
+        allow(http).to receive(:request).and_raise(Net::ReadTimeout)
 
         expect(described_class.verify(token, remote_ip: remote_ip)).to be false
       end

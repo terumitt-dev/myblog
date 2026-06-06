@@ -66,6 +66,23 @@ RSpec.describe 'Api::Blogs::Comments', type: :request do
       end
     end
 
+    context 'Turnstile 検証が成功したがコメントが無効な場合' do
+      before { allow(TurnstileService).to receive(:verify).and_return(true) }
+
+      it 'コメントを作成せず comment の errors を含む 422 を返すこと' do
+        expect do
+          post "/api/blogs/#{blog.id}/comments",
+               params: { comment: { user_name: '', comment: 'body' }, turnstile_token: 'good-token' }.to_json,
+               headers: headers
+        end.not_to change(Comment, :count)
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response.parsed_body['errors']).not_to be_empty
+        # 認証エラーメッセージではないこと (Turnstile 通過後の comment validation エラー)
+        expect(response.parsed_body['errors']).not_to include('認証に失敗しました。再度お試しください。')
+      end
+    end
+
     context 'Blog が存在しない場合' do
       before { allow(TurnstileService).to receive(:verify).and_return(true) }
 

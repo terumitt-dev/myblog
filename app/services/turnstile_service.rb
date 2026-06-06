@@ -47,6 +47,7 @@ class TurnstileService
     http.use_ssl = true
     http.open_timeout = TIMEOUT
     http.read_timeout = TIMEOUT
+    http.write_timeout = TIMEOUT
 
     request = Net::HTTP::Post.new(SITEVERIFY_URL.request_uri)
     request.set_form_data(params)
