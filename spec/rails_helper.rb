@@ -5,6 +5,7 @@ ENV['RAILS_ENV'] ||= 'test'
 # クラス読み込み時に ENV.fetch される必須環境変数のテスト用デフォルト。
 # 未設定だと PasswordsController のクラス定数評価で KeyError が出てテスト全体が起動失敗する。
 ENV['PASSWORD_RESET_SECRET'] ||= 'test-password-reset-secret'
+ENV['TURNSTILE_SECRET_KEY'] ||= 'test-turnstile-secret'
 require_relative '../config/environment'
 # Prevent database truncation if the environment is production
 abort('The Rails environment is running in production mode!') if Rails.env.production?

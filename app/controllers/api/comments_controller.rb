@@ -2,6 +2,13 @@
 
 module Api
   class CommentsController < ApplicationController
+    # create のみ verify_turnstile! を set_blog より先に走らせる。
+    # bot による無効 token + 任意 blog_id のスパムで DB 参照を発生させない目的:
+    # - DB 負荷の抑制 (検証通過しない POST は DB に到達しない)
+    # - blog_id の存在推測の防止 (Turnstile 失敗時は 404/422 の差が出ない)
+    # Cloudflare siteverify はレート制限が緩い (Free 100万/日) ため、
+    # 存在しない blog_id で 1 回外部 API を叩くコストは許容できる。
+    before_action :verify_turnstile!, only: [:create]
     before_action :set_blog
     before_action :set_cdn_cacheable, only: [:index]
 
@@ -54,6 +61,26 @@ module Api
 
     def comment_params
       params.require(:comment).permit(:user_name, :comment)
+    end
+
+    # Cloudflare Turnstile token を検証して bot / spam を弾く。
+    # token は body の top-level に `turnstile_token` として渡される想定:
+    #   { "comment": { "user_name": "...", "comment": "..." }, "turnstile_token": "..." }
+    # 不正・失効・未送信のいずれも 422 で同じレスポンスを返す
+    # (個別のエラー差分から検証ロジックを推測されないようにする)。
+    def verify_turnstile!
+      return if TurnstileService.verify(params[:turnstile_token], remote_ip: safe_remote_ip)
+
+      render json: { errors: ['認証に失敗しました。再度お試しください。'] }, status: :unprocessable_entity
+    end
+
+    # request.remote_ip は X-Forwarded-For の異常 (IpSpoofAttackError) で raise しうる。
+    # remote_ip は Turnstile では optional フィールドなので、取得失敗時は nil で続行し、
+    # 攻撃者の XFF 偽装による 500 量産を防ぐ (rack_attack.rb の client_ip と同じパターン)。
+    def safe_remote_ip
+      request.remote_ip
+    rescue StandardError
+      nil
     end
   end
 end
