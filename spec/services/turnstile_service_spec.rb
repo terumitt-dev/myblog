@@ -160,6 +160,52 @@ RSpec.describe TurnstileService do
     end
   end
 
+  # boot 時の SECRET_KEY 必須化と本番公開テストキー拒否を検証する。
+  # 実体は class 読み込み時に走るが、validate_secret_key! を private class method
+  # として切り出してあるので、メソッド単体で挙動を確認する。
+  describe '.validate_secret_key! (boot-time fail-fast)' do
+    context 'ENV が空文字の場合' do
+      it '全環境共通で blank の旨を raise すること' do
+        allow(Rails.env).to receive(:production?).and_return(true)
+        expect { described_class.send(:validate_secret_key!, '') }
+          .to raise_error(RuntimeError, /TURNSTILE_SECRET_KEY must not be blank/)
+      end
+    end
+
+    context '本番環境で Cloudflare 公開テストキーが設定されている場合' do
+      before { allow(Rails.env).to receive(:production?).and_return(true) }
+
+      it 'always-pass キーを raise すること' do
+        expect { described_class.send(:validate_secret_key!, '1x0000000000000000000000000000000AA') }
+          .to raise_error(RuntimeError, /must not be a public test key in production/)
+      end
+
+      it 'always-fail キーも raise すること' do
+        expect { described_class.send(:validate_secret_key!, '2x0000000000000000000000000000000AA') }
+          .to raise_error(RuntimeError, /must not be a public test key in production/)
+      end
+
+      it 'spent-token キーも raise すること' do
+        expect { described_class.send(:validate_secret_key!, '3x0000000000000000000000000000000FF') }
+          .to raise_error(RuntimeError, /must not be a public test key in production/)
+      end
+
+      it '本物の鍵 (テストキー以外) なら raise しないこと' do
+        expect { described_class.send(:validate_secret_key!, 'real-production-secret-xxxxxxxxxx') }
+          .not_to raise_error
+      end
+    end
+
+    context '非本番環境で Cloudflare 公開テストキーが設定されている場合' do
+      before { allow(Rails.env).to receive(:production?).and_return(false) }
+
+      it 'raise しないこと (dev / test で常用するキーのため)' do
+        expect { described_class.send(:validate_secret_key!, '1x0000000000000000000000000000000AA') }
+          .not_to raise_error
+      end
+    end
+  end
+
   # boot 時の TURNSTILE_ALLOWED_HOSTNAMES 必須化を検証する。
   # 実体は class 読み込み時に走るが、validate_allowed_hostnames! を private class method
   # として切り出してあるので、メソッド単体で挙動を確認する。

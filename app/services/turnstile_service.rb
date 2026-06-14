@@ -28,11 +28,34 @@ class TurnstileService
   # 型と byte size を事前検証する。
   MAX_TOKEN_BYTESIZE = 2048
 
-  # ENV.fetch は未設定だけ弾くので blank? でガードしてからフリーズ
-  # (空文字 "TURNSTILE_SECRET_KEY=" で渡された場合に boot 時に気付くため)。
-  SECRET_KEY = ENV.fetch('TURNSTILE_SECRET_KEY').tap do |value|
+  # Cloudflare が公開しているテスト用 secret key (公式ドキュメントに掲載)。
+  #   1x...AA: 常に検証成功 (dev / test の標準キー)
+  #   2x...AA: 常に検証失敗 (失敗シナリオの確認用)
+  #   3x...FF: 常に spent-token エラー (再利用シナリオの確認用)
+  # https://developers.cloudflare.com/turnstile/troubleshooting/testing/
+  # docker-compose.yml に always-pass の値が直書きされている関係上、
+  # 設定ミスで本番にコピペされる可能性が現実的にあるため、
+  # boot 時に本番デプロイを fail-fast で弾く。
+  PUBLIC_TEST_SECRET_KEYS = %w[
+    1x0000000000000000000000000000000AA
+    2x0000000000000000000000000000000AA
+    3x0000000000000000000000000000000FF
+  ].freeze
+
+  # SECRET_KEY 検証 (boot-time fail-fast)。
+  # - 空文字 / 未設定: 全環境共通で raise (silent failure 防止)
+  # - 本番 + Cloudflare 公開テストキー: raise (誤デプロイで Turnstile 検証が
+  #   実質バイパスされる事故を防ぐ)
+  # テスト可能にするため private class method として切り出している。
+  def self.validate_secret_key!(value)
     raise 'TURNSTILE_SECRET_KEY must not be blank' if value.blank?
-  end.freeze
+    return unless Rails.env.production? && PUBLIC_TEST_SECRET_KEYS.include?(value)
+
+    raise 'TURNSTILE_SECRET_KEY must not be a public test key in production'
+  end
+  private_class_method :validate_secret_key!
+
+  SECRET_KEY = ENV.fetch('TURNSTILE_SECRET_KEY').tap { |value| validate_secret_key!(value) }.freeze
 
   # 本番環境で TURNSTILE_ALLOWED_HOSTNAMES が空なら boot 時に raise する。
   # 設定漏れの silent な hostname 検証無効化を防ぎ、デプロイ時の CrashLoopBackOff
