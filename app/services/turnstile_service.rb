@@ -57,25 +57,34 @@ class TurnstileService
 
   SECRET_KEY = ENV.fetch('TURNSTILE_SECRET_KEY').tap { |value| validate_secret_key!(value) }.freeze
 
-  # 本番環境で TURNSTILE_ALLOWED_HOSTNAMES が空なら boot 時に raise する。
-  # 設定漏れの silent な hostname 検証無効化を防ぎ、デプロイ時の CrashLoopBackOff
-  # で即異常検知できるようにする (SECRET_KEY と同じ fail-fast パターン)。
-  # テスト可能にするため private class method として切り出している。
-  def self.validate_allowed_hostnames!(raw_value)
-    return unless Rails.env.production? && raw_value.blank?
+  # カンマ区切りの ENV 値をパースして hostname の配列へ正規化する。
+  # 各要素を strip + 空要素除去するので、',', ' , ', 'a, ,b' などのような
+  # 部分的に空白を含む値も意図通りの空配列 / 有効な配列になる。
+  def self.parse_allowed_hostnames(raw_value)
+    raw_value.to_s.split(',').map(&:strip).reject(&:blank?)
+  end
+  private_class_method :parse_allowed_hostnames
+
+  # 本番環境で TURNSTILE_ALLOWED_HOSTNAMES が実質的に空 (空文字 / カンマだけ /
+  # 空白だけ) なら boot 時に raise する。設定漏れによる silent な hostname
+  # 検証無効化を防ぎ、デプロイ時の CrashLoopBackOff で即異常検知できるようにする
+  # (SECRET_KEY と同じ fail-fast パターン)。
+  # parse 後の Array に対して検証するため、',' のような値も確実に弾ける。
+  def self.validate_allowed_hostnames!(hostnames)
+    return unless Rails.env.production? && hostnames.empty?
 
     raise 'TURNSTILE_ALLOWED_HOSTNAMES must not be blank in production'
   end
   private_class_method :validate_allowed_hostnames!
 
-  # siteverify 応答の `hostname` を照合する allow-list (カンマ区切り)。
+  # siteverify 応答の `hostname` を照合する allow-list。
   # Cloudflare 側で site key は domain に紐付くため一次防御は済んでいるが、
   # site key 漏洩 + 別ホストへの差し替えなどの edge case に備えた多層防御。
-  # 未設定 (空 list) の場合は dev / test に限定 (本番は上記 fail-fast で除外)。
+  # 未設定 (空 list) は dev / test に限定 (本番は上記 fail-fast で除外)。
   raw_allowed_hostnames = ENV.fetch('TURNSTILE_ALLOWED_HOSTNAMES', '')
-  validate_allowed_hostnames!(raw_allowed_hostnames)
-  ALLOWED_HOSTNAMES = raw_allowed_hostnames
-                        .split(',').map(&:strip).reject(&:blank?).freeze
+  parsed_allowed_hostnames = parse_allowed_hostnames(raw_allowed_hostnames)
+  validate_allowed_hostnames!(parsed_allowed_hostnames)
+  ALLOWED_HOSTNAMES = parsed_allowed_hostnames.freeze
 
   # @param token [String, nil] フォームから submit された Turnstile token
   # @param remote_ip [String, nil] 検証対象のクライアント IP (任意・推奨)

@@ -165,8 +165,14 @@ RSpec.describe TurnstileService do
   # として切り出してあるので、メソッド単体で挙動を確認する。
   describe '.validate_secret_key! (boot-time fail-fast)' do
     context 'ENV が空文字の場合' do
-      it '全環境共通で blank の旨を raise すること' do
+      it '本番環境でも blank の旨を raise すること' do
         allow(Rails.env).to receive(:production?).and_return(true)
+        expect { described_class.send(:validate_secret_key!, '') }
+          .to raise_error(RuntimeError, /TURNSTILE_SECRET_KEY must not be blank/)
+      end
+
+      it '非本番でも blank の旨を raise すること (全環境共通)' do
+        allow(Rails.env).to receive(:production?).and_return(false)
         expect { described_class.send(:validate_secret_key!, '') }
           .to raise_error(RuntimeError, /TURNSTILE_SECRET_KEY must not be blank/)
       end
@@ -206,20 +212,63 @@ RSpec.describe TurnstileService do
     end
   end
 
+  # ENV 値のパース挙動を検証する。
+  # ',' や ' , ' のような空 hostname しか含まない値が parse 後に空配列に
+  # 正規化されることが、validate_allowed_hostnames! の fail-fast の前提となる
+  # (raw_value.blank? では弾けない実質空ケースを confirm)。
+  describe '.parse_allowed_hostnames' do
+    it 'カンマ区切りで配列にすること' do
+      expect(described_class.send(:parse_allowed_hostnames, 'a.example.com,b.example.com'))
+        .to eq(%w[a.example.com b.example.com])
+    end
+
+    it '各要素を strip し、空白を除去すること' do
+      expect(described_class.send(:parse_allowed_hostnames, ' a.example.com , b.example.com '))
+        .to eq(%w[a.example.com b.example.com])
+    end
+
+    it '空要素を除去すること (a, ,b → [a, b])' do
+      expect(described_class.send(:parse_allowed_hostnames, 'a.example.com, ,b.example.com'))
+        .to eq(%w[a.example.com b.example.com])
+    end
+
+    it '空文字 → 空配列' do
+      expect(described_class.send(:parse_allowed_hostnames, '')).to eq([])
+    end
+
+    it 'カンマだけ → 空配列' do
+      expect(described_class.send(:parse_allowed_hostnames, ',')).to eq([])
+    end
+
+    it 'カンマと空白だけ → 空配列' do
+      expect(described_class.send(:parse_allowed_hostnames, ' , , ')).to eq([])
+    end
+
+    it 'nil → 空配列 (to_s 経由で安全に変換)' do
+      expect(described_class.send(:parse_allowed_hostnames, nil)).to eq([])
+    end
+  end
+
   # boot 時の TURNSTILE_ALLOWED_HOSTNAMES 必須化を検証する。
   # 実体は class 読み込み時に走るが、validate_allowed_hostnames! を private class method
   # として切り出してあるので、メソッド単体で挙動を確認する。
+  # 引数は parse_allowed_hostnames 経由で正規化済みの Array<String> を渡す。
   describe '.validate_allowed_hostnames! (boot-time fail-fast)' do
-    context '本番環境かつ ENV が空文字の場合' do
+    context '本番環境かつ正規化後が空配列の場合' do
       before { allow(Rails.env).to receive(:production?).and_return(true) }
 
-      it '設定漏れを検知して raise すること' do
-        expect { described_class.send(:validate_allowed_hostnames!, '') }
+      it '空配列 ([]) → raise (純粋な空文字 ENV)' do
+        expect { described_class.send(:validate_allowed_hostnames!, []) }
           .to raise_error(RuntimeError, /TURNSTILE_ALLOWED_HOSTNAMES must not be blank in production/)
       end
 
-      it '空白だけの値も raise すること' do
-        expect { described_class.send(:validate_allowed_hostnames!, '  ') }
+      # parse_allowed_hostnames が ',' や ' , ' を [] に正規化することで、
+      # bot 指摘の「raw.blank? を通過するが verify では実質バイパス」のケースが
+      # 確実に boot 時に止められることを確認する。
+      it "',' のような実質空の ENV も parse 後の空配列を経由して raise されること" do
+        parsed = described_class.send(:parse_allowed_hostnames, ',')
+        expect(parsed).to eq([])
+        expect { described_class.send(:validate_allowed_hostnames!, parsed) }
           .to raise_error(RuntimeError, /TURNSTILE_ALLOWED_HOSTNAMES must not be blank in production/)
       end
     end
@@ -228,16 +277,16 @@ RSpec.describe TurnstileService do
       before { allow(Rails.env).to receive(:production?).and_return(true) }
 
       it 'raise しないこと' do
-        expect { described_class.send(:validate_allowed_hostnames!, 'go-lilaregard.com') }
+        expect { described_class.send(:validate_allowed_hostnames!, ['go-lilaregard.com']) }
           .not_to raise_error
       end
     end
 
-    context '本番環境以外で ENV が空の場合' do
+    context '本番環境以外で空配列の場合' do
       before { allow(Rails.env).to receive(:production?).and_return(false) }
 
       it 'raise しないこと (dev / test では空 list 許容)' do
-        expect { described_class.send(:validate_allowed_hostnames!, '') }
+        expect { described_class.send(:validate_allowed_hostnames!, []) }
           .not_to raise_error
       end
     end
