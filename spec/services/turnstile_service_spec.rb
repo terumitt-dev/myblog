@@ -36,20 +36,6 @@ RSpec.describe TurnstileService do
       end
     end
 
-    context 'ALLOWED_HOSTNAMES が空 (未設定) で本番環境の場合' do
-      before { allow(Rails.env).to receive(:production?).and_return(true) }
-
-      it 'success: true でも false を返すこと (fail-closed)' do
-        stub_const('TurnstileService::ALLOWED_HOSTNAMES', [].freeze)
-
-        http = instance_double(Net::HTTP)
-        stub_http(http)
-        stub_request_returning(http, make_response('200', body: { success: true, hostname: 'go-lilaregard.com' }.to_json))
-
-        expect(described_class.verify(token, remote_ip: remote_ip)).to be false
-      end
-    end
-
     context 'ALLOWED_HOSTNAMES が設定されている場合' do
       it 'hostname が allow list に含まれていれば true を返すこと' do
         stub_const('TurnstileService::ALLOWED_HOSTNAMES', %w[go-lilaregard.com www.go-lilaregard.com])
@@ -170,6 +156,43 @@ RSpec.describe TurnstileService do
         stub_request_returning(http, make_response('200', body: '<html>not json</html>'))
 
         expect(described_class.verify(token, remote_ip: remote_ip)).to be false
+      end
+    end
+  end
+
+  # boot 時の TURNSTILE_ALLOWED_HOSTNAMES 必須化を検証する。
+  # 実体は class 読み込み時に走るが、validate_allowed_hostnames! を private class method
+  # として切り出してあるので、メソッド単体で挙動を確認する。
+  describe '.validate_allowed_hostnames! (boot-time fail-fast)' do
+    context '本番環境かつ ENV が空文字の場合' do
+      before { allow(Rails.env).to receive(:production?).and_return(true) }
+
+      it '設定漏れを検知して raise すること' do
+        expect { described_class.send(:validate_allowed_hostnames!, '') }
+          .to raise_error(RuntimeError, /TURNSTILE_ALLOWED_HOSTNAMES must not be blank in production/)
+      end
+
+      it '空白だけの値も raise すること' do
+        expect { described_class.send(:validate_allowed_hostnames!, '  ') }
+          .to raise_error(RuntimeError, /TURNSTILE_ALLOWED_HOSTNAMES must not be blank in production/)
+      end
+    end
+
+    context '本番環境で値が設定されている場合' do
+      before { allow(Rails.env).to receive(:production?).and_return(true) }
+
+      it 'raise しないこと' do
+        expect { described_class.send(:validate_allowed_hostnames!, 'go-lilaregard.com') }
+          .not_to raise_error
+      end
+    end
+
+    context '本番環境以外で ENV が空の場合' do
+      before { allow(Rails.env).to receive(:production?).and_return(false) }
+
+      it 'raise しないこと (dev / test では空 list 許容)' do
+        expect { described_class.send(:validate_allowed_hostnames!, '') }
+          .not_to raise_error
       end
     end
   end

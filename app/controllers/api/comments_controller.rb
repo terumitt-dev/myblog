@@ -2,8 +2,14 @@
 
 module Api
   class CommentsController < ApplicationController
-    before_action :set_blog
+    # create のみ verify_turnstile! を set_blog より先に走らせる。
+    # bot による無効 token + 任意 blog_id のスパムで DB 参照を発生させない目的:
+    # - DB 負荷の抑制 (検証通過しない POST は DB に到達しない)
+    # - blog_id の存在推測の防止 (Turnstile 失敗時は 404/422 の差が出ない)
+    # Cloudflare siteverify はレート制限が緩い (Free 100万/日) ため、
+    # 存在しない blog_id で 1 回外部 API を叩くコストは許容できる。
     before_action :verify_turnstile!, only: [:create]
+    before_action :set_blog
     before_action :set_cdn_cacheable, only: [:index]
 
     # GET /api/blogs/:blog_id/comments
