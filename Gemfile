@@ -15,7 +15,7 @@ gem 'sprockets-rails', '~> 3.4' # Rails 8 対応版で最新
 gem 'pg', '~> 1.5'
 
 # Webサーバー
-gem 'puma', '~> 6.6' # Rails 8 で推奨される 6 系最新
+gem 'puma', '~> 7.2' # Rails 8 で推奨される 6 系最新
 
 # JavaScript & Hotwire
 gem 'importmap-rails', '~> 1.2'
