@@ -145,6 +145,42 @@ jwt_blacklists
 | 外部画像 DL | ホスト許可リスト、MIME 検証、リダイレクト上限（3回） |
 | CORS | 環境別オリジン制限（本番はドメイン限定） |
 | パスワード | bcrypt（本番12ストレッチ） |
+| コメント Bot 対策 | Cloudflare Turnstile siteverify（`TurnstileService`）。token 検証 + hostname allow-list + 本番テストキー拒否 |
+
+### コメント Bot 対策（Cloudflare Turnstile）
+
+コメント投稿（`POST /api/blogs/:blog_id/comments`）は認証不要のため、bot / spam による DB 負荷を防ぐ目的で Cloudflare Turnstile を組み込んでいます。token 検証は backend 側で `Cloudflare siteverify API` を直接叩いて行います。
+
+**全体フロー**
+
+```
+ユーザー → frontend (widget 解決 → token 取得)
+       → POST /api/blogs/:id/comments (body の top-level に turnstile_token)
+       → backend: Api::CommentsController#create
+              → verify_turnstile! が TurnstileService.verify を呼ぶ
+              → siteverify API で token + hostname を検証
+              → 成功なら Comment.create、失敗なら 422 で fail-closed
+```
+
+**backend 側の実装** (`app/services/turnstile_service.rb`)
+
+- `Net::HTTP` で `challenges.cloudflare.com/turnstile/v0/siteverify` を直接叩く（gem 追加なし）
+- `before_action :verify_turnstile!` が `set_blog` より先に走るため、無効 token のリクエストは DB 参照に到達しない（DB 負荷 + blog_id 列挙の両方をガード）
+- 入力検証: `token.is_a?(String)` 型チェック + `MAX_TOKEN_BYTESIZE = 2048` の byte サイズ上限（過大ペイロードを Cloudflare へ転送する増幅攻撃を防止）
+- siteverify 応答の `hostname` を `ALLOWED_HOSTNAMES` (allow-list) と照合（多層防御）
+- 本番では起動時 fail-fast（`config/application.rb` boot 時）:
+  - `TURNSTILE_SECRET_KEY` 未設定 / 空 → boot 失敗
+  - 本番で Cloudflare 公開のテストキー（`1x0000...AA` 等）を設定 → boot 失敗（誤デプロイ防止）
+  - `TURNSTILE_ALLOWED_HOSTNAMES` 未設定 → boot 失敗（silent な検証無効化を防ぐ）
+
+**dev / test 環境**
+
+`spec/rails_helper.rb` で `ENV['TURNSTILE_SECRET_KEY'] ||= '1x0000000000000000000000000000000AA'`（公開の always-pass テスト Secret Key）を設定するため、追加の設定なしでテストが通る。`docker compose up` の dev 環境も同じ値を使う。
+
+**関連リポジトリ**
+
+- [`myblog-frontend`](https://github.com/terumitt-dev/myblog-frontend): Turnstile widget の埋め込み（`CommentForm`）
+- [`go-lilaregard-ops`](https://github.com/terumitt-dev/go-lilaregard-ops): `TURNSTILE_SECRET_KEY` (Secret) / `TURNSTILE_ALLOWED_HOSTNAMES` (ConfigMap) の K8s 注入
 
 ### HTML サニタイズの仕組み
 
