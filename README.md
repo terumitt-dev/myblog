@@ -39,6 +39,8 @@ Rails 8（API モード）で構築し、JWT 認証、ActiveStorage によるS3�
 | POST | `/api/auth/sign_in` | ログイン（JWT 発行） |
 | DELETE | `/api/auth/sign_out` | ログアウト（JWT 失効） |
 | GET | `/api/auth/current_user` | ログイン中の管理者情報 |
+| POST | `/api/auth/password` | パスワードリセットメール送信 |
+| PATCH | `/api/auth/password` | パスワードリセット実行 |
 | GET/POST/PATCH/DELETE | `/api/admin/blogs/*` | 記事 CRUD |
 | POST | `/api/admin/blogs/import_mt` | Movable Type 形式インポート |
 | POST | `/api/admin/images` | 画像アップロード |
@@ -67,7 +69,8 @@ app/
 │   ├── admin.rb                        # 管理者（1インスタンス1人制限）
 │   └── jwt_blacklist.rb                # JWT 失効管理
 └── services/
-    └── image_downloader.rb             # 外部画像ダウンロード（MT インポート用）
+    ├── image_downloader.rb             # 外部画像ダウンロード（MT インポート用）
+    └── turnstile_service.rb            # Cloudflare Turnstile token 検証
 ```
 
 ### データベース設計
@@ -277,6 +280,11 @@ PostgreSQL + Rails が起動し、`http://localhost:3000` でアクセスでき�
 | `SECRET_KEY_BASE` | Rails 暗号化キー |
 | `ADMIN_SIGNUP_PASSWORD` | 管理者登録パスワード |
 | `JWT_SECRET_KEY` | JWT 署名キー |
+| `PASSWORD_RESET_SECRET` | パスワードリセット用署名キー |
+| `SMTP_USERNAME` | メール送信用 SMTP ユーザー名 |
+| `SMTP_PASSWORD` | メール送信用 SMTP パスワード |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile Secret Key |
+| `TURNSTILE_ALLOWED_HOSTNAMES` | Turnstile hostname allow-list（カンマ区切り） |
 
 ## 関連リポジトリ
 
