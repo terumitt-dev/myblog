@@ -62,13 +62,13 @@ steps:
     environment:
       ECR_REGISTRY:
         from_secret: ECR_REGISTRY
+      DOCKER_CONFIG: /drone/src/.docker
     commands:
       - |
         if [ "$DRONE_BRANCH" = "main" ] && [ "$DRONE_BUILD_EVENT" = "push" ]; then
           /kaniko/executor \
             --context=dir:///drone/src \
             --dockerfile=/drone/src/Dockerfile.prod \
-            --docker-config=/drone/src/.docker \
             --destination="$ECR_REGISTRY/go-lilaregard-backend:$DRONE_COMMIT_SHA" \
             --destination="$ECR_REGISTRY/go-lilaregard-backend:latest"
         else
