@@ -1,6 +1,6 @@
-FROM ruby:3.2.1
+FROM ruby:3.2.11-bookworm
 
-RUN apt-get update && apt-get install -y nodejs postgresql-client --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y nodejs postgresql-client libvips-dev --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /myblog
 
